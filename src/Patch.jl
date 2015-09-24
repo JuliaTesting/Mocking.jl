@@ -1,5 +1,7 @@
 module Patch
 
+include("signature.jl")
+
 # type Patch
 #     mod::Module
 #     name::Symbol
