@@ -35,25 +35,15 @@ include("signature.jl")
 #     end
 # end
 
-# function patch(fn::Function, mod::Module, name::Symbol, rep::Function)
-#     const old = mod.eval(name)
-#     if isgeneric(old) && isconst(mod, name)
-#         if !isgeneric(rep)
-#             patch(old, :env, nothing) do
-#                 patch(old, :fptr, rep.fptr) do
-#                     old.code = rep.code
-#                     return fn()
-#                 end
-#             end
-#         else
-#             patch(old, :env, rep.env) do
-#                 return patch(fn, old, :fptr, rep.fptr)
-#             end
-#         end
-#     else
-#         return applypatch(fn, mod, name, rep)
-#     end
-# end
+function patch(body::Function, old_func::Function, new_func::Function, sig::Type=Void)
+    if !isgeneric(new_func)
+        sig = signature(new_func)
+    end
+
+    backup(old_func, sig) do
+        override(body, old_func, new_func, sig)
+    end
+end
 
 # patch(fn::Function, obj::Any, name::Symbol, rep::Any) = applypatch(fn, Core, :($obj.$name), rep)
 # patch(fn::Function, mod::Module, name::Symbol, rep::Any) = applypatch(fn, mod, name, rep)
@@ -68,7 +58,21 @@ include("signature.jl")
 #     end
 # end
 
-function override(old_func::Function, new_func::Function, sig::Type=Void)
+function backup(body::Function, new_func::Function, sig::Type=Void)
+    name = Base.function_name(new_func)
+    if !isgeneric(new_func)
+        sig = signature(new_func)
+    elseif sig == Void
+        error("explicit signature is required for generic functions")
+    end
+    # TODO: Generate this as just an expression
+    expr = parse("$name(" * join(["::$t" for t in array(sig)], ",") * ") = nothing")
+    const org_func = Original.eval(expr)
+    return override(body, org_func, new_func, sig)
+end
+
+
+function override(body::Function, old_func::Function, new_func::Function, sig::Type=Void)
     if !isgeneric(new_func)
         sig = signature(new_func)
     elseif sig != Void
@@ -88,31 +92,58 @@ function override(old_func::Function, new_func::Function, sig::Type=Void)
     if isgeneric(old_func)
         m = methods(old_func, sig)
         if length(m) == 1
-            m[1].func = new_func
+            method = m[1]
         elseif length(m) == 0
             error("function signature does not exist")
         else
             error("ambigious function signature; please make signature more specific")
         end
+
+        return override_internal(body, method, new_func)
     else
-        old_func.fptr = new_func.fptr
-        old_func.env = nothing
-        old_func.code = new_func.code
+        return override_internal(body, old_func, new_func)
     end
-    nothing
 end
 
-function backup(new_func::Function, sig::Type=Void)
-    name = Base.function_name(new_func)
-    if !isgeneric(new_func)
-        sig = signature(new_func)
-    elseif sig == Void
-        error("explicit signature is required for generic functions")
+function override_internal(body::Function, old_func::Function, new_func::Function)
+    isgeneric(old_func) && error("original function cannot be a generic")
+    isgeneric(new_func) && error("replacement function cannot be a generic")
+
+    org_fptr = old_func.fptr
+    org_code = old_func.code
+    old_func.fptr = new_func.fptr
+    old_func.code = new_func.code
+
+    try
+        return body()
+    finally
+        old_func.fptr = org_fptr
+        old_func.code = org_code
     end
-    # TODO: Generate this as just an expression
+end
+
+function override_internal(body::Function, old_method::Method, new_func::Function)
+    isgeneric(new_func) && error("replacement function cannot be a generic")
+
+    mod = old_method.func.code.module
+    name = old_method.func.code.name
+    sig = old_method.sig
+
+    # Overwrite a method such that Julia calls the updated function.
+    # TODO: Generate this with only expressions
+    isdefined(mod, name) || throw(MethodError("method $name does not exist in module $mod"))
     expr = parse("$name(" * join(["::$t" for t in array(sig)], ",") * ") = nothing")
-    const org_func = Original.eval(expr)
-    override(org_func, new_func, sig)
+
+    org_func = old_method.func
+    mod.eval(expr)  # Causes warning
+    old_method.func = new_func
+
+    try
+        return body()
+    finally
+        mod.eval(expr)  # Causes warning
+        old_method.func = org_func
+    end
 end
 
 end # module
