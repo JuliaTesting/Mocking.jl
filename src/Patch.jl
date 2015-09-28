@@ -1,39 +1,56 @@
 module Patch
 
-export Original
+export Original, Mock, patch
 
 module Original
 end
 
 include("signature.jl")
 
-# type Patch
-#     mod::Module
-#     name::Symbol
-#     rep::Function
-# end
+type Mock
+    original::Function
+    replacement::Function  # only non-generic functions
+    signature::Type
 
-# patch(fn::Function, patches::Array{Patch}) = patch(fn, patches...)
+    function Mock(original::Function, replacement::Function, signature::Type=Void)
+        if !isgeneric(replacement)
+            signature = signature(replacement)
+        elseif signature != Void
+            m = methods(replacement, signature)
+            if length(m) == 1
+                replacement = m[1].func
+            elseif length(m) == 0
+                error("no matching methods in replacement function")
+            else
+                error("method is ambigious; please make signature more specific")
+            end
+        else
+            error("signature is required when replacement is a generic function")
+        end
 
-# function patch(fn::Function, patches::Patch...)
-#     if length(patches) > 0
-#         patch(patches[1]) do
-#             if length(patches) > 1
-#                 patch(fn, patches[2:end]...)
-#             else
-#                 fn()
-#             end
-#         end
-#     else
-#         fn()
-#     end
-# end
+        new(original, replacement, signature)
+    end
+end
 
-# function patch(fn::Function, p::Patch)
-#     patch(p.mod, p.name, p.rep) do
-#         fn()
-#     end
-# end
+patch(body::Function, mocks::Array{Mock}) = patch(body, mocks...)
+
+function patch(body::Function, mocks::Mock...)
+    if length(mocks) > 0
+        patch(mocks[1]) do
+            if length(mocks) > 1
+                patch(body, mocks[2:end]...)
+            else
+                body()
+            end
+        end
+    else
+        body()
+    end
+end
+
+function patch(body::Function, mock::Mock)
+    patch(body, mock.original, mock.replacement, mock.signature)
+end
 
 function patch(body::Function, old_func::Function, new_func::Function, sig::Type=Void)
     if !isgeneric(new_func)
@@ -44,19 +61,6 @@ function patch(body::Function, old_func::Function, new_func::Function, sig::Type
         override(body, old_func, new_func, sig)
     end
 end
-
-# patch(fn::Function, obj::Any, name::Symbol, rep::Any) = applypatch(fn, Core, :($obj.$name), rep)
-# patch(fn::Function, mod::Module, name::Symbol, rep::Any) = applypatch(fn, mod, name, rep)
-
-# function applypatch(fn::Function, mod::Module, name::Union{Expr,Symbol}, rep::Any)
-#     const old = mod.eval(name)
-#     mod.eval(:($name = $rep))
-#     try
-#         fn()
-#     finally
-#         mod.eval(:($name = $old))
-#     end
-# end
 
 function backup(body::Function, new_func::Function, sig::Type=Void)
     name = Base.function_name(new_func)
