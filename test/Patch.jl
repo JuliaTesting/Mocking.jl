@@ -39,11 +39,25 @@ let open = Base.open
 
     @test_throws SystemError open("foo")
 
-    replacement = (name::AbstractString) -> name == "foo" ? "bar" : Original.open(name)
+    replacement = (name::AbstractString) -> name == "foo" ? IOBuffer("bar") : Original.open(name)
     Patch.patch(open, replacement) do
-        @test open("foo") == "bar"
+        @test readall(open("foo")) == "bar"
+        @test readall("foo") == "bar"  # patch doesn't overload internal calls
         @test isa(open(tempdir()), IOStream)
     end
 
     @test_throws SystemError open("foo")
 end
+
+# Let blocks seem more forgiving
+@test_throws SystemError open("foobar.txt")
+
+mock_open = (name::AbstractString) -> name == "foobar.txt" ? IOBuffer("Hello Julia") : Original.open(name)
+
+patch(open, mock_open) do
+    @test readall(open("foobar.txt")) == "Hello Julia"
+    @test readall("foobar.txt") == "Hello Julia"  # patch doesn't overload internal calls
+    @test isa(open(tempdir()), IOStream)
+end
+
+@test_throws SystemError open("foobar.txt")
