@@ -63,11 +63,12 @@ end
 
 
 # Replacing isfile is tricky as it uses varargs.
-@test isfile("/etc/timezone") == false
+tmp_file = tempname()
+@test isfile(tmp_file) == false
 
-mock_isfile = (f::AbstractString) -> f == "/etc/timezone" ? true : Original.isfile(f)
+mock_isfile = (f::AbstractString) -> f == tmp_file ? true : Original.isfile(f)
 mend(isfile, mock_isfile) do
-    @test isfile("/etc/timezone") == true
+    @test isfile(tmp_file) == true
 end
 
-@test isfile("/etc/timezone") == false
+@test isfile(tmp_file) == false
