@@ -10,26 +10,31 @@ include("signature.jl")
 type Mock
     original::Function
     replacement::Function  # only non-generic functions
-    signature::Type
+    signature::Signature
 
-    function Mock(original::Function, replacement::Function, signature::Type=Void)
-        if !isgeneric(replacement)
-            signature = signature(replacement)
-        elseif signature != Void
+    function Mock(original::Function, replacement::Function, signature::Signature)
+        if isgeneric(replacement)
             m = methods(replacement, signature)
             if length(m) == 1
                 replacement = m[1].func
             elseif length(m) == 0
-                error("no matching methods in replacement function")
+                error("explicit signature does not match any method")
             else
-                error("method is ambigious; please make signature more specific")
+                error("explicit signature is ambigious; please make signature more specific")
             end
-        else
-            error("signature is required when replacement is a generic function")
         end
 
-        new(original, replacement, signature)
+        return Mock(original, replacement, signature)
     end
+end
+
+function Mock(original::Function, replacement::Function)
+    if !isgeneric(replacement)
+        signature = Signature(replacement)
+    else
+        error("explicit signature required when replacement is a generic function")
+    end
+    Mock(original, replacement, signature)
 end
 
 patch(body::Function, mocks::Array{Mock}) = patch(body, mocks...)
@@ -52,35 +57,42 @@ function patch(body::Function, mock::Mock)
     patch(body, mock.original, mock.replacement, mock.signature)
 end
 
-function patch(body::Function, old_func::Function, new_func::Function, sig::Type=Void)
+function patch(body::Function, old_func::Function, new_func::Function)
     if !isgeneric(new_func)
-        sig = signature(new_func)
+        signature = Signature(new_func)
+    else
+        error("explicit signature required when replacement is a generic function")
     end
+    patch(body, old_func, new_func, signature)
+end
 
-    backup(old_func, sig) do
-        override(body, old_func, new_func, sig)
+function patch(body::Function, old_func::Function, new_func::Function, signature::Signature)
+    backup(old_func, signature) do
+        override(body, old_func, new_func, signature)
     end
 end
 
-function backup(body::Function, new_func::Function, sig::Type=Void)
+function backup(body::Function, new_func::Function, signature::Signature)
     name = Base.function_name(new_func)
-    if !isgeneric(new_func)
-        sig = signature(new_func)
-    elseif sig == Void
-        error("explicit signature is required for generic functions")
-    end
-    # TODO: Generate this as just an expression
-    expr = parse("$name(" * join(["::$t" for t in array(sig)], ",") * ") = nothing")
+    types = [:(::$t) for t in signature.types]
+    expr = :($name($(types...)) = nothing)
     const org_func = Original.eval(expr)
-    return override(body, org_func, new_func, sig)
+    return override(body, org_func, new_func, signature)
 end
 
 
-function override(body::Function, old_func::Function, new_func::Function, sig::Type=Void)
+function override(body::Function, old_func::Function, new_func::Function)
     if !isgeneric(new_func)
-        sig = signature(new_func)
-    elseif sig != Void
-        m = methods(new_func, sig)
+        signature = Signature(new_func)
+    else
+        error("explicit signature required when replacement is a generic function")
+    end
+    override(body, old_func, new_func, signature)
+end
+
+function override(body::Function, old_func::Function, new_func::Function, signature::Signature)
+    if isgeneric(new_func)
+        m = methods(new_func, signature)
         if length(m) == 1
             new_func = m[1].func
         elseif length(m) == 0
@@ -88,13 +100,12 @@ function override(body::Function, old_func::Function, new_func::Function, sig::T
         else
             error("explicit signature is ambigious; please make signature more specific")
         end
-    else
-        error("explicit signature required when replacement is a generic function")
     end
+
 
     # Replace the old Function with the new anonymous Function
     if isgeneric(old_func)
-        m = methods(old_func, sig)
+        m = methods(old_func, signature)
         if length(m) == 1
             method = m[1]
         elseif length(m) == 0
@@ -131,12 +142,11 @@ function override_internal(body::Function, old_method::Method, new_func::Functio
 
     mod = old_method.func.code.module
     name = old_method.func.code.name
-    sig = old_method.sig
 
     # Overwrite a method such that Julia calls the updated function.
-    # TODO: Generate this with only expressions
     isdefined(mod, name) || throw(MethodError("method $name does not exist in module $mod"))
-    expr = parse("$name(" * join(["::$t" for t in array(sig)], ",") * ") = nothing")
+    types = [:(::$t) for t in Signature(old_method).types]
+    expr = :($name($(types...)) = nothing)
 
     org_func = old_method.func
     mod.eval(expr)  # Causes warning

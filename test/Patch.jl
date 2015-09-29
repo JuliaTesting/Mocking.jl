@@ -34,15 +34,15 @@ end
 let open = Base.open
     @test_throws SystemError open("foo")
 
+    # Ambigious replacments should raise an exception
     replacement = (name) -> name == "foo" ? "bar" : Original.open(name)
-    @test_throws ErrorException Patch.patch(open, replacement) do nothing end
+    @test_throws ErrorException Patch.patch(() -> nothing, open, replacement)
 
     @test_throws SystemError open("foo")
 
     replacement = (name::AbstractString) -> name == "foo" ? IOBuffer("bar") : Original.open(name)
     Patch.patch(open, replacement) do
         @test readall(open("foo")) == "bar"
-        @test readall("foo") == "bar"  # patch doesn't overload internal calls
         @test isa(open(tempdir()), IOStream)
     end
 
@@ -56,8 +56,18 @@ mock_open = (name::AbstractString) -> name == "foobar.txt" ? IOBuffer("Hello Jul
 
 patch(open, mock_open) do
     @test readall(open("foobar.txt")) == "Hello Julia"
-    @test readall("foobar.txt") == "Hello Julia"  # patch doesn't overload internal calls
     @test isa(open(tempdir()), IOStream)
 end
 
 @test_throws SystemError open("foobar.txt")
+
+
+# Replacing isfile is tricky as it uses varargs.
+@test isfile("/etc/timezone") == false
+
+mock_isfile = (f::AbstractString) -> f == "/etc/timezone" ? true : Original.isfile(f)
+patch(isfile, mock_isfile) do
+    @test isfile("/etc/timezone") == true
+end
+
+@test isfile("/etc/timezone") == false

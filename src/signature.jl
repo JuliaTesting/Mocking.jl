@@ -1,4 +1,4 @@
-import Base: methods, ==
+import Base: Expr, methods, ==, convert
 
 type Signature
     types::Array{Type}
@@ -9,10 +9,13 @@ function Signature(f::Function)
     return Signature(types)
 end
 
-Signature(m::Method) = Signature(m.func)
+function Signature(m::Method)
+    names, types = parameters(m)
+    return Signature(types)
+end
 
 function methods(f::Function, sig::Signature)
-    matching = methods(f, Tuple(sig))
+    matching = methods(f, convert(Tuple, sig))
     if length(matching) > 1
         for m in matching
             Signature(m) == sig && return [m]
@@ -21,9 +24,20 @@ function methods(f::Function, sig::Signature)
     return matching
 end
 
-Tuple(s::Signature) = Tuple{s.types...}
 ==(a::Signature, b::Signature) = a.types == b.types
 
+convert(::Type{Tuple}, s::Signature) = Tuple{s.types...}
+
+function parameters(m::Method)
+    expr = Base.uncompressed_ast(m.func.code).args[1]
+    names = Array{Symbol}(length(expr))
+    types = Array{Type}(length(expr))
+    for (i, field) in enumerate(expr)
+        names[i] = isa(field, Symbol) ? field : field.args[1]
+        types[i] = m.sig.parameters[i]
+    end
+    return names, types
+end
 
 function parameters(f::Function)
     isgeneric(f) && throw(ArgumentError("only works for anonymous functions"))
