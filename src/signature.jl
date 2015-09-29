@@ -1,28 +1,43 @@
-doc"""
-Determines the type signature of an anonymous function
-"""
-function signature(f::Function)
-    isgeneric(f) && throw(ArgumentError("only works for anonymous functions"))
-    expr = Base.uncompressed_ast(f.code).args[1]
-    sig = Array{Type}(length(expr))
-    for (i, field) in enumerate(expr)
-        sub = field.args[2]
-        if isa(sub, Expr) && sub.head == :...
-            sig[i] = Vararg{eval(sub.args[1])}
-        else
-            sig[i] = eval(sub)
-        end
-    end
-    return eval(:(Tuple{$(sig...)}))
+import Base: methods, ==
+
+type Signature
+    types::Array{Type}
 end
 
-function array(signature::Type)
-    signature <: Tuple || throw(ArgumentError("signature expected to be a Tuple type"))
-    expr = parse(string(signature))  # Note: :($signature) should work but doesn't
-    isa(expr, Symbol) && return Type[]  # When signature = Tuple
-    sig = Array{Type}(length(expr.args) - 1)
-    for i in 1:length(expr.args) - 1
-        sig[i] = eval(expr.args[i + 1])
+function Signature(f::Function)
+    names, types = parameters(f)
+    return Signature(types)
+end
+
+Signature(m::Method) = Signature(m.func)
+
+function methods(f::Function, sig::Signature)
+    matching = methods(f, Tuple(sig))
+    if length(matching) > 1
+        for m in matching
+            Signature(m) == sig && return [m]
+        end
     end
-    return sig
+    return matching
+end
+
+Tuple(s::Signature) = Tuple{s.types...}
+==(a::Signature, b::Signature) = a.types == b.types
+
+
+function parameters(f::Function)
+    isgeneric(f) && throw(ArgumentError("only works for anonymous functions"))
+    expr = Base.uncompressed_ast(f.code).args[1]
+    names = Array{Symbol}(length(expr))
+    types = Array{Type}(length(expr))
+    for (i, field) in enumerate(expr)
+        name, typ = isa(field, Symbol) ? (field, Any) : field.args
+        names[i] = name
+        if isa(typ, Expr) && typ.head == :...
+            types[i] = Vararg{eval(typ.args[1])}
+        else
+            types[i] = eval(typ)
+        end
+    end
+    return names, types
 end

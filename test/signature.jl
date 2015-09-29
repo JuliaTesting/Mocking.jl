@@ -1,17 +1,63 @@
-# Test Patch.signature
+import Patch: Signature, parameters
+
+# Only can work on non-generic functions
 let generic() = nothing
-    @test_throws ArgumentError Patch.signature(generic)
+    @test_throws ArgumentError parameters(generic)
+    @test_throws ArgumentError Signature(generic)
 end
 
-@test Patch.signature(() -> nothing) == Tuple{}
-@test Patch.signature((v) -> nothing) == Tuple{Any}
-@test Patch.signature((v::Int64) -> nothing) == Tuple{Int64}
-@test Patch.signature((v, n::AbstractString) -> nothing) == Tuple{Any,AbstractString}
-@test Patch.signature((name...) -> nothing) == Tuple
+f = () -> nothing
+@test parameters(f) == (Symbol[], Type[])
+@test Signature(f) == Signature([])
+@test Tuple(Signature(f)) == Tuple{}
 
-# Tests for Patch.array
-@test_throws ArgumentError Patch.array(Any)
+f = (a) -> nothing
+@test parameters(f) == ([:a], [Any])
+@test Signature(f) == Signature([Any])
+@test Tuple(Signature(f)) == Tuple{Any}
 
-@test Patch.array(Tuple{Any,AbstractArray{Int64,1}}) == Type[Any, AbstractArray{Int64,1}]
-@test Patch.array(Tuple{}) == Type[]
-@test Patch.array(Tuple) == Type[]
+f = (a::Int64) -> nothing
+@test parameters(f) == ([:a], [Int64])
+@test Signature(f) == Signature([Int64])
+@test Tuple(Signature(f)) == Tuple{Int64}
+
+f = (a, b::AbstractString) -> nothing
+@test parameters(f) == ([:a, :b], [Any, AbstractString])
+@test Signature(f) == Signature([Any, AbstractString])
+@test Tuple(Signature(f)) == Tuple{Any,AbstractString}
+
+f = (a...) -> nothing
+@test parameters(f) == ([:a], [Vararg{Any}])
+@test Signature(f) == Signature([Vararg{Any}])
+@test Tuple(Signature(f)) == Tuple  # Note: Tuple == Tuple{Vararg{Any}}
+
+f = (a, b...) -> nothing
+@test parameters(f) == ([:a, :b], [Any, Vararg{Any}])
+@test Signature(f) == Signature([Any, Vararg{Any}])
+@test Tuple(Signature(f)) == Tuple{Any,Vararg{Any}}
+
+# New "methods" method allows us to isolate a vararg method
+let
+    m() = "empty"
+    m(arg) = "arg"
+    m(args...) = "vararg"
+
+    @test length(methods(m, Tuple{Vararg{Any}})) == 3
+
+    results = methods(m, Signature([Vararg{Any}]))
+    @test length(results) == 1
+    @test first(results).func() == "vararg"
+end
+
+# Since we check for signature equality we could run into issues
+# with selecting methods via a subtype
+let
+    m(a::Number) = Number
+    m(a::Integer) = Integer
+
+    @test length(methods(m, Tuple{Int64})) == 1
+
+    results = methods(m, Signature([Int64]))
+    @test length(results) == 1
+    @test first(results).func(0) == Integer
+end
