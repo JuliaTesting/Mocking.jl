@@ -1,5 +1,5 @@
-using PatchWork
+using Patchwork
 using Base.Test
 
 include("signature.jl")
-include("PatchWork.jl")
+include("Patchwork.jl")

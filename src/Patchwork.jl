@@ -1,4 +1,4 @@
-module PatchWork
+module Patchwork
 
 export Original, Patch, mend
 
