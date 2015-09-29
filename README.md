@@ -1,3 +1,3 @@
-# Patch
+# PatchWork
 
-[![Build Status](https://travis-ci.org/samuel-massinon-invenia/Patch.jl.svg?branch=master)](https://travis-ci.org/samuel-massinon-invenia/Patch.jl)
+[![Build Status](https://travis-ci.org/omus/PatchWork.jl.svg?branch=master)](https://travis-ci.org/omus/PatchWork.jl)

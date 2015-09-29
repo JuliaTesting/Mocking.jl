@@ -1,4 +1,4 @@
-import Patch: Signature, parameters
+import PatchWork: Signature, parameters
 
 # Only can work on non-generic functions
 let generic() = nothing

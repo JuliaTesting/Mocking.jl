@@ -1,18 +1,18 @@
-module Patch
+module PatchWork
 
-export Original, Mock, patch
+export Original, Patch, mend
 
 module Original
 end
 
 include("signature.jl")
 
-type Mock
+type Patch
     original::Function
     replacement::Function  # only non-generic functions
     signature::Signature
 
-    function Mock(original::Function, replacement::Function, signature::Signature)
+    function Patch(original::Function, replacement::Function, signature::Signature)
         if isgeneric(replacement)
             m = methods(replacement, signature)
             if length(m) == 1
@@ -24,26 +24,26 @@ type Mock
             end
         end
 
-        return Mock(original, replacement, signature)
+        return Patch(original, replacement, signature)
     end
 end
 
-function Mock(original::Function, replacement::Function)
+function Patch(original::Function, replacement::Function)
     if !isgeneric(replacement)
         signature = Signature(replacement)
     else
         error("explicit signature required when replacement is a generic function")
     end
-    Mock(original, replacement, signature)
+    Patch(original, replacement, signature)
 end
 
-patch(body::Function, mocks::Array{Mock}) = patch(body, mocks...)
+mend(body::Function, patches::Array{Patch}) = mend(body, patches...)
 
-function patch(body::Function, mocks::Mock...)
-    if length(mocks) > 0
-        patch(mocks[1]) do
-            if length(mocks) > 1
-                patch(body, mocks[2:end]...)
+function mend(body::Function, patches::Patch...)
+    if length(patches) > 0
+        mend(patches[1]) do
+            if length(patches) > 1
+                mend(body, patches[2:end]...)
             else
                 body()
             end
@@ -53,20 +53,20 @@ function patch(body::Function, mocks::Mock...)
     end
 end
 
-function patch(body::Function, mock::Mock)
-    patch(body, mock.original, mock.replacement, mock.signature)
+function mend(body::Function, patch::Patch)
+    mend(body, patch.original, patch.replacement, patch.signature)
 end
 
-function patch(body::Function, old_func::Function, new_func::Function)
+function mend(body::Function, old_func::Function, new_func::Function)
     if !isgeneric(new_func)
         signature = Signature(new_func)
     else
         error("explicit signature required when replacement is a generic function")
     end
-    patch(body, old_func, new_func, signature)
+    mend(body, old_func, new_func, signature)
 end
 
-function patch(body::Function, old_func::Function, new_func::Function, signature::Signature)
+function mend(body::Function, old_func::Function, new_func::Function, signature::Signature)
     backup(old_func, signature) do
         override(body, old_func, new_func, signature)
     end
