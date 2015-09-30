@@ -49,6 +49,27 @@ let open = Base.open
     @test_throws SystemError open("foo")
 end
 
+# Ensure that compiled functions that use methods we will mend are modified
+let
+    internal() = open("foo")
+    @test_throws SystemError internal()
+
+    replacement(name::AbstractString) = IOBuffer("bar")
+    mend(open, replacement) do
+        @test_throws SystemError internal()
+    end
+end
+
+let
+    internal() = open(["foo"]...)
+    @test_throws SystemError internal()
+
+    replacement(name::AbstractString) = IOBuffer("bar")
+    mend(open, replacement) do
+        @test readall(internal()) == "bar"
+    end
+end
+
 # Let blocks seem more forgiving
 @test !isfile("foobar.txt")
 @test_throws SystemError open("foobar.txt")
