@@ -50,6 +50,7 @@ let open = Base.open
 end
 
 # Let blocks seem more forgiving
+@test !isfile("foobar.txt")
 @test_throws SystemError open("foobar.txt")
 
 mock_open = (name::AbstractString) -> name == "foobar.txt" ? IOBuffer("Hello Julia") : Original.open(name)

@@ -24,7 +24,7 @@ type Patch
             end
         end
 
-        return Patch(original, replacement, signature)
+        return new(original, replacement, signature)
     end
 end
 
@@ -72,12 +72,12 @@ function mend(body::Function, old_func::Function, new_func::Function, signature:
     end
 end
 
-function backup(body::Function, new_func::Function, signature::Signature)
-    name = Base.function_name(new_func)
+function backup(body::Function, org_func::Function, signature::Signature)
+    name = Base.function_name(org_func)
     types = [:(::$t) for t in signature.types]
     expr = :($name($(types...)) = nothing)
-    const org_func = Original.eval(expr)
-    return override(body, org_func, new_func, signature)
+    const backup_func = Original.eval(expr)
+    return override(body, backup_func, org_func, signature)
 end
 
 
