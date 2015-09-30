@@ -32,7 +32,14 @@ function Patch(original::Function, replacement::Function)
     if !isgeneric(replacement)
         signature = Signature(replacement)
     else
-        error("explicit signature required when replacement is a generic function")
+        m = collect(methods(replacement))
+        if length(m) == 1
+            signature = Signature(m[1])
+        elseif length(m) == 0
+            error("generic function doesn't contain any methods")
+        else
+            error("explicit signature required when replacement is a generic function with more than one method")
+        end
     end
     Patch(original, replacement, signature)
 end
@@ -61,7 +68,14 @@ function mend(body::Function, old_func::Function, new_func::Function)
     if !isgeneric(new_func)
         signature = Signature(new_func)
     else
-        error("explicit signature required when replacement is a generic function")
+        m = collect(methods(new_func))
+        if length(m) == 1
+            signature = Signature(m[1])
+        elseif length(m) == 0
+            error("generic function doesn't contain any methods")
+        else
+            error("explicit signature required when replacement is a generic function with more than one method")
+        end
     end
     mend(body, old_func, new_func, signature)
 end
@@ -85,7 +99,14 @@ function override(body::Function, old_func::Function, new_func::Function)
     if !isgeneric(new_func)
         signature = Signature(new_func)
     else
-        error("explicit signature required when replacement is a generic function")
+        m = collect(methods(new_func))
+        if length(m) == 1
+            signature = Signature(m[1])
+        elseif length(m) == 0
+            error("generic function doesn't contain any methods")
+        else
+            error("explicit signature required when replacement is a generic function with more than one method")
+        end
     end
     override(body, old_func, new_func, signature)
 end
@@ -96,9 +117,9 @@ function override(body::Function, old_func::Function, new_func::Function, signat
         if length(m) == 1
             new_func = m[1].func
         elseif length(m) == 0
-            error("explicit signature does not match any method")
+            error("signature does not match any method in function $new_func")
         else
-            error("explicit signature is ambigious; please make signature more specific")
+            error("signature is ambigious; please make signature more specific\n    " * join(m, "\n    ") * "\n")
         end
     end
 
@@ -111,7 +132,7 @@ function override(body::Function, old_func::Function, new_func::Function, signat
         elseif length(m) == 0
             error("function signature does not exist")
         else
-            error("ambigious function signature; please make signature more specific")
+            error("ambigious function signature; please make signature more specific\n    " * join(m, "\n    ") * "\n")
         end
 
         return override_internal(body, method, new_func)
