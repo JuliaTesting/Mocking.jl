@@ -1,4 +1,4 @@
-The Patchwork.jl package is licensed under version 2.0 of the Apache License:
+The Mocking.jl package is licensed under version 2.0 of the Apache License:
 
 > Copyright (c) 2015: Samuel Massinon.
 >

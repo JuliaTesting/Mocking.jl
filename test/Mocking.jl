@@ -1,4 +1,4 @@
-import Patchwork: override, mend
+import Mocking: override, mend
 using Base.Test
 
 # Test the concept of overwritten methods in Julia

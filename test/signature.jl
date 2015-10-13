@@ -1,4 +1,4 @@
-import Patchwork: Signature, parameters
+import Mocking: Signature, parameters
 
 # Only can work on non-generic functions
 let generic() = nothing
