@@ -170,14 +170,39 @@ function override_internal(body::Function, old_method::Method, new_func::Functio
     expr = :($name($(types...)) = nothing)
 
     org_func = old_method.func
-    mod.eval(expr)  # Causes warning
+
+    # Ignore warning "Method definition ... overwritten"
+    ignore_stderr() do
+        mod.eval(expr)
+    end
+
     old_method.func = new_func
 
     try
         return body()
     finally
-        mod.eval(expr)  # Causes warning
+        # Ignore warning "Method definition ... overwritten"
+        ignore_stderr() do
+            mod.eval(expr)
+        end
         old_method.func = org_func
+    end
+end
+
+function ignore_stderr(body::Function)
+    # TODO: Need to figure out what to do on Windows...
+    @windows_only return body()
+
+    stderr = Base.STDERR
+    null = open("/dev/null", "w")
+    redirect_stderr(null)
+    try
+        return body()
+    catch
+        # Note: Catch runs prior to finally but errors seem to display fine
+        rethrow()
+    finally
+        redirect_stderr(stderr)
     end
 end
 
