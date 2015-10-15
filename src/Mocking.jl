@@ -2,7 +2,7 @@ module Mocking
 
 export Original, Patch, mend
 
-module Original
+baremodule Original
 end
 
 include("signature.jl")
@@ -90,7 +90,7 @@ function backup(body::Function, org_func::Function, signature::Signature)
     name = Base.function_name(org_func)
     types = [:(::$t) for t in signature.types]
     expr = :($name($(types...)) = nothing)
-    const backup_func = Original.eval(expr)
+    const backup_func = Core.eval(Original, expr)
     return override(body, backup_func, org_func, signature)
 end
 
@@ -173,7 +173,7 @@ function override_internal(body::Function, old_method::Method, new_func::Functio
 
     # Ignore warning "Method definition ... overwritten"
     ignore_stderr() do
-        mod.eval(expr)
+        Core.eval(mod, expr)
     end
 
     old_method.func = new_func
@@ -183,7 +183,7 @@ function override_internal(body::Function, old_method::Method, new_func::Functio
     finally
         # Ignore warning "Method definition ... overwritten"
         ignore_stderr() do
-            mod.eval(expr)
+            Core.eval(mod, expr)
         end
         old_method.func = org_func
     end

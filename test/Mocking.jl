@@ -36,7 +36,9 @@ let open = Base.open
 
     # Ambigious replacments should raise an exception
     replacement = (name) -> name == "foo" ? "bar" : Original.open(name)
+    @test_throws UndefVarError Original.open
     @test_throws ErrorException mend(() -> nothing, open, replacement)
+    @test isa(Original.open, Function)  # TODO: Original methods should be cleared after mend
 
     @test_throws SystemError open("foo")
 
