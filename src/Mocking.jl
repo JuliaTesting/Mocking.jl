@@ -38,7 +38,7 @@ function Patch(original::Function, replacement::Function)
         elseif length(m) == 0
             error("generic function doesn't contain any methods")
         else
-            error("explicit signature required when replacement is a generic function with more than one method")
+            error("explicit signature required since replacement $replacement is a generic function with more than one method")
         end
     end
     Patch(original, replacement, signature)
@@ -74,7 +74,7 @@ function mend(body::Function, old_func::Function, new_func::Function)
         elseif length(m) == 0
             error("generic function doesn't contain any methods")
         else
-            error("explicit signature required when replacement is a generic function with more than one method")
+            error("explicit signature required since replacement $new_func is a generic function with more than one method")
         end
     end
     mend(body, old_func, new_func, signature)
@@ -105,7 +105,7 @@ function override(body::Function, old_func::Function, new_func::Function)
         elseif length(m) == 0
             error("generic function doesn't contain any methods")
         else
-            error("explicit signature required when replacement is a generic function with more than one method")
+            error("explicit signature required since replacement $new_func is a generic function with more than one method")
         end
     end
     override(body, old_func, new_func, signature)
