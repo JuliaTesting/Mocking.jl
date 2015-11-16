@@ -45,7 +45,7 @@ let open = Base.open
     replacement = (name::AbstractString) -> name == "foo" ? IOBuffer("bar") : Original.open(name)
     mend(open, replacement) do
         @test readall(open("foo")) == "bar"
-        @test isa(open(tempdir()), IOStream)
+        @test isa(open(@__FILE__), IOStream)
     end
 
     @test_throws SystemError open("foo")
@@ -81,7 +81,7 @@ mock_open = (name::AbstractString) -> name == "foobar.txt" ? IOBuffer("Hello Jul
 
 mend(open, mock_open) do
     @test readall(open("foobar.txt")) == "Hello Julia"
-    @test isa(open(tempdir()), IOStream)
+    @test isa(open(@__FILE__), IOStream)
 end
 
 @test_throws SystemError open("foobar.txt")
