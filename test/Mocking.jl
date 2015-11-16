@@ -51,19 +51,19 @@ let open = Base.open
     @test_throws SystemError open("foo")
 end
 
-# Ensure that compiled functions that use methods we will mend are modified
+# Ensure that compiled functions that use methods that will be mended are modified
 let
     internal() = open("foo")
     @test_throws SystemError internal()
 
     replacement(name::AbstractString) = IOBuffer("bar")
     mend(open, replacement) do
-        @test_throws SystemError internal()
+        @test_throws SystemError internal()  # Mend fails as open will be embedded in internal
     end
 end
 
 let
-    internal() = open(["foo"]...)
+    internal() = open(["foo"]...)  # Force open not to inline
     @test_throws SystemError internal()
 
     replacement(name::AbstractString) = IOBuffer("bar")
@@ -71,6 +71,7 @@ let
         @test readall(internal()) == "bar"
     end
 end
+
 
 # Let blocks seem more forgiving
 @test !isfile("foobar.txt")
