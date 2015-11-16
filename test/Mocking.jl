@@ -88,7 +88,7 @@ end
 
 
 # Replacing isfile is tricky as it uses varargs.
-tmp_file = tempname()
+tmp_file = string(@__FILE__, ".null")  # Note: tempfile() on Windows creates a file
 @test isfile(tmp_file) == false
 
 mock_isfile = (f::AbstractString) -> f == tmp_file ? true : Original.isfile(f)
