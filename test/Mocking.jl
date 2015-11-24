@@ -112,18 +112,39 @@ end
 
 ### User assistive error messages ###
 
-# User attempted to override a generic function with no methods
-let generic, empty_body = () -> nothing, replacement = () -> true
+# Attempt to override a generic function with no methods
+let generic, empty_body = () -> nothing
     function generic end
+    replacement() = true
     @test_throws ErrorException mend(empty_body, generic, replacement)
     @test_throws ErrorException override(empty_body, generic, replacement)
     @test_throws ErrorException override(empty_body, generic, replacement, Signature([Any]))
 end
 
-# User attempted to override a generic function
-let generic, empty_body = () -> nothing, replacement = (value) -> true
+# Attempt to override a generic function with a generic function containing no methods
+let generic, empty_body = () -> nothing
+    generic() = true
+    function replacement end
+    @test_throws ErrorException mend(empty_body, generic, replacement)
+    @test_throws ErrorException override(empty_body, generic, replacement)
+    @test_throws ErrorException override(empty_body, generic, replacement, Signature([Any]))
+end
+
+# Attempt to override a ambiguious generic function
+let generic, empty_body = () -> nothing
     generic(value::AbstractString) = value
     generic(value::Integer) = -value
+    replacement(value) = true
+    @test_throws ErrorException mend(empty_body, generic, replacement)
+    @test_throws ErrorException override(empty_body, generic, replacement)
+    @test_throws ErrorException override(empty_body, generic, replacement, Signature([Any]))
+end
+
+# Attempt to override an non-ambiguious generic function with an ambiguious generic function
+let generic, empty_body = () -> nothing
+    generic(value) = value
+    replacement(value::AbstractString) = "foo"
+    replacement(value::Integer) = 0
     @test_throws ErrorException mend(empty_body, generic, replacement)
     @test_throws ErrorException override(empty_body, generic, replacement)
     @test_throws ErrorException override(empty_body, generic, replacement, Signature([Any]))
