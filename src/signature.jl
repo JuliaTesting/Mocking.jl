@@ -58,11 +58,3 @@ function parameters(f::Function)
     return names, types
 end
 
-# Based upon Base.to_tuple_type(::ANY)
-function to_array_type(t::ANY)
-    if isa(t, Tuple) || isa(t, AbstractArray) || isa(t, SimpleVector)
-        return Type[t...]
-    else
-        error("argument tuple type must contain only types")
-    end
-end

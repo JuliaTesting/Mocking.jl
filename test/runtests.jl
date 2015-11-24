@@ -1,5 +1,6 @@
 using Mocking
 using Base.Test
 
-include("signature.jl")
 include("Mocking.jl")
+include("signature.jl")
+include("util.jl")

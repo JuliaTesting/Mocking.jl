@@ -6,6 +6,7 @@ baremodule Original
 end
 
 include("signature.jl")
+include("util.jl")
 
 macro mendable(expr)
     return :(eval($(Expr(:quote, expr))))
@@ -201,21 +202,6 @@ function override_internal(body::Function, old_method::Method, new_func::Functio
     end
 end
 
-function ignore_stderr(body::Function)
-    # TODO: Need to figure out what to do on Windows...
-    @windows_only return body()
 
-    stderr = Base.STDERR
-    null = open("/dev/null", "w")
-    redirect_stderr(null)
-    try
-        return body()
-    catch
-        # Note: Catch runs prior to finally but errors seem to display fine
-        rethrow()
-    finally
-        redirect_stderr(stderr)
-    end
-end
 
 end # module
