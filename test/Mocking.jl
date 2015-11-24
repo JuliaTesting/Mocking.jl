@@ -125,9 +125,11 @@ end
 let generic, empty_body = () -> nothing
     generic() = true
     function replacement end
-    @test_throws ErrorException mend(empty_body, generic, replacement)
     @test_throws ErrorException override(empty_body, generic, replacement)
     @test_throws ErrorException override(empty_body, generic, replacement, Signature([Any]))
+    @test_throws ErrorException mend(empty_body, generic, replacement)
+    @test_throws ErrorException Patch(generic, replacement)
+    @test_throws ErrorException Patch(generic, replacement, [Any])
 end
 
 # Attempt to override a ambiguious generic function
@@ -148,4 +150,6 @@ let generic, empty_body = () -> nothing
     @test_throws ErrorException mend(empty_body, generic, replacement)
     @test_throws ErrorException override(empty_body, generic, replacement)
     @test_throws ErrorException override(empty_body, generic, replacement, Signature([Any]))
+    @test_throws ErrorException Patch(generic, replacement)
+    @test_throws ErrorException Patch(generic, replacement, [Any])
 end
