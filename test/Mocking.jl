@@ -63,12 +63,12 @@ let
 end
 
 let
-    internal() = open(["foo"]...)  # Force open not to inline
+    internal() = @mendable readall(open("foo"))  # Force open not to inline here
     @test_throws SystemError internal()
 
     replacement(name::AbstractString) = IOBuffer("bar")
     mend(open, replacement) do
-        @test readall(internal()) == "bar"
+        @test internal() == "bar"
     end
 end
 

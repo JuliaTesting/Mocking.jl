@@ -34,7 +34,7 @@ ERROR: SystemError: opening file foo: No such file or directory
  in open at iostream.jl:99
 ```
 
-## Issues with inlining
+## Compiler Issues
 
 When Julia compiles a function it may decide to inline the function call which you may want to mend:
 ```julia
@@ -56,11 +56,11 @@ ERROR: SystemError: opening file foo: No such file or directory
  in myfunc at none:1
 ```
 
-To stop Julia from inlining a particular call you can wrap the arguments with `[args; kwargs]...` to ensure that the call can be mended:
+To stop Julia from inlining a particular call you can wrap the function call with `@mendable` to ensure that the call can be mended:
 ```julia
 julia> using Mocking
 
-julia> myfunc() = open(["foo"]...)
+julia> myfunc() = @mendable open("foo")
 myfunc (generic function with 1 method)
 
 julia> Base.precompile(myfunc, ())

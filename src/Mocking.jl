@@ -1,11 +1,15 @@
 module Mocking
 
-export Original, Patch, mend
+export Original, Patch, mend, @mendable
 
 baremodule Original
 end
 
 include("signature.jl")
+
+macro mendable(expr)
+    return :(eval($(Expr(:quote, expr))))
+end
 
 type Patch
     original::Function
