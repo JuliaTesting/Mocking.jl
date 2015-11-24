@@ -48,6 +48,10 @@ function Patch(original::Function, replacement::Function)
     Patch(original, replacement, signature)
 end
 
+function Patch(original::Function, replacement::Function, signature::ANY)
+    Patch(original, replacement, Signature(signature))
+end
+
 mend(body::Function, patches::Array{Patch}) = mend(body, patches...)
 
 function mend(body::Function, patches::Patch...)
@@ -88,6 +92,10 @@ function mend(body::Function, old_func::Function, new_func::Function, signature:
     backup(old_func, signature) do
         override(body, old_func, new_func, signature)
     end
+end
+
+function mend(body::Function, old_func::Function, new_func::Function, signature::ANY)
+    mend(body, old_func, new_func, Signature(signature))
 end
 
 function backup(body::Function, org_func::Function, signature::Signature)

@@ -14,6 +14,8 @@ function Signature(m::Method)
     return Signature(types)
 end
 
+Signature(t::ANY) = Signature(to_array_type(t))
+
 function methods(f::Function, sig::Signature)
     matching = methods(f, convert(Tuple, sig))
     if length(matching) > 1
@@ -54,4 +56,13 @@ function parameters(f::Function)
         end
     end
     return names, types
+end
+
+# Based upon Base.to_tuple_type(::ANY)
+function to_array_type(t::ANY)
+    if isa(t, Tuple) || isa(t, AbstractArray) || isa(t, SimpleVector)
+        return Type[t...]
+    else
+        error("argument tuple type must contain only types")
+    end
 end
