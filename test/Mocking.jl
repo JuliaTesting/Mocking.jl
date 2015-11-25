@@ -110,6 +110,59 @@ end
 @test isfile(tmp_file) == false
 
 
+### Patch Interface ###
+
+# Patch interface should allow the same behaviour of using mend directly
+let open = Base.open
+    @test_throws SystemError open("foo")
+
+    replacement = (name) -> name == "foo" ? IOBuffer("bar") : Original.open(name)
+
+    # Ambiguious replacements should raise an exception
+    patch = Patch(open, replacement)
+    @test_throws ErrorException mend(patch) do
+        nothing
+    end
+
+    @test_throws SystemError open("foo")
+
+    # Replacement is no longer ambiguious if we supply a specific signature
+    patch = Patch(open, replacement, (AbstractString,))
+    mend(patch) do
+        @test readall(open("foo")) == "bar"
+        @test isa(open(@__FILE__), IOStream)  # Any other file works normally
+    end
+
+    @test_throws SystemError open("foo")
+
+    # Replacement is no longer ambiguious since we added a more specific signature
+    replacement = (name::AbstractString) -> name == "foo" ? IOBuffer("bar") : Original.open(name)
+    patch = Patch(open, replacement)
+    mend(patch) do
+        @test readall(open("foo")) == "bar"
+        @test isa(open(@__FILE__), IOStream)  # Any other file works normally
+    end
+
+    @test_throws SystemError open("foo")
+end
+
+# Pre-creating patches allows making the mend call easier to read
+let open = Base.open, isfile = Base.isfile
+    internal(filename) = @mendable isfile(filename) && readall(open(filename))
+
+    patch_isfile = Patch(isfile, (f::AbstractString) -> f == "foo" ? true : Original.isfile(f))
+    patch_open = Patch(open, (f::AbstractString) -> f == "foo" ? IOBuffer("bar") : Original.open(f))
+
+    mend(patch_isfile, patch_open) do
+        @test internal("foo") == "bar"
+    end
+
+    mend([patch_isfile, patch_open]) do
+        @test internal("foo") == "bar"
+    end
+end
+
+
 ### User assistive error messages ###
 
 # Attempt to override a generic function with no methods
