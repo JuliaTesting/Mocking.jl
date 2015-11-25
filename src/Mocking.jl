@@ -12,7 +12,7 @@ macro mendable(expr)
     return :(eval($(Expr(:quote, expr))))
 end
 
-type Patch
+immutable Patch
     original::Function
     replacement::Function  # only non-generic functions
     signature::Signature
