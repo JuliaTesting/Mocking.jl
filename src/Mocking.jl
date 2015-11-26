@@ -6,11 +6,8 @@ baremodule Original
 end
 
 include("signature.jl")
+include("mendable.jl")
 include("util.jl")
-
-macro mendable(expr)
-    return :(eval($(Expr(:quote, expr))))
-end
 
 immutable Patch
     original::Function
