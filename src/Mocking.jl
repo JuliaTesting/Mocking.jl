@@ -50,13 +50,11 @@ function Patch(original::Function, replacement::Function, signature::ANY)
     Patch(original, replacement, Signature(signature))
 end
 
-mend(body::Function, patches::Array{Patch}) = mend(body, patches...)
-
-function mend(body::Function, patches::Patch...)
+function mend(body::Function, patches::Array{Patch})
     if length(patches) > 0
         mend(patches[1]) do
             if length(patches) > 1
-                mend(body, patches[2:end]...)
+                mend(body, patches[2:end])
             else
                 body()
             end
@@ -65,6 +63,8 @@ function mend(body::Function, patches::Patch...)
         body()
     end
 end
+
+mend(body::Function, patches::Patch...) = mend(body, Patch[patches...])
 
 function mend(body::Function, patch::Patch)
     mend(body, patch.original, patch.replacement, patch.signature)

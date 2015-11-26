@@ -160,9 +160,16 @@ let open = Base.open, isfile = Base.isfile
     mend(patch_isfile, patch_open) do
         @test internal("foo") == "bar"
     end
-
     mend([patch_isfile, patch_open]) do
         @test internal("foo") == "bar"
+    end
+
+    # Strange corner cases that will probably never happen in reality
+    mend([patch_isfile]) do
+        @test_throws SystemError internal("foo")
+    end
+    mend(Patch[]) do
+        @test internal("foo") == false
     end
 end
 
