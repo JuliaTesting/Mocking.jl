@@ -1,3 +1,4 @@
+# Note: generated functions appear not be optimized
 macro mendable(expr)
-    return :(eval($(Expr(:quote, expr))))
+    esc(:((@generated $(gensym())() = $expr)()))
 end
