@@ -150,8 +150,12 @@ end
 let open = Base.open, isfile = Base.isfile
     internal(filename) = @mendable isfile(filename) && readall(open(filename))
 
-    patch_isfile = Patch(isfile, (f::AbstractString) -> f == "foo" ? true : Original.isfile(f))
-    patch_open = Patch(open, (f::AbstractString) -> f == "foo" ? IOBuffer("bar") : Original.open(f))
+    # Testing with both generic and anonymous functions
+    new_isfile(f::AbstractString) = f == "foo" ? true : Original.isfile(f)
+    new_open = (f::AbstractString) -> f == "foo" ? IOBuffer("bar") : Original.open(f)
+
+    patch_isfile = Patch(isfile, new_isfile)
+    patch_open = Patch(open, new_open)
 
     mend(patch_isfile, patch_open) do
         @test internal("foo") == "bar"
