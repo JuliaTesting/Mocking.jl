@@ -1,9 +1,14 @@
 import Mocking: ignore_stderr, to_array_type
 
-# TODO: Not a great test...
+# TODO: Still not a great test...
 @unix_only begin
-    ignore_stderr() do
-        warn("you should never see this!")
+    open("/dev/null", "w") do null
+        @test_throws ErrorException STDERR.name
+        ignore_stderr() do
+            warn("you should never see this!")
+            @test null.name == STDERR.name
+        end
+        @test_throws ErrorException STDERR.name
     end
 end
 
