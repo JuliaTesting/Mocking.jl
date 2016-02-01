@@ -1,6 +1,6 @@
 function module_and_name(m::Method)
-    mod = m.func.code.module
-    name = m.func.code.name
+    mod = m.func.module
+    name = m.func.name
     return mod, name
 end
 

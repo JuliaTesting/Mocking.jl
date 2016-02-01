@@ -39,25 +39,38 @@ end
 # Non-generic functions can be overridden no matter where they are defined
 let anonymous = () -> "foo"
     @test anonymous() == "foo"
-    Mocking.override(anonymous, () -> "bar") do
-        @test anonymous() == "bar"
+
+    # Note: As of Julia 0.5- all functions are generic
+    @test_throws FunctionError Mocking.override(anonymous, () -> "bar") do
+        nothing  # Note: Never should be executed
     end
+
     @test anonymous() == "foo"
 end
 
-# Generic functions cannot be overridden temporarily in a let if they are defined globally
-# within a module.
+# Generic functions can be overridden temporarily in a let if they are defined globally
+# within a module. Unfortunately there are issues with this...
 temp() = nothing
 temp(v) = nothing
 let t = temp
     @test methods(t) == methods(temp)
 
+    # As of Julia 0.5 attempting to add new method or override one will restrict the method
+    # table to only contain functions defined within the scope of the let
     t(s::AbstractString) = s
-    @test length(methods(t)) == 3
+    @test length(methods(t)) == 1
+    @test length(methods(temp)) == 2
+end
+
+# Using a let block and using the globally defined function directly acts in the way we want
+let
+    @test length(methods(temp)) == 2
+    temp(s::UTF8String) = s
     @test length(methods(temp)) == 3
 end
 
-# The changes made in the let block are permanent
+# The downside is that the function will be permanently modified for the duration of the
+# Julia session
 @test length(methods(temp)) == 3
 
 
