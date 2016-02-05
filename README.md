@@ -1,8 +1,8 @@
 # Mocking
 
-[![Build Status](https://travis-ci.org/invenia/Mocking.jl.svg?branch=master)](https://travis-ci.org/invenia/Mocking.jl)
+[![Build Status](https://travis-ci.org/invenia/Mocking.jl.svg?branch=julia-0.4)](https://travis-ci.org/invenia/Mocking.jl)
 [![Build Status](https://ci.appveyor.com/api/projects/status/la041r86v6p5k24x?svg=true)](https://ci.appveyor.com/project/omus/mocking-jl)
-[![codecov.io](http://codecov.io/github/invenia/Mocking.jl/coverage.svg?branch=master)](http://codecov.io/github/invenia/Mocking.jl?branch=master)
+[![codecov.io](http://codecov.io/github/invenia/Mocking.jl/coverage.svg?branch=julia-0.4)](http://codecov.io/github/invenia/Mocking.jl?branch=julia-0.4)
 
 Allows Julia functions to be temporarily modified for testing purposes.
 
