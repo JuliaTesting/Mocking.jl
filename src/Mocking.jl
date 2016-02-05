@@ -8,6 +8,7 @@ end
 include("signature.jl")
 include("mendable.jl")
 include("util.jl")
+include("exception.jl")
 
 immutable Patch
     original::Function
@@ -133,7 +134,6 @@ function override(body::Function, old_func::Function, new_func::Function, signat
         end
     end
 
-
     # Replace the old Function with the new anonymous Function
     if isgeneric(old_func)
         m = methods(old_func, signature)
@@ -171,14 +171,16 @@ end
 function override_internal(body::Function, old_method::Method, new_func::Function)
     isgeneric(new_func) && error("replacement function cannot be a generic")
 
-    mod = old_method.func.code.module
-    name = old_method.func.code.name
+    mod, name = module_and_name(old_method)
 
-    # Overwrite a method such that Julia calls the updated function.
-    isdefined(mod, name) || throw(MethodError("method $name does not exist in module $mod"))
+    # Avoid overwriting or defining a method for a function that doesn't exist in the module
+    isdefined(mod, name) || throw(FunctionError(mod, name))
+
+    # Overwrite a method such that Julia calls the updated function
     types = [:(::$t) for t in Signature(old_method).types]
     expr = :($name($(types...)) = nothing)
 
+    # Save the original implementation prior to modifying it
     org_func = old_method.func
 
     # Ignore warning "Method definition ... overwritten"
@@ -186,6 +188,7 @@ function override_internal(body::Function, old_method::Method, new_func::Functio
         Core.eval(mod, expr)
     end
 
+    # Replace implementation
     old_method.func = new_func
 
     try
@@ -198,7 +201,5 @@ function override_internal(body::Function, old_method::Method, new_func::Functio
         old_method.func = org_func
     end
 end
-
-
 
 end # module

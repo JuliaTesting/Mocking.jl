@@ -1,3 +1,9 @@
+function module_and_name(m::Method)
+    mod = m.func.code.module
+    name = m.func.code.name
+    return mod, name
+end
+
 function ignore_stderr(body::Function)
     # TODO: Need to figure out what to do on Windows...
     @windows_only return body()
