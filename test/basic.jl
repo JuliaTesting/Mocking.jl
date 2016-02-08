@@ -144,10 +144,10 @@ general(value) = value
 @test_throws ErrorException Mocking.Patch(single_generic, empty_generic)
 @test_throws ErrorException Mocking.Patch(single_generic, empty_generic, [Any])
 
-# Attempt to override a ambiguious generic function
+# Attempt to override a ambiguous generic function
 @test_throws ErrorException Mocking.override(body, specific, general)
 
-# Attempt to override an non-ambiguious generic function with an ambiguious generic function
+# Attempt to override an non-ambiguous generic function with an ambiguous generic function
 @test_throws ErrorException Mocking.override(body, general, specific)
 @test_throws ErrorException Mocking.mend(body, general, specific)
 @test_throws ErrorException Mocking.Patch(general, specific)

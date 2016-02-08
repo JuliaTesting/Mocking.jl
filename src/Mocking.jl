@@ -22,7 +22,7 @@ immutable Patch
         elseif length(m) == 0
             error("explicit signature does not match any method")
         else
-            error("explicit signature is ambigious; please make signature more specific")
+            error("explicit signature is ambiguous; please make signature more specific")
         end
     end
 end
@@ -115,7 +115,7 @@ function override(body::Function, old_func::Function, new_func::Function, signat
     elseif length(m) == 0
         error("signature does not match any method in function $new_func")
     else
-        error("signature is ambigious; please make signature more specific\n    " * join(m, "\n    ") * "\n")
+        error("signature is ambiguous; please make signature more specific\n    " * join(m, "\n    ") * "\n")
     end
 
     m = methods(old_func, signature)
@@ -124,7 +124,7 @@ function override(body::Function, old_func::Function, new_func::Function, signat
     elseif length(m) == 0
         error("function signature does not exist")
     else
-        error("ambigious function signature; please make signature more specific\n    " * join(m, "\n    ") * "\n")
+        error("ambiguous function signature; please make signature more specific\n    " * join(m, "\n    ") * "\n")
     end
 
     return override(body, old_method, new_method)

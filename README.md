@@ -66,7 +66,7 @@ b
 
 ### Patch
 
-`Patch` allows similar behaviour as you would get from using `mend` directly. Note that you only need to specify a signature when the function you are overloading has multiple methods and the replacement w ould be ambiguous. 
+`Patch` allows similar behaviour as you would get from using `mend` directly. Note that you only need to specify a signature when the function you are overloading has multiple methods and the replacement would be ambiguous.
 
 ```julia
 julia> replacement = (name::AbstractString) -> name == "foo" ? IOBuffer("bar") : Original.open(name)

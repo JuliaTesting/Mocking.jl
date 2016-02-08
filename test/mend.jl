@@ -8,13 +8,13 @@ let
     replacement = (name) -> name == "foo" ? IOBuffer("bar") : Original.open(name)
     @test_throws UndefVarError Original.open  # Only defined when mend is run
 
-    # The replacement signature is ambiguious and mend cannot determine what open method to replace
+    # The replacement signature is ambiguous and mend cannot determine what open method to replace
     @test_throws ErrorException mend(() -> nothing, open, replacement)
     @test isa(Original.open, Function)  # TODO: Original methods should be cleared after mend
 
     @test_throws SystemError open("foo")
 
-    # Replacement is no longer ambiguious if we supply a specific signature
+    # Replacement is no longer ambiguous if we supply a specific signature
     mend(open, replacement, (AbstractString,)) do
         @test @mendable readstring(open("foo")) == "bar"
         @test @mendable isa(open(@__FILE__), IOStream)  # Any other file works normally
@@ -22,7 +22,7 @@ let
 
     @test_throws SystemError open("foo")
 
-    # Replacement is no longer ambiguious if the signature is included in the definition
+    # Replacement is no longer ambiguous if the signature is included in the definition
     replacement = (name::AbstractString) -> name == "foo" ? IOBuffer("bar") : Original.open(name)
     mend(open, replacement) do
         @test @mendable readstring(open("foo")) == "bar"
@@ -65,7 +65,7 @@ let
 
     @test_throws SystemError open("foo")
 
-    # Replacement is no longer ambiguious if we supply a specific signature
+    # Replacement is no longer ambiguous if we supply a specific signature
     patch = Patch(open, replacement, (AbstractString,))
     mend(patch) do
         @test @mendable readstring(open("foo")) == "bar"
@@ -74,7 +74,7 @@ let
 
     @test_throws SystemError open("foo")
 
-    # Replacement is no longer ambiguious since we added a more specific signature
+    # Replacement is no longer ambiguous since we added a more specific signature
     replacement = (name::AbstractString) -> name == "foo" ? IOBuffer("bar") : Original.open(name)
     patch = Patch(open, replacement)
     mend(patch) do
