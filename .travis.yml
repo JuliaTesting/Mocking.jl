@@ -9,6 +9,10 @@ git:
   depth: 999999
 notifications:
   email: false
+  slack:
+    secure: Qx2A4fw/m7L95/63AFpT8BvxImkHNEsLUjEbaoxmiUcc64SXsOj90A+29Uuwhve4YvI2X1+p14DWrzf9+xd5s2zunQ2Y6Ezd+ors5FbTYA4yoWsRTs+FKdZcXxLpUjI5TaV84sD397bz6oDpGh6HqpCIpWnEkBj5gm+wUERqYifscdX80NkGbchpdVAMDlF1jVacWzO1sOWb0wOYQbxbmZ9E+usA2siGT+4Rfz6dtI1tgZozmxr527CAdlvi5mTCxpcDhJFOaVdcBvc76Yn2FzRBj65zqLqR0hF227MKcNP1+2WLoeAt+4PfDo1HfNdbLK2ogBZVQVS77sd4WBWaYpMYFj/81v60QaoLEpNiwZHMkVEoxXKh/GOgs2j2iAI8BnN4Nfx++kFFPi66YFDfelzr9JBy9B6UDWYIjPUIoqi8LuvxocS8FOb7/w8CpbXUJ1JHbz6VWk4P5kk2PQmXePCGFc3NCfoHYGFgvIbBUTuS/v9Dpj8K6ZwX1r8T0by2QPrbUVcPtRV9phzoQjnu/nqewstmsawCY9FH+Klfw0s9LTxU0vNXZ1a3rFKBM31quGw879YZ3YyDJUzc84TvN+sfQgwMMZnusGi8I8IL9y5HrEkoC9p6m0o0h/PaXNbT7JXrN82pjfaNj1H50cW5hCOorciXYcj/R6epNXxED+w=
+    on_success: change
+    on_failure: change
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia -e 'Pkg.clone(pwd()); Pkg.build("Mocking"); Pkg.test("Mocking"; coverage=true)';
