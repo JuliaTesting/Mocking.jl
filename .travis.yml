@@ -5,6 +5,8 @@ os:
   - osx
 julia:
   - nightly
+git:
+  depth: 999999
 notifications:
   email: false
 script:
