@@ -6,7 +6,7 @@ type Signature
     Signature(t) = new(to_array_type(t))
 end
 
-function Signature(m::Method)
+function Signature(m::TypeMapEntry)
     names, types = parameters(m)
     return Signature(types)
 end
@@ -30,17 +30,21 @@ end
 
 convert(::Type{Tuple}, s::Signature) = Tuple{s.types...}
 
-function parameters(m::Method)
-    expr = Base.uncompressed_ast(m.func).args[1]
-    names = Array{Symbol}(length(expr))
-    types = Array{Type}(length(expr))
-    for (i, field) in enumerate(expr)
+function parameters(m::TypeMapEntry)
+    # Remove the function name and its type
+    slotnames = m.func.lambda_template.slotnames[2:end]
+    specTypes = m.func.lambda_template.specTypes.parameters[2:end]
+
+    nargs = min(length(slotnames), length(specTypes))
+
+    names = Array{Symbol}(nargs)
+    types = Array{Type}(nargs)
+    for (i, (field, argtype)) in enumerate(zip(slotnames, specTypes))
         names[i] = isa(field, Symbol) ? field : field.args[1]
-        types[i] = m.sig.parameters[i]
+        types[i] = argtype
     end
 
-    # Remove the function name and its type
-    return names[2:end], types[2:end]
+    return names, types
 end
 
 function parameters(f::Function)

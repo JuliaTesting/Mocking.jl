@@ -28,9 +28,9 @@ immutable Patch
 end
 
 function Patch(original::Function, replacement::Function)
-    m = collect(methods(replacement))
+    m = methods(replacement)
     if length(m) == 1
-        signature = Signature(m[1])
+        signature = Signature(first(m))
     elseif length(m) == 0
         error("generic function doesn't contain any methods")
     else
@@ -64,9 +64,9 @@ function mend(body::Function, patch::Patch)
 end
 
 function mend(body::Function, old_func::Function, new_func::Function)
-    m = collect(methods(new_func))
+    m = methods(new_func)
     if length(m) == 1
-        signature = Signature(m[1])
+        signature = Signature(first(m))
     elseif length(m) == 0
         error("generic function doesn't contain any methods")
     else
@@ -97,9 +97,9 @@ end
 
 
 function override(body::Function, old_func::Function, new_func::Function)
-    m = collect(methods(new_func))
+    m = methods(new_func)
     if length(m) == 1
-        signature = Signature(m[1])
+        signature = Signature(first(m))
     elseif length(m) == 0
         error("generic function doesn't contain any methods")
     else
@@ -111,7 +111,7 @@ end
 function override(body::Function, old_func::Function, new_func::Function, signature::Signature)
     m = methods(new_func, signature)
     if length(m) == 1
-        new_method = m[1]
+        new_method = first(m)
     elseif length(m) == 0
         error("signature does not match any method in function $new_func")
     else
@@ -120,7 +120,7 @@ function override(body::Function, old_func::Function, new_func::Function, signat
 
     m = methods(old_func, signature)
     if length(m) == 1
-        old_method = m[1]
+        old_method = first(m)
     elseif length(m) == 0
         error("function signature does not exist")
     else
@@ -130,7 +130,7 @@ function override(body::Function, old_func::Function, new_func::Function, signat
     return override(body, old_method, new_method)
 end
 
-function override(body::Function, old_method::Method, new_method::Method)
+function override(body::Function, old_method::TypeMapEntry, new_method::TypeMapEntry)
     mod, name = module_and_name(old_method)
 
     # Avoid overwriting or defining a method for a function that doesn't exist in the module

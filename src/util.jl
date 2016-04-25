@@ -1,4 +1,4 @@
-function module_and_name(m::Method)
+function module_and_name(m::TypeMapEntry)
     mod = m.func.module
     name = m.func.name
     return mod, name
@@ -29,3 +29,10 @@ function to_array_type(t::ANY)
         error("argument tuple type must contain only types")
     end
 end
+
+# iteration for MethodTable
+Base.start(mt::MethodTable) = mt.defs
+
+Base.next(mt::MethodTable, state) = (state, state.next)
+
+Base.done(mt::MethodTable, state) = state === nothing
