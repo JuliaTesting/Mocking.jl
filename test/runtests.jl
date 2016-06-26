@@ -8,3 +8,4 @@ using Base.Test
 # include("mend.jl")
 
 include("caller.jl")
+include("scope.jl")
