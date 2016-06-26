@@ -44,7 +44,34 @@ type PatchEnv
         new(m)
     end
 end
-apply(patch_env::PatchEnv, p::Patch) = Core.eval(patch_env.mod, p.func)
+
+function PatchEnv(patches::Array{Patch})
+    pe = PatchEnv()
+    apply!(pe, patches)
+    return pe
+end
+
+function PatchEnv(patch::Patch)
+    pe = PatchEnv()
+    apply!(pe, patch)
+    return pe
+end
+
+apply!(pe::PatchEnv, p::Patch) = Core.eval(pe.mod, p.func)
+
+function apply!(pe::PatchEnv, patches::Array{Patch})
+    for p in patches
+        apply!(pe, p)
+    end
+end
+
+function apply(body::Function, pe::PatchEnv)
+    set_active_env(pe)
+    return body()
+end
+
+apply(body::Function, patches::Array{Patch}) =  apply(body, PatchEnv(patches))
+apply(body::Function, patch::Patch) = apply(body, PatchEnv(patch))
 
 function ismocked(patch_env::PatchEnv, func_name::Symbol, args::Tuple)
     if isdefined(patch_env.mod, func_name)
