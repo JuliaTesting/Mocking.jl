@@ -3,16 +3,25 @@ module Mocking
 export @patch, @mock
 export Patch, PatchEnv, apply, ismocked, set_active_env, get_active_env
 
+# TODO:
+# - [ ] Test Patch with different function syntaxes: long, short, anonymous
+# - [ ] Change Patch and PatchEnv to immutable?
 
 type Patch
     func::Expr
 
     function Patch(expr::Expr)
-        # Shortform function definition
-        if expr.head == :(=) && expr.args[1].head == :call
+        # Long-form function syntax
+        if expr.head == :function
             new(expr)
+        # Short-form function syntax
+        elseif expr.head == :(=) && expr.args[1].head == :call
+            new(expr)
+        # Anonymous function syntax
+        # elseif expr.head == :(->)
+            # TODO: Determine how this could be supported
         else
-            error("Not a function definition")
+            throw(ArgumentError("expression is not a function definition"))
         end
     end
 end
