@@ -3,6 +3,7 @@ using Base.Test
 
 include("concept.jl")
 include("scope.jl")
+include("real-open.jl")
 
 # include("basic.jl")
 # include("signature.jl")
