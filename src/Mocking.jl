@@ -73,9 +73,9 @@ end
 apply(body::Function, patches::Array{Patch}) =  apply(body, PatchEnv(patches))
 apply(body::Function, patch::Patch) = apply(body, PatchEnv(patch))
 
-function ismocked(patch_env::PatchEnv, func_name::Symbol, args::Tuple)
-    if isdefined(patch_env.mod, func_name)
-        func = Core.eval(patch_env.mod, func_name)
+function ismocked(pe::PatchEnv, func_name::Symbol, args::Tuple)
+    if isdefined(pe.mod, func_name)
+        func = Core.eval(pe.mod, func_name)
         types = map(typeof, tuple(args...))
         exists = method_exists(func, types)
         println("$func_name($(types...))")
@@ -93,9 +93,9 @@ function ismocked(patch_env::PatchEnv, func_name::Symbol, args::Tuple)
     return false
 end
 
-global ACTIVE_ENV = PatchEnv()
-set_active_env(patch_env::PatchEnv) = (global ACTIVE_ENV = patch_env)
-get_active_env() = ACTIVE_ENV
+global PATCH_ENV = PatchEnv()
+set_active_env(pe::PatchEnv) = (global PATCH_ENV = pe)
+get_active_env() = PATCH_ENV
 
 macro mock(expr)
     isa(expr, Expr) || error("argument is not an expression")
