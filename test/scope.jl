@@ -1,4 +1,4 @@
-using Mocking
+# Test that Mocking works at various scopes
 
 # Global scope
 global_scope() = "foo"

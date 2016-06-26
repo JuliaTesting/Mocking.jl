@@ -1,4 +1,4 @@
-using Mocking
+# Test the basic concept behind call overloading
 
 multiply(x::Number) = 2x
 multiply(x::Int64) = 2x - 1
@@ -39,9 +39,14 @@ Mocking.set_active_env(pe)
 @test (@mock multiply(0x2)) == 0x4
 @test (@mock multiply(2//1)) == 4//1
 
-
+# Use convienient syntax
 apply(patches) do
     @test (@mock multiply(2)) == 8
     @test (@mock multiply(0x2)) == 0x6
     @test (@mock multiply(2//1)) == 4//1
 end
+
+# Patches should only be applied for the scope of the do block
+@test (@mock multiply(2)) == 3
+@test (@mock multiply(0x2)) == 0x4
+@test (@mock multiply(2//1)) == 4//1
