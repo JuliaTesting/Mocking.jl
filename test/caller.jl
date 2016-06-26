@@ -5,12 +5,10 @@ multiply(x::Int64) = 2x - 1
 
 @test (@mock multiply(2)) == 3
 @test (@mock multiply(0x2)) == 0x4
-@test (@mock multiply(2.0)) == 4.0
 @test (@mock multiply(2//1)) == 4//1
 
 @test (@mock multiply(2)) == multiply(2)
 @test (@mock multiply(0x2)) == multiply(0x2)
-@test (@mock multiply(2.0)) == multiply(2.0)
 @test (@mock multiply(2//1)) == multiply(2//1)
 
 patches = [
@@ -26,12 +24,10 @@ set_active_env(pe)
 
 @test (@mock multiply(2)) == 8        # calls mocked `multiply(::Int64)`
 @test (@mock multiply(0x2)) == 0x6    # calls mocked `multiply(::Integer)`
-@test (@mock multiply(2.0)) == 4.0    # calls original `multiply(::Number)`
 @test (@mock multiply(2//1)) == 4//1  # calls original `multiply(::Number)`
 
 @test (@mock multiply(2)) != multiply(2)
 @test (@mock multiply(0x2)) != multiply(0x2)
-@test (@mock multiply(2.0)) == multiply(2.0)
 @test (@mock multiply(2//1)) == multiply(2//1)
 
 # Clean env
@@ -41,6 +37,4 @@ set_active_env(pe)
 # Ensure that original behaviour is restored
 @test (@mock multiply(2)) == 3
 @test (@mock multiply(0x2)) == 0x4
-@test (@mock multiply(2.0)) == 4.0
 @test (@mock multiply(2//1)) == 4//1
-
