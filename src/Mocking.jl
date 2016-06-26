@@ -6,6 +6,8 @@ export Patch, PatchEnv, apply, ismocked, set_active_env, get_active_env
 # TODO:
 # - [ ] Test Patch with different function syntaxes: long, short, anonymous
 # - [ ] Change Patch and PatchEnv to immutable?
+# - [ ] Use baremodule to avoid debugging stating things like: using mocked version of
+#       == when == wasn't explicity mocked.
 
 type Patch
     func::Expr
@@ -68,22 +70,34 @@ global ACTIVE_ENV = PatchEnv()
 set_active_env(patch_env::PatchEnv) = (global ACTIVE_ENV = patch_env)
 get_active_env() = ACTIVE_ENV
 
+function mock(expr::Expr)
+    for i in eachindex(expr.args)
+        isa(expr.args[i], Expr) || continue
+        expr.args[i] = mock(expr.args[i])
+    end
+
+    if expr.head == :call
+        func = expr.args[1]
+        func_name = string(func)
+        args = expr.args[2:end]
+        expr = quote
+            # Want ...(::Module, ::Symbol, ::Array{Any})
+            if Mocking.ismocked(env, Symbol($func_name), tuple($(args...)))
+                env.mod.$func($(args...))
+            else
+                $expr
+            end
+        end
+    end
+
+    return expr
+end
+
 # TODO: Perform hygiene here
 macro mock(expr)
-    isa(expr, Expr) || error("argument is not an expression")
-    expr.head == :call || error("expression is not a function call")
-
-    func = expr.args[1]
-    func_name = string(func)
-    args = expr.args[2:end]
     result = quote
         local env = Mocking.get_active_env()
-        # Want ...(::Module, ::Symbol, ::Array{Any})
-        if Mocking.ismocked(env, Symbol($func_name), tuple($(args...)))
-            env.mod.$func($(args...))
-        else
-            $expr
-        end
+        $(mock(expr))
     end
     return esc(result)
 end
