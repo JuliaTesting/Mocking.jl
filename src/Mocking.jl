@@ -44,11 +44,22 @@ type PatchEnv
 end
 apply(patch_env::PatchEnv, p::Patch) = Core.eval(patch_env.mod, p.func)
 
-function ismocked(patch_env::PatchEnv, func_name::Symbol, args::Array)
+function ismocked(patch_env::PatchEnv, func_name::Symbol, args::Tuple)
     if isdefined(patch_env.mod, func_name)
-        func = Core.eval(patch_env.mod, name)
+        func = Core.eval(patch_env.mod, func_name)
         types = map(typeof, tuple(args...))
-        return method_exists(func, types)
+        exists = method_exists(func, types)
+        println("$func_name($(types...))")
+        if exists
+            m = first(methods(func, types))
+            println("executing mocked function: $m")
+        else
+            ms = methods(Core.eval(func_name), types)
+            println(ms)
+            m = first(ms)
+            println("executing original function: $m")
+        end
+        return exists
     end
     return false
 end
@@ -59,26 +70,22 @@ get_active_env() = ACTIVE_ENV
 
 # TODO: Perform hygiene here
 macro mock(expr)
-    esc(mock(expr))
-end
+    isa(expr, Expr) || error("argument is not an expression")
+    expr.head == :call || error("expression is not a function call")
 
-function mock(expr::Expr)
-    if expr.head == :call
-        func = expr.args[1]
-        func_name = string(func)
-        args = expr.args[2:end]
-        quote
-            local env = Mocking.get_active_env()
-            # Want ...(::Module, ::Symbol, ::Array{Any})
-            if Mocking.ismocked(env, Symbol($func_name), $args)
-                env.$func($(args...))
-            else
-                $expr
-            end
+    func = expr.args[1]
+    func_name = string(func)
+    args = expr.args[2:end]
+    result = quote
+        local env = Mocking.get_active_env()
+        # Want ...(::Module, ::Symbol, ::Array{Any})
+        if Mocking.ismocked(env, Symbol($func_name), tuple($(args...)))
+            env.mod.$func($(args...))
+        else
+            $expr
         end
-    else
-        error("not a call")
     end
+    return esc(result)
 end
 
 end # module
