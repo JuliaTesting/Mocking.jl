@@ -66,8 +66,13 @@ function apply!(pe::PatchEnv, patches::Array{Patch})
 end
 
 function apply(body::Function, pe::PatchEnv)
+    original_pe = get_active_env()
     set_active_env(pe)
-    return body()
+    try
+        return body()
+    finally
+        set_active_env(original_pe)
+    end
 end
 
 apply(body::Function, patches::Array{Patch}) =  apply(body, PatchEnv(patches))
