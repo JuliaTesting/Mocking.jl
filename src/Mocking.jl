@@ -114,17 +114,21 @@ macro mock(expr)
 
     func = expr.args[1]
     func_name = QuoteNode(func)
-    _args = expr.args[2:end]
+    args = expr.args[2:end]
+
+    env_var = gensym("env")
+    args_var = gensym("args")
+
     result = quote
-        local env = Mocking.get_active_env()
-        local args = tuple($(_args...))
-        # Want ...(::Module, ::Symbol, ::Array{Any})
-        if Mocking.ismocked(env, $func_name, args)
-            env.mod.$func(args...)
+        local $env_var = Mocking.get_active_env()
+        local $args_var = tuple($(args...))
+        if Mocking.ismocked($env_var, $func_name, $args_var)
+            $env_var.mod.$func($args_var...)
         else
-            $func(args...)
+            $func($args_var...)
         end
     end
+
     return esc(result)
 end
 
