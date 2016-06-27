@@ -12,28 +12,34 @@ export Patch, PatchEnv, apply, ismocked, set_active_env, get_active_env
 type Patch
     func::Expr
 
-    function Patch(expr::Expr)
-        # Long-form function syntax
-        if expr.head == :function
-            new(expr)
-        # Short-form function syntax
-        elseif expr.head == :(=) && expr.args[1].head == :call
-            new(expr)
-        # Anonymous function syntax
-        # elseif expr.head == :(->)
-            # TODO: Determine how this could be supported
-        else
-            throw(ArgumentError("expression is not a function definition"))
-        end
+    function Patch(signature::Expr, body::Function)
+        params = signature.args[2:end]
+        new(:($signature = $body($(params...))))
     end
 end
 
-name(p::Patch) = p.func.args[1].args[1]
-parameters(p::Patch) = p.func.args[1].args[2:end]
-body(p::Patch) = p.func.args[2]
-
 macro patch(expr::Expr)
-    Patch(expr)
+    if expr.head == :function
+        name = expr.args[1].args[1]
+        params = expr.args[1].args[2:end]
+        body = expr.args[2]
+
+    # Short-form function syntax
+    elseif expr.head == :(=) && expr.args[1].head == :call
+        name = expr.args[1].args[1]
+        params = expr.args[1].args[2:end]
+        body = expr.args[2]
+
+    # Anonymous function syntax
+    # elseif expr.head == :(->)
+        # TODO: Determine how this could be supported
+    else
+        throw(ArgumentError("expression is not a function definition"))
+    end
+
+    signature = QuoteNode(Expr(:call, name, params...))
+    func = Expr(:(->), Expr(:tuple, params...), body)
+    esc(:(Mocking.Patch($signature, $func)))
 end
 
 type PatchEnv
@@ -107,13 +113,13 @@ macro mock(expr)
     expr.head == :call || error("expression is not a function call")
 
     func = expr.args[1]
-    func_name = string(func)
+    func_name = QuoteNode(func)
     _args = expr.args[2:end]
     result = quote
         local env = Mocking.get_active_env()
         local args = tuple($(_args...))
         # Want ...(::Module, ::Symbol, ::Array{Any})
-        if Mocking.ismocked(env, Symbol($func_name), args)
+        if Mocking.ismocked(env, $func_name, args)
             env.mod.$func(args...)
         else
             $func(args...)
