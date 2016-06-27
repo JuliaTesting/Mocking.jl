@@ -5,11 +5,8 @@ export Patch, PatchEnv, apply, ismocked, set_active_env, get_active_env
 
 # TODO:
 # - [ ] Test Patch with different function syntaxes: long, short, anonymous
-# - [ ] Change Patch and PatchEnv to immutable?
-# - [ ] Use baremodule to avoid debugging stating things like: using mocked version of
-#       == when == wasn't explicity mocked.
 
-type Patch
+immutable Patch
     func::Expr
 
     function Patch(signature::Expr, body::Function)
@@ -42,11 +39,11 @@ macro patch(expr::Expr)
     esc(:(Mocking.Patch($signature, $func)))
 end
 
-type PatchEnv
+immutable PatchEnv
     mod::Module
 
     function PatchEnv()
-        m = eval(:(module $(gensym()) end))  # generate a module
+        m = eval(:(baremodule $(gensym()) end))  # generate a module
         new(m)
     end
 end
