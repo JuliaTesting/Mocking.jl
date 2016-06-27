@@ -1,7 +1,7 @@
 # Test the basic concept behind call overloading
 
 multiply(x::Number) = 2x
-multiply(x::Int64) = 2x - 1
+multiply(x::Int) = 2x - 1
 
 @test (@mock multiply(2)) == 3
 @test (@mock multiply(0x2)) == 0x4
@@ -13,7 +13,7 @@ multiply(x::Int64) = 2x - 1
 
 patches = Patch[
     @patch multiply(x::Integer) = 3x
-    @patch multiply(x::Int64) = 4x
+    @patch multiply(x::Int) = 4x
 ]
 
 pe = Mocking.PatchEnv()
@@ -22,7 +22,7 @@ for p in patches
 end
 Mocking.set_active_env(pe)
 
-@test (@mock multiply(2)) == 8        # calls mocked `multiply(::Int64)`
+@test (@mock multiply(2)) == 8        # calls mocked `multiply(::Int)`
 @test (@mock multiply(0x2)) == 0x6    # calls mocked `multiply(::Integer)`
 @test (@mock multiply(2//1)) == 4//1  # calls original `multiply(::Number)`
 
