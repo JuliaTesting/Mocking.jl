@@ -1,3 +1,5 @@
+import Compat: readstring
+
 let
     readfile(filename) = (@mock isfile(filename)) ? readstring(@mock open(filename)) : ""
 

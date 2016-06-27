@@ -1,3 +1,5 @@
+import Compat: readstring
+
 let
     # Ensure that open cannot find the file "foo"
     @test !isfile("foo")

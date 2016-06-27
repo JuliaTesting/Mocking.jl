@@ -1,5 +1,6 @@
 using Mocking
 using Base.Test
+import Mocking: apply
 
 include("concept.jl")
 include("scope.jl")
