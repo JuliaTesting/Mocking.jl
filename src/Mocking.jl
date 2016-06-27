@@ -41,21 +41,22 @@ end
 
 immutable PatchEnv
     mod::Module
+    debug::Bool
 
-    function PatchEnv()
+    function PatchEnv(debug::Bool=false)
         m = eval(:(baremodule $(gensym()) end))  # generate a module
-        new(m)
+        new(m, debug)
     end
 end
 
-function PatchEnv(patches::Array{Patch})
-    pe = PatchEnv()
+function PatchEnv(patches::Array{Patch}, debug::Bool=false)
+    pe = PatchEnv(debug)
     apply!(pe, patches)
     return pe
 end
 
-function PatchEnv(patch::Patch)
-    pe = PatchEnv()
+function PatchEnv(patch::Patch, debug::Bool=false)
+    pe = PatchEnv(debug)
     apply!(pe, patch)
     return pe
 end
@@ -78,24 +79,30 @@ function apply(body::Function, pe::PatchEnv)
     end
 end
 
-apply(body::Function, patches::Array{Patch}) =  apply(body, PatchEnv(patches))
-apply(body::Function, patch::Patch) = apply(body, PatchEnv(patch))
+function apply(body::Function, patches::Array{Patch}; debug::Bool=false)
+    apply(body, PatchEnv(patches, debug))
+end
+function apply(body::Function, patch::Patch; debug::Bool=false)
+    apply(body, PatchEnv(patch, debug))
+end
 
 function ismocked(pe::PatchEnv, func_name::Symbol, args::Tuple)
     if isdefined(pe.mod, func_name)
         func = Core.eval(pe.mod, func_name)
         types = map(typeof, tuple(args...))
         exists = method_exists(func, types)
-        println("$func_name($(types...))")
-        if exists
-            m = first(methods(func, types))
-            println("executing mocked function: $m")
-        else
-            ms = methods(Core.eval(func_name), types)
-            println(ms)
-            m = first(ms)
-            println("executing original function: $m")
+
+        if pe.debug
+            info("calling $func_name($(types...))")
+            if exists
+                m = first(methods(func, types))
+                info("executing mocked function: $m")
+            else
+                m = first(methods(Core.eval(func_name), types))
+                info("executing original function: $m")
+            end
         end
+
         return exists
     end
     return false
