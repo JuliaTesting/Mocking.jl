@@ -1,7 +1,6 @@
 module Mocking
 
-export @patch, @mock
-export Patch, PatchEnv, apply, ismocked, set_active_env, get_active_env
+export @patch, @mock, Patch, apply
 
 # TODO:
 # - [ ] Test Patch with different function syntaxes: long, short, anonymous
