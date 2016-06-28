@@ -49,7 +49,7 @@ With the call site being marked we can now write a new testcase which allows us 
 the reversing behaviour of the `randdev` function:
 
 ```julia
-ENV["JULIA_TEST"] = 1
+ENV["JULIA_ENV"] = "test"
 using Mocking
 
 ...

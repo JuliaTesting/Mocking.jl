@@ -8,17 +8,11 @@ export @patch, @mock, Patch, apply
 const GENERIC_ANONYMOUS = VERSION >= v"0.5-"
 
 # When ALLOW_MOCK is false the @mock macro is a noop.
-const ALLOW_MOCK = if isdefined(Base, :PROGRAM_FILE) && !haskey(ENV, "JULIA_TEST")
+const ALLOW_MOCK = if isdefined(Base, :PROGRAM_FILE) && !haskey(ENV, "JULIA_ENV")
     basename(Base.PROGRAM_FILE) != "runtests.jl"
 else
-    state = get(ENV, "JULIA_TEST", "0")
-    if state == "1" || state == "true"
-        true
-    elseif state == "0" || state == "false"
-        false
-    else
-        error("expected JULIA_TEST to be \"0\" or \"1\"")
-    end
+    mode = get(ENV, "JULIA_ENV", "")
+    mode == "test"
 end
 
 immutable Patch

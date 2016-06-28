@@ -1,6 +1,6 @@
-# Note: Explicitly setting JULIA_TEST should only be needed on Julia 0.4
+# Note: Explicitly setting JULIA_ENV should only be needed on Julia 0.4
 # The environmental variable will only be set for the current Julia session
-ENV["JULIA_TEST"] = 1
+ENV["JULIA_ENV"] = "test"
 
 using Mocking
 using Base.Test
