@@ -7,13 +7,8 @@ export @patch, @mock, Patch, apply
 
 const GENERIC_ANONYMOUS = VERSION >= v"0.5-"
 
-# When ALLOW_MOCK is false the @mock macro is a noop.
-const ALLOW_MOCK = if isdefined(Base, :PROGRAM_FILE) && !haskey(ENV, "JULIA_ENV")
-    basename(Base.PROGRAM_FILE) != "runtests.jl"
-else
-    mode = get(ENV, "JULIA_ENV", "")
-    mode == "test"
-end
+# When ENABLE is false the @mock macro is a noop.
+global ENABLE = isdefined(Base, :PROGRAM_FILE) && basename(PROGRAM_FILE) == "runtests.jl"
 
 immutable Patch
     signature::Expr
@@ -135,7 +130,7 @@ get_active_env() = PATCH_ENV
 macro mock(expr)
     isa(expr, Expr) || error("argument is not an expression")
     expr.head == :call || error("expression is not a function call")
-    ALLOW_MOCK || return esc(expr)
+    ENABLE || return esc(expr)
 
     func = expr.args[1]
     func_name = QuoteNode(func)

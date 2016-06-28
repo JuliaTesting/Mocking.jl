@@ -50,8 +50,8 @@ With the call site being marked as "mockable" we can now write a testcase which 
 us to demonstrate the reversing behaviour within the `randdev` function:
 
 ```julia
-ENV["JULIA_ENV"] = "test"  # Only necessary on Julia 0.4
 using Mocking
+Mocking.ENABLE = true  # Only necessary on Julia 0.4
 
 ...
 

@@ -1,8 +1,10 @@
-# Note: Explicitly setting JULIA_ENV should only be needed on Julia 0.4
-# The environmental variable will only be set for the current Julia session
-ENV["JULIA_ENV"] = "test"
-
 using Mocking
+
+# Note: Explicitly setting Mocking.ENABLE should only be needed on Julia 0.4
+if VERSION < v"0.5-"
+    Mocking.ENABLE = true
+end
+
 using Base.Test
 import Mocking: apply
 
