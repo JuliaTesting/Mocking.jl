@@ -17,12 +17,18 @@ else
 end
 
 immutable Patch
-    func::Expr
+    signature::Expr
+    body::Function
 
     function Patch(signature::Expr, body::Function)
-        params = signature.args[2:end]
-        new(:($signature = $body($(params...))))
+        new(signature, body)
     end
+end
+
+function Expr(p::Patch)
+    sig, body = p.signature, p.body
+    params = sig.args[2:end]
+    return :($sig = $body($(params...)))
 end
 
 macro patch(expr::Expr)
@@ -71,7 +77,7 @@ function PatchEnv(patch::Patch, debug::Bool=false)
     return pe
 end
 
-apply!(pe::PatchEnv, p::Patch) = Core.eval(pe.mod, p.func)
+apply!(pe::PatchEnv, p::Patch) = Core.eval(pe.mod, Expr(p))
 
 function apply!(pe::PatchEnv, patches::Array{Patch})
     for p in patches
