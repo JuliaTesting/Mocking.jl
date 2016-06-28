@@ -8,16 +8,21 @@ function randdev(n::Integer)
     end
 end
 
-result = randdev(10)
+n = 10
+result = randdev(n)
 @test eltype(result) == UInt8
-@test length(result) == 10
+@test length(result) == n
 
-data = unsafe_string(pointer(convert(Array{UInt8}, 1:10)))  # Produces exactly 10 values
+# Produces a string with sequential UInt8 values from 1:n
+data = unsafe_string(pointer(convert(Array{UInt8}, 1:n)))
 
-# Generate a alternative method of the `open` call we wish to mock.
+# Generate a alternative method of `open` which call we wish to mock
 patch = @patch open(fn::Function, f::AbstractString) = fn(IOBuffer(data))
 
-# Apply the patch which will modify the behaviour for our test.
+# Apply the patch which will modify the behaviour for our test
 apply(patch) do
-    @test randdev(10) == convert(Array{UInt8}, 10:-1:1)
+    @test randdev(n) == convert(Array{UInt8}, n:-1:1)
 end
+
+# Outside of the scope of the patched environment `@mock` is essentially a no-op
+@test randdev(n) != convert(Array{UInt8}, n:-1:1)
