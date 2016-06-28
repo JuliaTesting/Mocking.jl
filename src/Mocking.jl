@@ -19,7 +19,7 @@ end
 immutable Patch
     signature::Expr
     body::Function
-    modules::Array{Tuple}
+    modules::Array{Union{Expr,Symbol}}
 end
 
 function Expr(p::Patch)
@@ -48,37 +48,60 @@ macro patch(expr::Expr)
     end
 
     # Determine the modules required for the parameter types
-    modules = Tuple[]
-    for p in Set(parameter_types(params))
-        typ = Core.eval(p)
-        push!(modules, fullname(typ.name.module))
-    end
-    modules = unique(modules)
+    modules = unique(qualify_types!(params))
 
     signature = QuoteNode(Expr(:call, name, params...))
     func = Expr(:(->), Expr(:tuple, params...), body)
     esc(:(Mocking.Patch($signature, $func, $modules)))
 end
 
-function parameter_types(params::Array)
-    types = Union{Expr,Symbol}[]
+function qualify_types!(params::Array)
+    modules = Union{Expr,Symbol}[]
     for p in params
         if isa(p, Expr)
             # Positional parameter
             if p.head == :(::)
-                push!(types, p.args[2])
+                t = qualify_type(p.args[2])
+                p.args[2] = t
+                push!(modules, t.args[1])
 
             # Optional parameter
             elseif p.head == :kw && isa(p.args[1], Expr)
-                push!(types, p.args[1].args[2])
+                t = qualify_type(p.args[1].args[2])
+                p.args[1].args[2] = t
+                push!(modules, t.args[1])
 
             # Keyword parameters
             elseif p.head == :parameters
-                append!(types, parameter_types(p.args))
+                append!(modules, qualify_types!(p.args))
             end
         end
     end
-    return types
+    return modules
+end
+
+function qualify_type(expr::Union{Expr,Symbol})
+    typ = Core.eval(expr)
+    m = fullname(typ.name.module)
+    if isa(expr, Expr)
+        type_expr = expr.args[2]
+        if isa(type_expr, Expr) && type_expr.head == :quote
+            type_sym = type_expr.args[1]
+        else
+            type_sym = type_expr
+        end
+    else
+        type_sym = expr
+    end
+    return joinpath(m..., type_sym)
+end
+
+function joinpath(symbols::Symbol...)
+    result = symbols[1]
+    for s in symbols[2:end]
+        result = Expr(:., result, QuoteNode(s))
+    end
+    return result
 end
 
 immutable PatchEnv
@@ -105,7 +128,7 @@ end
 
 function apply!(pe::PatchEnv, p::Patch)
     for m in p.modules
-        Core.eval(pe.mod, :(import $(m...)))
+        Core.eval(pe.mod, :(import $m))
     end
     Core.eval(pe.mod, Expr(p))
 end

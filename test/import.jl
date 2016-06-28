@@ -24,3 +24,11 @@ patch = @patch readstring(cmd::Base.AbstractCmd) = "bar"
 apply(patch) do
     @test (@mock readstring(`foo`)) == "bar"
 end
+
+# Patches should allow using imported bindings syntax in the signature
+import Base: AbstractCmd
+
+patch = @patch readstring(cmd::AbstractCmd) = "bar"
+apply(patch) do
+    @test (@mock readstring(`foo`)) == "bar"
+end
