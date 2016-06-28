@@ -81,7 +81,7 @@ end
 
 function apply!(pe::PatchEnv, p::Patch)
     for m in p.modules
-        Core.eval(pe.mod, :(import $m))
+        Core.eval(pe.mod, Expr(:import, splitbinding(m)...))
     end
     Core.eval(pe.mod, Expr(p))
 end

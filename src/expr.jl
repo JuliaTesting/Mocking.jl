@@ -44,13 +44,25 @@ function qualify(expr::Union{Expr,Symbol})
     else
         name_sym = expr
     end
-    return joinpath(m..., name_sym)
+    return joinbinding(m..., name_sym)
 end
 
-function joinpath(symbols::Symbol...)
+function joinbinding(symbols::Symbol...)
     result = symbols[1]
     for s in symbols[2:end]
         result = Expr(:., result, QuoteNode(s))
     end
     return result
+end
+
+function splitbinding(expr::Union{Expr,Symbol})
+    parts = Symbol[]
+    if isa(expr, Expr) && expr.head == :.
+        append!(parts, splitbinding(expr.args[1]))
+        tail = expr.args[2]
+        push!(parts, isa(tail, QuoteNode) ? tail.value : tail)
+    else
+        push!(parts, expr)
+    end
+    return parts
 end
