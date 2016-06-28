@@ -27,7 +27,7 @@ immutable Patch
     modules::Array{Union{Expr,Symbol}}
 end
 
-function Expr(p::Patch)
+function convert(::Type{Expr}, p::Patch)
     sig, body = p.signature, p.body
     params = sig.args[2:end]
     return :($sig = $body($(params...)))
@@ -86,7 +86,7 @@ function apply!(pe::PatchEnv, p::Patch)
     for m in p.modules
         Core.eval(pe.mod, Expr(:import, splitbinding(m)...))
     end
-    Core.eval(pe.mod, Expr(p))
+    Core.eval(pe.mod, convert(Expr, p))
 end
 
 function apply!(pe::PatchEnv, patches::Array{Patch})
