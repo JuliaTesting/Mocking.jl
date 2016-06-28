@@ -4,6 +4,9 @@ include("expr.jl")
 
 export @patch, @mock, Patch, apply
 
+
+const GENERIC_ANONYMOUS = VERSION >= v"0.5-"
+
 # When ALLOW_MOCK is false the @mock macro is a noop.
 const ALLOW_MOCK = if isdefined(Base, :PROGRAM_FILE) && !haskey(ENV, "JULIA_TEST")
     basename(Base.PROGRAM_FILE) != "runtests.jl"
@@ -50,7 +53,7 @@ macro patch(expr::Expr)
     end
 
     # Determine the modules required for the parameter types
-    modules = unique(qualify!(params))
+    modules = unique(qualify!(params; anonymous_safe=!GENERIC_ANONYMOUS))
 
     signature = QuoteNode(Expr(:call, name, params...))
     func = Expr(:(->), Expr(:tuple, params...), body)
@@ -62,7 +65,7 @@ immutable PatchEnv
     debug::Bool
 
     function PatchEnv(debug::Bool=false)
-        m = eval(:(baremodule $(gensym()) end))  # generate a module
+        m = eval(:(module $(gensym()) end))  # generate a module
         new(m, debug)
     end
 end

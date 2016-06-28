@@ -1,4 +1,4 @@
-function qualify!(exprs::Array)
+function qualify!(exprs::Array; anonymous_safe::Bool=false)
     modules = Union{Expr,Symbol}[]
     for ex in exprs
         if isa(ex, Expr)
@@ -10,6 +10,7 @@ function qualify!(exprs::Array)
 
             # Optional parameter
             elseif ex.head == :kw && isa(ex.args[1], Expr)
+                anonymous_safe && error("optional parameters are not allowed")
                 q = qualify(ex.args[1].args[2])
                 ex.args[1].args[2] = q
                 push!(modules, q.args[1])
@@ -17,6 +18,7 @@ function qualify!(exprs::Array)
 
             # Keyword parameters
             elseif ex.head == :parameters
+                anonymous_safe && error("keyword parameters are not allowed")
                 append!(modules, qualify!(ex.args))
 
             # Default values for optional or keyword parameters
