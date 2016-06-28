@@ -19,10 +19,7 @@ end
 immutable Patch
     signature::Expr
     body::Function
-
-    function Patch(signature::Expr, body::Function)
-        new(signature, body)
-    end
+    modules::Array{Tuple}
 end
 
 function Expr(p::Patch)
@@ -50,9 +47,38 @@ macro patch(expr::Expr)
         throw(ArgumentError("expression is not a function definition"))
     end
 
+    # Determine the modules required for the parameter types
+    modules = Tuple[]
+    for p in Set(parameter_types(params))
+        typ = Core.eval(p)
+        push!(modules, fullname(typ.name.module))
+    end
+    modules = unique(modules)
+
     signature = QuoteNode(Expr(:call, name, params...))
     func = Expr(:(->), Expr(:tuple, params...), body)
-    esc(:(Mocking.Patch($signature, $func)))
+    esc(:(Mocking.Patch($signature, $func, $modules)))
+end
+
+function parameter_types(params::Array)
+    types = Union{Expr,Symbol}[]
+    for p in params
+        if isa(p, Expr)
+            # Positional parameter
+            if p.head == :(::)
+                push!(types, p.args[2])
+
+            # Optional parameter
+            elseif p.head == :kw && isa(p.args[1], Expr)
+                push!(types, p.args[1].args[2])
+
+            # Keyword parameters
+            elseif p.head == :parameters
+                append!(types, parameter_types(p.args))
+            end
+        end
+    end
+    return types
 end
 
 immutable PatchEnv
@@ -77,7 +103,12 @@ function PatchEnv(patch::Patch, debug::Bool=false)
     return pe
 end
 
-apply!(pe::PatchEnv, p::Patch) = Core.eval(pe.mod, Expr(p))
+function apply!(pe::PatchEnv, p::Patch)
+    for m in p.modules
+        Core.eval(pe.mod, :(import $(m...)))
+    end
+    Core.eval(pe.mod, Expr(p))
+end
 
 function apply!(pe::PatchEnv, patches::Array{Patch})
     for p in patches
