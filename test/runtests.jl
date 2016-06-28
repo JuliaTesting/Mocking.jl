@@ -6,6 +6,8 @@ using Mocking
 using Base.Test
 import Mocking: apply
 
+include("expr.jl")
+
 include("concept.jl")
 include("scope.jl")
 include("closure.jl")

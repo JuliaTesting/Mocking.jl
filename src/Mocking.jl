@@ -50,7 +50,7 @@ macro patch(expr::Expr)
     end
 
     # Determine the modules required for the parameter types
-    modules = unique(qualify_types!(params))
+    modules = unique(qualify!(params))
 
     signature = QuoteNode(Expr(:call, name, params...))
     func = Expr(:(->), Expr(:tuple, params...), body)

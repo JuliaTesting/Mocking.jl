@@ -1,42 +1,50 @@
-function qualify_types!(params::Array)
+function qualify!(exprs::Array)
     modules = Union{Expr,Symbol}[]
-    for p in params
-        if isa(p, Expr)
+    for ex in exprs
+        if isa(ex, Expr)
             # Positional parameter
-            if p.head == :(::)
-                t = qualify_type(p.args[2])
-                p.args[2] = t
-                push!(modules, t.args[1])
+            if ex.head == :(::)
+                q = qualify(ex.args[2])
+                ex.args[2] = q
+                push!(modules, q.args[1])
 
             # Optional parameter
-            elseif p.head == :kw && isa(p.args[1], Expr)
-                t = qualify_type(p.args[1].args[2])
-                p.args[1].args[2] = t
-                push!(modules, t.args[1])
+            elseif ex.head == :kw && isa(ex.args[1], Expr)
+                q = qualify(ex.args[1].args[2])
+                ex.args[1].args[2] = q
+                push!(modules, q.args[1])
+                append!(modules, qualify!(ex.args[2:2]))
 
             # Keyword parameters
-            elseif p.head == :parameters
-                append!(modules, qualify_types!(p.args))
+            elseif ex.head == :parameters
+                append!(modules, qualify!(ex.args))
+
+            # Default values for optional or keyword parameters
+            elseif ex.head == :call
+                q = qualify(ex.args[1])
+                ex.args[1] = q
+                push!(modules, q.args[1])
+                append!(modules, qualify!(ex.args[2:end]))
             end
         end
     end
     return modules
 end
 
-function qualify_type(expr::Union{Expr,Symbol})
-    typ = Core.eval(expr)
-    m = fullname(typ.name.module)
+function qualify(expr::Union{Expr,Symbol})
+    binding = Core.eval(expr)
+    m = fullname(binding.name.module)
     if isa(expr, Expr)
-        type_expr = expr.args[2]
-        if isa(type_expr, Expr) && type_expr.head == :quote
-            type_sym = type_expr.args[1]
+        name_expr = expr.args[2]
+        if isa(name_expr, Expr) && name_expr.head == :quote
+            name_sym = name_expr.args[1]
         else
-            type_sym = type_expr
+            name_sym = name_expr
         end
     else
-        type_sym = expr
+        name_sym = expr
     end
-    return joinpath(m..., type_sym)
+    return joinpath(m..., name_sym)
 end
 
 function joinpath(symbols::Symbol...)
