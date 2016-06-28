@@ -29,7 +29,7 @@ end
 
 function convert(::Type{Expr}, p::Patch)
     sig, body = p.signature, p.body
-    params = sig.args[2:end]
+    params = call_parameters(sig)
     return :($sig = $body($(params...)))
 end
 

@@ -16,3 +16,9 @@ expected = r.args[1].args[2:end]
 @test Mocking.splitbinding(:(Foo)) == Symbol[:Foo]
 @test Mocking.splitbinding(:(Foo.Bar)) == Symbol[:Foo, :Bar]
 @test Mocking.splitbinding(:(Foo.Bar.Baz)) == Symbol[:Foo, :Bar, :Baz]
+
+expr = :(f(a, b::Int64, c=3, d::Integer=4; e=5, f::Int=6))
+@test Mocking.call_parameters(expr) == [Expr(:parameters, Expr(:kw, :e, :e), Expr(:kw, :f, :f)), :a, :b, :c, :d]
+
+expr = :(f(a..., b::Integer...))
+@test Mocking.call_parameters(expr) == Any[Expr(:..., :a), Expr(:..., :b)]

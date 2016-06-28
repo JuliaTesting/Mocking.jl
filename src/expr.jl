@@ -68,3 +68,53 @@ function splitbinding(expr::Union{Expr,Symbol})
     end
     return parts
 end
+
+function variable_name(expr::Expr)
+    # Positional parameter, with type assertion
+    if expr.head == :(::)
+        name = expr.args[1]  # x::Integer
+
+    # Optional parameter
+    elseif expr.head == :kw
+        if isa(expr.args[1], Symbol)
+            name = expr.args[1]  # x=0
+        else
+            name = expr.args[1].args[1]  # x::Integer=0
+        end
+
+    else
+        error("Unable to process expression")
+    end
+    return name
+end
+variable_name(sym::Symbol) = sym
+
+function call_parameters(expr::Expr)
+    keywords = Expr[]
+    positional = Any[]
+    expr.head == :call || error("expression is not a call")
+    for expr in expr.args[2:end]
+        if isa(expr, Expr)
+            # Keyword parameters
+            if expr.head == :parameters
+                for ex in expr.args
+                    name = variable_name(ex)
+                    push!(keywords, Expr(:kw, name, name))
+                end
+
+             # Varags parameter
+            elseif expr.head == :...
+                name = variable_name(expr.args[1])
+                push!(positional, Expr(:..., name))
+            else
+                push!(positional, variable_name(expr))
+            end
+        else
+            push!(positional, variable_name(expr))
+        end
+    end
+    if !isempty(keywords)
+        positional = vcat(Expr(:parameters, keywords...), positional)
+    end
+    return positional
+end
