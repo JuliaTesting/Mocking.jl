@@ -4,150 +4,63 @@
 [![Build Status](https://ci.appveyor.com/api/projects/status/la041r86v6p5k24x?svg=true)](https://ci.appveyor.com/project/omus/mocking-jl)
 [![codecov.io](http://codecov.io/github/invenia/Mocking.jl/coverage.svg?branch=master)](http://codecov.io/github/invenia/Mocking.jl?branch=master)
 
-Allows Julia functions to be temporarily modified for testing purposes.
+Allows Julia function calls to be temporarily overloaded for purpose of testing.
 
 
 ## Usage
 
-Using the `mend` function provides a way to temporarily overwrite a specific method. The original implementation of a method can be used within the replacement method by accessing it from the `Original` module.
+Suppose you wrote the function `randdev`, how would you go about writing tests for it?
 
 ```julia
-julia> using Mocking
-
-julia> open("foo")
-ERROR: SystemError: opening file foo: No such file or directory
- in open at ./iostream.jl:90
- in open at iostream.jl:99
-
-julia> replacement = (name::AbstractString) -> name == "foo" ? IOBuffer("bar") : Original.open(name)
-(anonymous function)
-
-replacement = (name::AbstractString) -> name == "foo" ? IOBuffer("bar") : Original.open(name)
-julia> mend(Base.open, replacement) do
-           readall(open("foo"))
-       end
-"bar"
-
-julia> open("foo")  # Ensure original open behaviour is restored
-ERROR: SystemError: opening file foo: No such file or directory
- in open at ./iostream.jl:90
- in open at iostream.jl:99
+function randdev(n::Integer)
+    open("/dev/urandom") do fp
+        reverse(read(fp, n))
+    end
+end
 ```
 
-### @mendable
-
-Some functions you want to mock are called from the function you are testing. If the function you are testing is compiled, you will not be able to mock the internal function. That is where `@mendable` can help, it will allow you to mock the internal functions to your needs. As show in this example.
+The non-deterministic behaviour of this function makes it hard to test but we could write
+some tests:
 
 ```julia
-julia> function_inside() = println("a")
-function_inside (generic function with 1 method)
+using Base.Test
 
-julia> test1() = function_inside()
-test1 (generic function with 1 method)
+include("...")
 
-julia> test2() = @mendable function_inside()
-test2 (generic function with 1 method)
-
-julia> test1()
-a
-
-julia> test2()
-a
-
-julia> function_inside() = println("b")
-function_inside (generic function with 1 method)
-
-julia> test1()
-a
-
-julia> test2()
-b
+result = randdev(10)
+@test eltype(result) == UInt8
+@test length(result) == 10
 ```
 
-### Patch
-
-`Patch` allows similar behaviour as you would get from using `mend` directly. Note that you only need to specify a signature when the function you are overloading has multiple methods and the replacement would be ambiguous.
+But how could we test to ensure that the results produced by the function are reversed? The
+Mocking.jl package provides developers with the `@mock` macro which allows them to 
+temporarily overload a specific call. In this case we will apply `@mock` to the `open` call
+in `randdev`:
 
 ```julia
-julia> replacement = (name::AbstractString) -> name == "foo" ? IOBuffer("bar") : Original.open(name)
-(anonymous function)
-
-julia> mend(Patch(open, replacement)) do
-           readall(open("foo"))
-       end
-"bar"
+function randdev(n::Integer)
+    @mock open("/dev/urandom") do fp
+        reverse(read(fp, n))
+    end
+end
 ```
 
-We can also define multiple patches to make the code more readable.
+With the call site being marked we can now write a new testcase which allows us to test
+the reversing behaviour of the `randdev` function:
 
 ```julia
-julia> demo(filename) = @mendable isfile(filename) && readall(open(filename)) # this is just so we can show both calls are being used
-demo (generic function with 1 method)
+ENV["JULIA_TEST"] = 1
+using Mocking
 
-julia> new_isfile(f::AbstractString) = f == "foo" ? true : Original.isfile(f)
-new_isfile (generic function with 1 method)
+...
 
-julia> new_open = (f::AbstractString) -> f == "foo" ? IOBuffer("bar") : Original.open(f)
-(anonymous function)
+data = unsafe_string(pointer(convert(Array{UInt8}, 1:10)))  # Produces exactly 10 values
 
-julia> patch_isfile = Patch(isfile, new_isfile)
-Mocking.Patch(isfile,(anonymous function),Mocking.Signature(Type[AbstractString]))
+# Generate a alternative method of the `open` call we wish to mock.
+patch = @patch open(fn::Function, f::AbstractString) = fn(IOBuffer(data))
 
-julia> patch_open = Patch(open, new_open)
-Mocking.Patch(open,(anonymous function),Mocking.Signature(Type[AbstractString]))
-
-julia> mend(patch_isfile, patch_open) do
-           demo("foo")
-       end
-"bar"
-
-julia> patches = [patch_isfile, patch_open]
-2-element Array{Mocking.Patch,1}:
- Mocking.Patch(isfile,(anonymous function),Mocking.Signature(Type[AbstractString]))
- Mocking.Patch(open,(anonymous function),Mocking.Signature(Type[AbstractString]))
-
-julia> mend(patches) do
-           demo("foo")
-       end
-"bar"
-```
-
-## Compiler Issues
-
-When Julia compiles a function it may decide to inline the function call which you may want to mend:
-```julia
-julia> using Mocking
-
-julia> myfunc() = open("foo")  # Will be replaced with `open(fname::AbstractString, rd::Bool, wr::Bool, cr::Bool, tr::Bool, ff::Bool)`
-myfunc (generic function with 1 method)
-
-julia> Base.precompile(myfunc, ())
-
-julia> replacement = (name::AbstractString) -> name == "foo" ? IOBuffer("bar") : Original.open(name)
-(anonymous function)
-
-julia> mend(Base.open, replacement) do
-           readall(myfunc())
-       end
-ERROR: SystemError: opening file foo: No such file or directory
- in open at ./iostream.jl:90
- in myfunc at none:1
-```
-
-To stop Julia from inlining a particular call you can wrap the function call with `@mendable` to ensure that the call can be mended:
-```julia
-julia> using Mocking
-
-julia> myfunc() = @mendable open("foo")
-myfunc (generic function with 1 method)
-
-julia> Base.precompile(myfunc, ())
-
-julia> replacement = (name::AbstractString) -> name == "foo" ? IOBuffer("bar") : Original.open(name)
-(anonymous function)
-
-julia> mend(Base.open, replacement) do
-           readall(myfunc())
-       end
-"bar"
+# Apply the patch which will modify the behaviour for our test.
+apply(patch) do
+    @test randdev(10) == convert(Array{UInt8}, 10:-1:1)
+end
 ```
