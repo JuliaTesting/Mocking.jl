@@ -10,11 +10,25 @@ function __init__()
     const global GENERIC_ANONYMOUS = VERSION >= v"0.5-"
 
     # When ENABLED is false the @mock macro is a noop.
-    global ENABLED = isdefined(Base, :PROGRAM_FILE) && basename(PROGRAM_FILE) == "runtests.jl"
+    global ENABLED = false
     global PATCH_ENV = PatchEnv()
+
+    # Attempt to detect when Mocking has been imported while running within Pkg.test()
+    if isdefined(Base, :PROGRAM_FILE) && basename(PROGRAM_FILE) == "runtests.jl"
+        enable()
+    end
 end
 
-enable() = (global ENABLED = true)
+function enable()
+    ENABLED && return  # Abend early if enabled has already been set
+    global ENABLED = true
+
+    # TODO: Support programatically disabling the use of the compilecache.
+    opts = Base.JLOptions()
+    if isdefined(opts, :use_compilecache) && Bool(opts.use_compilecache)
+        warn("Mocking.jl will not probably not work when compilecache is enabled. Please start Julia with `--compilecache=no`")
+    end
+end
 
 immutable Patch
     signature::Expr
@@ -89,7 +103,9 @@ immutable PatchEnv
     debug::Bool
 
     function PatchEnv(debug::Bool=false)
-        m = eval(:(module $(gensym()) end))  # generate a module
+        # Generate a new module. TODO: pre-compilation doesn't like us creating new
+        # modules. One workaround is to pre-create a finite amount of empty modules.
+        m = Core.eval(Mocking, :(module $(gensym()) end))  # generate a module
         new(m, debug)
     end
 end
