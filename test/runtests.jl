@@ -8,7 +8,7 @@ end
 using Base.Test
 import Mocking: apply
 
-# include("expr.jl")
+include("expr.jl")
 include("patch.jl")
 
 # include("concept.jl")

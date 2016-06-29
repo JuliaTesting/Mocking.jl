@@ -1,5 +1,5 @@
-function extract_bindings(exprs::Array; anonymous_safe::Bool=false)
-    bindings = Union{Expr,Symbol}[]
+function extract_bindings(exprs::AbstractArray; anonymous_safe::Bool=false)
+    bindings = Set{Union{Expr,Symbol}}()
     for ex in exprs
         if isa(ex, Expr)
             # Positional parameter
@@ -10,21 +10,21 @@ function extract_bindings(exprs::Array; anonymous_safe::Bool=false)
             elseif ex.head == :kw && isa(ex.args[1], Expr)
                 anonymous_safe && error("optional parameters are not allowed")
                 push!(bindings, ex.args[1].args[2])
-                append!(bindings, extract_bindings(ex.args[2:2]))
+                union!(bindings, extract_bindings(ex.args[2:2]))
 
             # Keyword parameters
             elseif ex.head == :parameters
                 anonymous_safe && error("keyword parameters are not allowed")
-                append!(bindings, extract_bindings(ex.args))
+                union!(bindings, extract_bindings(ex.args))
 
             # Varargs parameter
             elseif ex.head == :...
-                append!(bindings, extract_bindings(ex.args))
+                union!(bindings, extract_bindings(ex.args))
 
             # Default values for optional or keyword parameters
             elseif ex.head == :call
                 push!(bindings, ex.args[1])
-                append!(bindings, extract_bindings(ex.args[2:end]))
+                union!(bindings, extract_bindings(ex.args[2:end]))
             end
         end
     end
