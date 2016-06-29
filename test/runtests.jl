@@ -2,7 +2,7 @@ using Mocking
 
 # Note: Explicitly setting Mocking.ENABLE should only be needed on Julia 0.4
 if VERSION < v"0.5-"
-    Mocking.ENABLE = true
+    Mocking.enable()
 end
 
 using Base.Test

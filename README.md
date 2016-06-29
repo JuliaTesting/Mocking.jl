@@ -35,7 +35,7 @@ result = randdev(n)
 
 How could we create a test that shows the output of the function is reversed? Mocking.jl
 provides the `@mock` macro which allows package developers to temporarily overload a
-specific call in their package. In this example we will apply `@mock` to the `open` call
+specific calls in their package. In this example we will apply `@mock` to the `open` call
 in `randdev`:
 
 ```julia
@@ -51,7 +51,7 @@ us to demonstrate the reversing behaviour within the `randdev` function:
 
 ```julia
 using Mocking
-Mocking.ENABLE = true  # Only necessary on Julia 0.4
+Mocking.enable()  # Not necessary on Julia 0.5- and above
 
 ...
 
