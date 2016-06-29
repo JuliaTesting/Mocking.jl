@@ -19,8 +19,27 @@ enable() = (global ENABLED = true)
 immutable Patch
     signature::Expr
     body::Function
-    modules::Array{Union{Expr,Symbol}}
+    modules::Set
+    # translation::Dict
+
+    function Patch(signature::Expr, body::Function, translation::Dict)
+        trans = adjust_bindings(translation)
+        absolute_binding!(signature.args[2:end], trans)  # TODO: Don't like that signature is modified
+        modules = Set([v.args[1] for v in values(trans)])
+        new(signature, body, modules)
+    end
 end
+
+# TODO: Find non-eval way to determine module locations of Types
+# evaling in the @patch scope seems to be problematic for pre-compliation
+# first(methods(x)).sig.types[2:end]
+
+# We can use the @patch macro to create a list of bindings used then pass that
+# in as an array into Patch. At runtime the types and function names will be fully
+# qualified
+
+# We can support optional parameters and keywords by using generic functions on
+# 0.4
 
 function convert(::Type{Expr}, p::Patch)
     sig, body = p.signature, p.body
@@ -48,11 +67,20 @@ macro patch(expr::Expr)
     end
 
     # Determine the modules required for the parameter types
-    modules = unique(qualify!(params; anonymous_safe=!GENERIC_ANONYMOUS))
+    bindings = unique(extract_bindings(params; anonymous_safe=!GENERIC_ANONYMOUS))
 
     signature = QuoteNode(Expr(:call, name, params...))
+
+    # Need to evaluate the body of the function in the context of the `@patch` macro in
+    # order to support closures.
     func = Expr(:(->), Expr(:tuple, params...), body)
-    esc(:(Mocking.Patch($signature, $func, $modules)))
+
+    translations = []
+    for b in bindings
+        push!(translations, Expr(:(=>), QuoteNode(b), b))
+    end
+
+    return esc(:(Mocking.Patch( $signature, $func, Dict($(translations...)) )))
 end
 
 immutable PatchEnv
