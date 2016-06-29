@@ -67,13 +67,14 @@ macro patch(expr::Expr)
     end
 
     # Determine the modules required for the parameter types
-    bindings = unique(extract_bindings(params; anonymous_safe=!GENERIC_ANONYMOUS))
+    bindings = unique(extract_bindings(params))
 
     signature = QuoteNode(Expr(:call, name, params...))
 
     # Need to evaluate the body of the function in the context of the `@patch` macro in
     # order to support closures.
-    func = Expr(:(->), Expr(:tuple, params...), body)
+    # func = Expr(:(->), Expr(:tuple, params...), body)
+    func = Expr(:(=), Expr(:call, gensym(), params...), body)
 
     translations = []
     for b in bindings

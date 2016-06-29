@@ -1,4 +1,4 @@
-function extract_bindings(exprs::AbstractArray; anonymous_safe::Bool=false)
+function extract_bindings(exprs::AbstractArray)
     bindings = Set{Union{Expr,Symbol}}()
     for ex in exprs
         if isa(ex, Expr)
@@ -8,13 +8,11 @@ function extract_bindings(exprs::AbstractArray; anonymous_safe::Bool=false)
 
             # Optional parameter
             elseif ex.head == :kw && isa(ex.args[1], Expr)
-                anonymous_safe && error("optional parameters are not allowed")
                 push!(bindings, ex.args[1].args[2])
                 union!(bindings, extract_bindings(ex.args[2:2]))
 
             # Keyword parameters
             elseif ex.head == :parameters
-                anonymous_safe && error("keyword parameters are not allowed")
                 union!(bindings, extract_bindings(ex.args))
 
             # Varargs parameter
