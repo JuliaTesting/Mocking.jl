@@ -1,14 +1,19 @@
+__precompile__(true)
+
 module Mocking
 
 include("expr.jl")
 
 export @patch, @mock, Patch, apply
 
+function __init__()
+    const global GENERIC_ANONYMOUS = VERSION >= v"0.5-"
 
-const GENERIC_ANONYMOUS = VERSION >= v"0.5-"
+    # When ENABLED is false the @mock macro is a noop.
+    global ENABLED = isdefined(Base, :PROGRAM_FILE) && basename(PROGRAM_FILE) == "runtests.jl"
+    global PATCH_ENV = PatchEnv()
+end
 
-# When ENABLED is false the @mock macro is a noop.
-global ENABLED = isdefined(Base, :PROGRAM_FILE) && basename(PROGRAM_FILE) == "runtests.jl"
 enable() = (global ENABLED = true)
 
 immutable Patch
@@ -124,7 +129,6 @@ function ismocked(pe::PatchEnv, func_name::Symbol, args::Tuple)
     return false
 end
 
-global PATCH_ENV = PatchEnv()
 set_active_env(pe::PatchEnv) = (global PATCH_ENV = pe)
 get_active_env() = PATCH_ENV
 
