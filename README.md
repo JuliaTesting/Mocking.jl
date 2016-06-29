@@ -1,4 +1,5 @@
-# Mocking
+Mocking
+=======
 
 [![Build Status](https://travis-ci.org/invenia/Mocking.jl.svg?branch=master)](https://travis-ci.org/invenia/Mocking.jl)
 [![Build Status](https://ci.appveyor.com/api/projects/status/la041r86v6p5k24x?svg=true)](https://ci.appveyor.com/project/omus/mocking-jl)
@@ -7,7 +8,8 @@
 Allows Julia function calls to be temporarily overloaded for purpose of testing.
 
 
-## Usage
+Usage
+-----
 
 Suppose you wrote the function `randdev`, how would you go about writing tests for it?
 
@@ -69,3 +71,16 @@ end
 # Outside of the scope of the patched environment `@mock` is essentially a no-op
 @test randdev(n) != convert(Array{UInt8}, n:-1:1)
 ```
+
+Notes
+-----
+
+Mocking.jl is intended to be used for testing only and will not affect the performance of
+your code when using `@mock`. In fact the `@mock` is actually a no-op when `Mocking.enable`
+is not called. One side effect of this behaviour is that pre-compiled packages won't work
+correctly with mocking unless you start Julia with `--compilecache=no`.
+
+License
+-------
+
+Mocking.jl is provided under the [MIT "Expat" License](LICENSE.md).
