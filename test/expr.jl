@@ -8,7 +8,8 @@ import Base.Dates: Hour
 @test Mocking.splitbinding(:(Foo.Bar)) == [:Foo, :Bar]
 @test Mocking.splitbinding(:(Foo.Bar.Baz)) == [:Foo, :Bar, :Baz]
 
-@test Mocking.binding_expr(Int) == :(Core.Int64)  # typealias, TODO: Core.Int?
+int_expr = is(Int, Int32) ? :(Core.Int32) : :(Core.Int64)
+@test Mocking.binding_expr(Int) == int_expr  # typealias. TODO: Change to Core.Int? Shouldn't actually matter
 @test Mocking.binding_expr(Int64) == :(Core.Int64)  # concrete type
 @test Mocking.binding_expr(Integer) == :(Core.Integer)  # abstract type
 @test Mocking.binding_expr(Hour) == :(Base.Dates.Hour)  # unexported type
@@ -18,7 +19,7 @@ import Base.Dates: Hour
 
 trans = Dict(:Int => Int, :Int64 => Int64, :Integer => Integer)
 @test Mocking.adjust_bindings(trans) == Dict(
-    :Int => :(Core.Int64),
+    :Int => int_expr,
     :Int64 => :(Core.Int64),
     :Integer => :(Core.Integer),
 )

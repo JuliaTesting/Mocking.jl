@@ -1,8 +1,9 @@
 import Base: Dates
 import Base.Dates: Hour
 
+int_expr = is(Int, Int32) ? :(Core.Int32) : :(Core.Int64)
 p = @patch f(a, b::Int64, c=3, d::Integer=4; e=5, f::Int=6) = nothing
-@test p.signature == :(f(a, b::Core.Int64, c=3, d::Core.Integer=4; e=5, f::Core.Int64=6))
+@test p.signature == :(f(a, b::Core.Int64, c=3, d::Core.Integer=4; e=5, f::$int_expr=6))
 @test p.modules == Set([:Core])
 
 p = @patch f(a::Integer...) = nothing

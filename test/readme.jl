@@ -1,7 +1,8 @@
 # Testcase from example given in Mocking.jl's README
 
-import Compat: read, unsafe_string
+import Compat: is_unix, read, unsafe_string
 
+# Note: Function only works in UNIX environments.
 function randdev(n::Integer)
     @mock open("/dev/urandom") do fp
         reverse(read(fp, n))
@@ -9,9 +10,11 @@ function randdev(n::Integer)
 end
 
 n = 10
-result = randdev(n)
-@test eltype(result) == UInt8
-@test length(result) == n
+if is_unix()
+    result = randdev(n)  # Reading /dev/urandom only works on UNIX environments
+    @test eltype(result) == UInt8
+    @test length(result) == n
+end
 
 # Produces a string with sequential UInt8 values from 1:n
 data = unsafe_string(pointer(convert(Array{UInt8}, 1:n)))
@@ -24,5 +27,7 @@ apply(patch) do
     @test randdev(n) == convert(Array{UInt8}, n:-1:1)
 end
 
-# Outside of the scope of the patched environment `@mock` is essentially a no-op
-@test randdev(n) != convert(Array{UInt8}, n:-1:1)
+if is_unix()
+    # Outside of the scope of the patched environment `@mock` is essentially a no-op
+    @test randdev(n) != convert(Array{UInt8}, n:-1:1)
+end
