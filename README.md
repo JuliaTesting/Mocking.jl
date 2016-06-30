@@ -11,7 +11,8 @@ Allows Julia function calls to be temporarily overloaded for purpose of testing.
 Usage
 -----
 
-Suppose you wrote the function `randdev`, how would you go about writing tests for it?
+Suppose you wrote the function `randdev` (UNIX only). How would you go about writing tests
+for it?
 
 ```julia
 function randdev(n::Integer)
@@ -26,8 +27,7 @@ tests dealing with the deterministic properties of the function:
 
 ```julia
 using Base.Test
-
-include("...")
+import ...: randdev
 
 n = 10
 result = randdev(n)
@@ -41,6 +41,8 @@ specific calls in their package. In this example we will apply `@mock` to the `o
 in `randdev`:
 
 ```julia
+using Mocking
+
 function randdev(n::Integer)
     @mock open("/dev/urandom") do fp
         reverse(read(fp, n))
@@ -72,13 +74,22 @@ end
 @test randdev(n) != convert(Array{UInt8}, n:-1:1)
 ```
 
+
 Notes
 -----
 
 Mocking.jl is intended to be used for testing only and will not affect the performance of
 your code when using `@mock`. In fact the `@mock` is actually a no-op when `Mocking.enable`
-is not called. One side effect of this behaviour is that pre-compiled packages won't work
-correctly with mocking unless you start Julia with `--compilecache=no`.
+is not called. One side effect of this behaviour is that pre-compiled packages won't test
+correctly with Mocking unless you start Julia with `--compilecache=no`.
+
+```
+$ julia --compilecache=no -e Pkg.test("...")
+```
+
+Examples of how to add this flag within Appveyor and Travis can be found in Mocking's own
+[appveyor.yml](appveyor.yml) and [.travis.yml](.travis.yml) files.
+
 
 License
 -------
