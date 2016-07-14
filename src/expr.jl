@@ -33,8 +33,8 @@ function binding_expr(t::Type)
     joinbinding(fullname(t.name.module)..., t.name.name)
 end
 function binding_expr(f::Function)
-    mod = Base.function_module(f, Tuple)
-    joinbinding(fullname(mod)..., Base.function_name(f))
+    m = Base.function_module(f, Tuple)
+    joinbinding(fullname(m)..., Base.function_name(f))
 end
 
 

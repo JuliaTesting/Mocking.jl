@@ -14,7 +14,7 @@ function __init__()
     global PATCH_ENV = PatchEnv()
 
     # Attempt to detect when Mocking has been imported while running within Pkg.test()
-    if isdefined(Base, :PROGRAM_FILE) && basename(PROGRAM_FILE) == "runtests.jl"
+    if isdefined(Base, :PROGRAM_FILE) && basename(Base.PROGRAM_FILE) == "runtests.jl"
         enable()
     end
 end
