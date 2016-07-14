@@ -26,7 +26,7 @@ function enable()
     # TODO: Support programatically disabling the use of the compilecache.
     opts = Base.JLOptions()
     if isdefined(opts, :use_compilecache) && Bool(opts.use_compilecache)
-        warn("Mocking.jl will not probably not work when compilecache is enabled. Please start Julia with `--compilecache=no`")
+        warn("Mocking.jl will probably not work when compilecache is enabled. Please start Julia with `--compilecache=no`")
     end
 end
 
