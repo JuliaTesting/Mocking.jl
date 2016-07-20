@@ -11,7 +11,7 @@ function __init__()
 
     # When ENABLED is false the @mock macro is a noop.
     global ENABLED = false
-    global PATCH_ENV = PatchEnv()
+    global PATCH_ENV = nothing
 
     # Attempt to detect when Mocking has been imported while running within Pkg.test()
     if isdefined(Base, :PROGRAM_FILE) && basename(Base.PROGRAM_FILE) == "runtests.jl"
@@ -22,6 +22,7 @@ end
 function enable()
     ENABLED && return  # Abend early if enabled has already been set
     global ENABLED = true
+    global PATCH_ENV = PatchEnv()
 
     # TODO: Support programatically disabling the use of the compilecache.
     opts = Base.JLOptions()
@@ -103,9 +104,9 @@ immutable PatchEnv
     debug::Bool
 
     function PatchEnv(debug::Bool=false)
-        # Generate a new module. TODO: pre-compilation doesn't like us creating new
-        # modules. One workaround is to pre-create a finite amount of empty modules.
-        m = Core.eval(Mocking, :(module $(gensym()) end))  # generate a module
+        # Be careful not to call this code during pre-compilation otherwise we'll see the
+        # warning: "incremental compilation may be broken for this module"
+        m = Core.eval(Mocking, :(module $(gensym()) end))
         new(m, debug)
     end
 end
@@ -180,7 +181,7 @@ get_active_env() = PATCH_ENV
 macro mock(expr)
     isa(expr, Expr) || error("argument is not an expression")
     expr.head == :call || error("expression is not a function call")
-    ENABLED || return esc(expr)
+    ENABLED || return esc(expr)  # @mock is a no-op when Mocking is not ENABLED
 
     func = expr.args[1]
     func_name = QuoteNode(func)
