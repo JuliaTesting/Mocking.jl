@@ -6,13 +6,13 @@ include("expr.jl")
 
 export @patch, @mock, Patch, apply
 
+const global GENERIC_ANONYMOUS = VERSION >= v"0.5-"
+
+# When ENABLED is false the @mock macro is a noop.
+global ENABLED = false
+global PATCH_ENV = nothing
+
 function __init__()
-    const global GENERIC_ANONYMOUS = VERSION >= v"0.5-"
-
-    # When ENABLED is false the @mock macro is a noop.
-    global ENABLED = false
-    global PATCH_ENV = nothing
-
     # Attempt to detect when Mocking has been imported while running within Pkg.test()
     if isdefined(Base, :PROGRAM_FILE) && basename(Base.PROGRAM_FILE) == "runtests.jl"
         enable()
