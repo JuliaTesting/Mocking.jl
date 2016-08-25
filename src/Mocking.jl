@@ -20,7 +20,7 @@ function __init__()
 end
 
 function enable()
-    ENABLED && return  # Abend early if enabled has already been set
+    ENABLED::Bool && return  # Abend early if enabled has already been set
     global ENABLED = true
     global PATCH_ENV = PatchEnv()
 
@@ -176,12 +176,12 @@ function ismocked(pe::PatchEnv, func_name::Symbol, args::Tuple)
 end
 
 set_active_env(pe::PatchEnv) = (global PATCH_ENV = pe)
-get_active_env() = PATCH_ENV
+get_active_env() = PATCH_ENV::PatchEnv
 
 macro mock(expr)
     isa(expr, Expr) || error("argument is not an expression")
     expr.head == :call || error("expression is not a function call")
-    ENABLED || return esc(expr)  # @mock is a no-op when Mocking is not ENABLED
+    ENABLED::Bool || return esc(expr)  # @mock is a no-op when Mocking is not ENABLED
 
     func = expr.args[1]
     func_name = QuoteNode(func)
