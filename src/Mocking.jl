@@ -10,13 +10,6 @@ export @patch, @mock, Patch, apply
 global ENABLED = false
 global PATCH_ENV = nothing
 
-function __init__()
-    # Attempt to detect when Mocking has been imported while running within Pkg.test()
-    if isdefined(Base, :PROGRAM_FILE) && basename(Base.PROGRAM_FILE) == "runtests.jl"
-        enable()
-    end
-end
-
 function enable()
     ENABLED::Bool && return  # Abend early if enabled has already been set
     global ENABLED = true

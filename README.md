@@ -55,7 +55,10 @@ us to demonstrate the reversing behaviour within the `randdev` function:
 
 ```julia
 using Mocking
-Mocking.enable()  # Not necessary on Julia 0.5- and above
+Mocking.enable()  # Need to enable before we import any code using the `@mock` macro
+
+using Base.Test
+import ...: randdev
 
 ...
 
