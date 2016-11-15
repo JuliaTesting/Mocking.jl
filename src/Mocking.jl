@@ -6,8 +6,6 @@ include("expr.jl")
 
 export @patch, @mock, Patch, apply
 
-const global GENERIC_ANONYMOUS = VERSION >= v"0.5-"
-
 # When ENABLED is false the @mock macro is a noop.
 global ENABLED = false
 global PATCH_ENV = nothing
