@@ -181,11 +181,16 @@ macro mock(expr)
     env_var = gensym("env")
     args_var = gensym("args")
 
+    # Note: The fix to Julia issue #265 (PR #17057) introduced changes where no compiled
+    # calls could be made to functions compiled afterwards. Since the `apply` do block
+    # syntax compiles the do block function before evaluating the do "outer" function this
+    # means our patch functions will be compiled after the "inner" function.
+    # Also note that we need to QuoteNode args_var to handle Symbols in args_var.
     result = quote
         local $env_var = Mocking.get_active_env()
         local $args_var = tuple($(args...))
         if Mocking.ismocked($env_var, $func_name, $args_var)
-            $env_var.mod.$func($args_var...)
+            eval(Expr(:call, $env_var.mod.$func, map(QuoteNode, $args_var)...))
         else
             $func($args_var...)
         end

@@ -1,6 +1,6 @@
 let magic
     magic(x) = false
-    sentinel = gensym()
+    sentinel = gensym("sentinel")
     @test magic(sentinel) == false
 
     # Getting closers to work means having a function created in the current scope
