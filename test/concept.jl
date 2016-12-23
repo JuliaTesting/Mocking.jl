@@ -39,7 +39,7 @@ Mocking.set_active_env(pe)
 @test (@mock multiply(0x2)) == 0x4
 @test (@mock multiply(2//1)) == 4//1
 
-# Use convienient syntax
+# Use convenient syntax
 apply(patches) do
     @test (@mock multiply(2)) == 8
     @test (@mock multiply(0x2)) == 0x6
