@@ -3,7 +3,7 @@
 if isdefined(Base, :unwrap_unionall)
     import Base: unwrap_unionall
 else
-    unwrap_unionall(t::Type) = t.name
+    unwrap_unionall(t::Type) = t
 end
 
 function extract_bindings(exprs::AbstractArray)
