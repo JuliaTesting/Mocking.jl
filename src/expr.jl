@@ -1,3 +1,11 @@
+# Note: Needed for compatibility with the Julia 0.6 type system change:
+# https://github.com/JuliaLang/julia/pull/18457
+if isdefined(Base, :unwrap_unionall)
+    import Base: unwrap_unionall
+else
+    unwrap_unionall(t::Type) = t
+end
+
 function extract_bindings(exprs::AbstractArray)
     bindings = Set{Union{Expr,Symbol}}()
     for ex in exprs
@@ -30,7 +38,8 @@ function extract_bindings(exprs::AbstractArray)
 end
 
 function binding_expr(t::Type)
-    joinbinding(fullname(t.name.module)..., t.name.name)
+    type_name = unwrap_unionall(t).name
+    joinbinding(fullname(type_name.module)..., type_name.name)
 end
 function binding_expr(f::Function)
     m = Base.function_module(f, Tuple)
