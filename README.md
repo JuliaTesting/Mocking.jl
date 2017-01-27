@@ -91,8 +91,9 @@ correctly with Mocking unless you start Julia with `--compiled-modules=no` (>=0.
 $ julia --compilecache=no -e Pkg.test("...")
 ```
 
-Examples of how to add this flag within Appveyor and Travis can be found in Mocking's own
-[appveyor.yml](appveyor.yml) and [.travis.yml](.travis.yml) files.
+Alternatively you can use `Mocking.enable(force=true)` to automatically disable using
+package precompilation for you (experimental). Make sure to call `enable` before the you
+importing the module you are testing.
 
 
 License

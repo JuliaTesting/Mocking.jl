@@ -1,5 +1,5 @@
 using Mocking
-Mocking.enable()
+Mocking.enable(force=true)
 
 VERSION < v"0.7-" && import Compat: Test
 using Test
