@@ -84,7 +84,7 @@ macro patch(expr::Expr)
 
     translations = []
     for b in bindings
-        push!(translations, Expr(:(=>), QuoteNode(b), b))
+        push!(translations, Expr(:call, :(=>), QuoteNode(b), b))
     end
 
     return esc(:(Mocking.Patch( $signature, $func, Dict($(translations...)) )))
