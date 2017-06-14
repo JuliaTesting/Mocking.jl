@@ -19,6 +19,9 @@ end
     patch = @patch hourvalue(; hour::Hour=Hour(21)) = 2 * Dates.value(hour)
     apply(patch) do
         @test (@mock hourvalue()) == 42
-        # @test (@mock hourvalue(hour=Hour(4))) == 8  # TODO
+
+        # Test @mock calls with keyword arguments
+        @test (@mock hourvalue(hour=Hour(4))) == 8      #:kw
+        @test (@mock hourvalue(; hour=Hour(4))) == 8    #:parameters
     end
 end

@@ -2,7 +2,7 @@ __precompile__(true)
 
 module Mocking
 
-import Compat: uninitialized, @info, @warn
+import Compat: uninitialized, @info, @warn, invokelatest
 
 if VERSION < v"0.7.0-DEV.3455"
     hasmethod(f, t) = Base.method_exists(f, t)
@@ -217,7 +217,8 @@ macro mock(expr)
 
     func = expr.args[1]
     func_name = QuoteNode(func)
-    args = expr.args[2:end]
+    args = filter(x -> !Mocking.iskwarg(x), expr.args[2:end])
+    kwargs = extract_kwargs(expr)
 
     env_var = gensym("env")
     args_var = gensym("args")
@@ -231,9 +232,9 @@ macro mock(expr)
         local $env_var = Mocking.get_active_env()
         local $args_var = tuple($(args...))
         if Mocking.ismocked($env_var, $func_name, $args_var)
-            Base.invokelatest($env_var.mod.$func, $args_var...)
+            Mocking.invokelatest($env_var.mod.$func, $args_var...; $(kwargs...))
         else
-            $func($args_var...)
+            $func($args_var...; $(kwargs...))
         end
     end
 
