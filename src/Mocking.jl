@@ -31,8 +31,9 @@ immutable Patch
     # translation::Dict
 
     function Patch(signature::Expr, body::Function, translation::Dict)
+        signature = deepcopy(signature)
         trans = adjust_bindings(translation)
-        absolute_binding!(signature.args[2:end], trans)  # TODO: Don't like that signature is modified
+        absolute_binding!(signature.args[2:end], trans)
         modules = Set([v.args[1] for v in values(trans)])
         new(signature, body, modules)
     end
