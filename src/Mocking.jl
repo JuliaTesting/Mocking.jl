@@ -85,10 +85,9 @@ macro patch(expr::Expr)
     # func = Expr(:(->), Expr(:tuple, params...), body)
     func = Expr(:(=), Expr(:call, gensym(), params...), body)
 
-    translations = []
-    for b in bindings
-        push!(translations, Expr(:call, :(=>), QuoteNode(b), b))
-    end
+    # Generate a translation between the binding Symbols and the runtime types and
+    # functions. The translation will be used to revise all bindings to be absolute.
+    translations = [Expr(:call, :(=>), QuoteNode(b), b) for b in bindings]
 
     return esc(:(Mocking.Patch( $signature, $func, Dict($(translations...)) )))
 end
