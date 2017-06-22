@@ -32,9 +32,9 @@ immutable Patch
 
     function Patch(signature::Expr, body::Function, translation::Dict)
         trans = adjust_bindings(translation)
-        absolute_binding!(signature.args[2:end], trans)  # TODO: Don't like that signature is modified
-        modules = Set([v.args[1] for v in values(trans)])
-        new(signature, body, modules)
+        sig = absolute_sig(signature, trans)
+        modules = Set([v.args[1] for v in values(trans)])  # Square brackets only needed on Julia 0.4
+        new(sig, body, modules)
     end
 end
 
@@ -84,10 +84,9 @@ macro patch(expr::Expr)
     # func = Expr(:(->), Expr(:tuple, params...), body)
     func = Expr(:(=), Expr(:call, gensym(), params...), body)
 
-    translations = []
-    for b in bindings
-        push!(translations, Expr(:call, :(=>), QuoteNode(b), b))
-    end
+    # Generate a translation between the binding Symbols and the runtime types and
+    # functions. The translation will be used to revise all bindings to be absolute.
+    translations = [Expr(:call, :(=>), QuoteNode(b), b) for b in bindings]
 
     return esc(:(Mocking.Patch( $signature, $func, Dict($(translations...)) )))
 end
