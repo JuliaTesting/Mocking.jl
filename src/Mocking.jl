@@ -31,11 +31,10 @@ immutable Patch
     # translation::Dict
 
     function Patch(signature::Expr, body::Function, translation::Dict)
-        signature = deepcopy(signature)
         trans = adjust_bindings(translation)
-        absolute_binding!(signature.args[2:end], trans)
-        modules = Set([v.args[1] for v in values(trans)])
-        new(signature, body, modules)
+        sig = absolute_sig(signature, trans)
+        modules = Set([v.args[1] for v in values(trans)])  # Square brackets only needed on Julia 0.4
+        new(sig, body, modules)
     end
 end
 

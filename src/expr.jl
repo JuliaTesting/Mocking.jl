@@ -96,6 +96,17 @@ function absolute_binding!(exprs::Array, translations::Dict)
     exprs
 end
 
+function absolute_sig!(expr::Expr, translations::Dict)
+    expr.head == :call || error("expression is not a call")
+    absolute_binding!(expr.args[2:end], translations)
+    expr
+end
+
+function absolute_sig(expr::Expr, translations::Dict)
+    absolute_sig!(deepcopy(expr), translations)
+end
+
+
 function joinbinding(symbols::Symbol...)
     result = symbols[1]
     for s in symbols[2:end]
