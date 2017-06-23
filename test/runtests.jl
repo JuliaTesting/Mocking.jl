@@ -5,6 +5,7 @@ using Base.Test
 import Mocking: apply
 
 include("expr.jl")
+include("bindings/bindings.jl")
 include("patch.jl")
 
 include("concept.jl")

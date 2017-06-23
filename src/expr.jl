@@ -6,37 +6,26 @@ else
     unwrap_unionall(t::Type) = t
 end
 
-function extract_bindings(exprs::AbstractArray)
-    bindings = Set{Union{Expr,Symbol}}()
-    for ex in exprs
-        if isa(ex, Expr)
-            # Positional parameter
-            if ex.head == :(::)
-                push!(bindings, ex.args[2])
 
-            # Optional parameter
-            elseif ex.head == :kw && isa(ex.args[1], Expr)
-                push!(bindings, ex.args[1].args[2])
-                union!(bindings, extract_bindings(ex.args[2:2]))
+"""
+    binding_expr(x) -> Expr
 
-            # Keyword parameters
-            elseif ex.head == :parameters
-                union!(bindings, extract_bindings(ex.args))
+Converts a Module, Type, or Function into an expression which includes the entire module
+hierarchy.
 
-            # Varargs parameter
-            elseif ex.head == :...
-                union!(bindings, extract_bindings(ex.args))
+```julia
+julia> binding_expr(Int8)
+:(Core.Int8)
 
-            # Default values for optional or keyword parameters
-            elseif ex.head == :call
-                push!(bindings, ex.args[1])
-                union!(bindings, extract_bindings(ex.args[2:end]))
-            end
-        end
-    end
-    return bindings
+julia> binding_expr(Dates.Hour)
+:(Base.Dates.Hour)
+```
+"""
+function binding_expr end
+
+function binding_expr(m::Module)
+    joinbinding(fullname(m)...)
 end
-
 function binding_expr(t::Type)
     type_name = unwrap_unionall(t).name
     joinbinding(fullname(type_name.module)..., type_name.name)
@@ -45,7 +34,6 @@ function binding_expr(f::Function)
     m = Base.function_module(f, Tuple)
     joinbinding(fullname(m)..., Base.function_name(f))
 end
-
 
 
 function adjust_bindings(translations::Dict)
@@ -57,54 +45,24 @@ function adjust_bindings(translations::Dict)
 end
 
 
-
-function absolute_binding!(expr::Expr, translations::Dict)
-    # Positional parameter
-    if expr.head == :(::)
-        binding = expr.args[2]
-        expr.args[2] = translations[binding]
-
-    # Optional parameter
-    elseif expr.head == :kw && isa(expr.args[1], Expr)
-        binding = expr.args[1].args[2]
-        expr.args[1].args[2] = translations[binding]
-        absolute_binding!(expr.args[2:2], translations)
-
-    # Keyword parameters
-    elseif expr.head == :parameters
-        absolute_binding!(expr.args, translations)
-
-    # Varargs parameter
-    elseif expr.head == :...
-        absolute_binding!(expr.args, translations)
-
-    # Default values for optional or keyword parameters
-    elseif expr.head == :call
-        binding = expr.args[1]
-        expr.args[1] = translations[binding]
-        absolute_binding!(expr.args[2:end], translations)
-    end
-    expr
-end
-
-function absolute_binding!(exprs::Array, translations::Dict)
-    for expr in exprs
-        if isa(expr, Expr)
-           absolute_binding!(expr, translations)
+function absolute_signature(expr::Expr, translations::Dict)
+    if expr.head == :.
+        return get(translations, expr, expr)
+    else
+        num_args = length(expr.args)
+        args = Array{Any}(num_args)
+        for i in 1:num_args
+            args[i] = absolute_signature(expr.args[i], translations)
         end
+        return Expr(expr.head, args...)
     end
-    exprs
 end
 
-function absolute_sig!(expr::Expr, translations::Dict)
-    expr.head == :call || error("expression is not a call")
-    absolute_binding!(expr.args[2:end], translations)
-    expr
+function absolute_signature(sym::Symbol, translations::Dict)
+    return get(translations, sym, sym)
 end
 
-function absolute_sig(expr::Expr, translations::Dict)
-    absolute_sig!(deepcopy(expr), translations)
-end
+absolute_signature(x::Any, translations::Dict) = x
 
 
 function joinbinding(symbols::Symbol...)

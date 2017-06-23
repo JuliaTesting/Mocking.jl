@@ -5,6 +5,7 @@ module Mocking
 import Compat: invokelatest
 
 include("expr.jl")
+include("bindings.jl")
 
 export @patch, @mock, Patch, apply
 
@@ -32,7 +33,7 @@ immutable Patch
 
     function Patch(signature::Expr, body::Function, translation::Dict)
         trans = adjust_bindings(translation)
-        sig = absolute_sig(signature, trans)
+        sig = absolute_signature(signature, trans)
         modules = Set([v.args[1] for v in values(trans)])  # Square brackets only needed on Julia 0.4
         new(sig, body, modules)
     end
@@ -85,21 +86,21 @@ macro patch(expr::Expr)
         throw(ArgumentError("expression is not a function definition"))
     end
 
-    # Determine the modules required for the parameter types
-    bindings = unique(extract_bindings(params))
+    signature = Expr(:call, name, params...)
 
-    signature = QuoteNode(Expr(:call, name, params...))
+    # Determine the bindings used in the signature
+    bindings = Bindings(signature)
 
     # Need to evaluate the body of the function in the context of the `@patch` macro in
     # order to support closures.
     # func = Expr(:(->), Expr(:tuple, params...), body)
     func = Expr(:(=), Expr(:call, gensym(), params...), body)
 
-    # Generate a translation between the binding Symbols and the runtime types and
+    # Generate a translation between the external bindings and the runtime types and
     # functions. The translation will be used to revise all bindings to be absolute.
-    translations = [Expr(:call, :(=>), QuoteNode(b), b) for b in bindings]
+    translations = [Expr(:call, :(=>), QuoteNode(b), b) for b in bindings.external]
 
-    return esc(:(Mocking.Patch( $signature, $func, Dict($(translations...)) )))
+    return esc(:(Mocking.Patch( $(QuoteNode(signature)), $func, Dict($(translations...)) )))
 end
 
 immutable PatchEnv
