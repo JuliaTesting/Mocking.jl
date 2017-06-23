@@ -50,9 +50,20 @@ end
 # 0.4
 
 function convert(::Type{Expr}, p::Patch)
+    exprs = Array{Expr}(length(p.modules) + 1)
+
+    # Generate imports for all required modules
+    for (i, m) in enumerate(p.modules)
+        exprs[i] = Expr(:import, splitbinding(m)...)
+    end
+
+    # Generate the new method which will call the user's patch function. We need to perform
+    # this call instead of injecting the body expression to support closures.
     sig, body = p.signature, p.body
     params = call_parameters(sig)
-    return :($sig = $body($(params...)))
+    exprs[end] = :($sig = $body($(params...)))
+
+    return Expr(:block, exprs...)
 end
 
 macro patch(expr::Expr)
@@ -116,9 +127,6 @@ function PatchEnv(patch::Patch, debug::Bool=false)
 end
 
 function apply!(pe::PatchEnv, p::Patch)
-    for m in p.modules
-        Core.eval(pe.mod, Expr(:import, splitbinding(m)...))
-    end
     Core.eval(pe.mod, convert(Expr, p))
 end
 
