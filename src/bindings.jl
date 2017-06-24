@@ -190,7 +190,9 @@ function ingest_signature!(b::Bindings, expr::Expr)
 
     # f(...) where T
     elseif expr.head == :where
-        push!(b.internal, expr.args[2])
+        for parametric in expr.args[2:end]
+            ingest_parametric!(b, parametric)
+        end
         ingest_signature!(b, expr.args[1])
 
     else

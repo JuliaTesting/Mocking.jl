@@ -1,4 +1,5 @@
 # Needs to be in a separate file since not even `@static` can fix the unhandled syntax
+import Mocking: Bindings, ingest_signature!
 
 @test @valid_method f(x::T, y::S) where S<:T where T = (x, y)
 b = Bindings()
