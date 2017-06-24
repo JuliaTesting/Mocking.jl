@@ -36,12 +36,12 @@ ingest_parameter!(b, :(f(a::Int=1)).args[2])
 @test b.external == Set([:Int])
 
 b = Bindings()
-ingest_parameter!(b, :(; a=1).args[1])
+ingest_parameter!(b, :(f(; a=1)).args[2])  # VERSION >= v"0.5-" could be `:(; a=1).args[1]`
 @test b.internal == Set([:a])
 @test b.external == Set([])
 
 b = Bindings()
-ingest_parameter!(b, :(; a::Int=1).args[1])
+ingest_parameter!(b, :(f(; a::Int=1)).args[2])  # VERSION >= v"0.5-" could be `:(; a::Int=1).args[1]`
 @test b.internal == Set([:a])
 @test b.external == Set([:Int])
 

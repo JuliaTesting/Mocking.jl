@@ -32,6 +32,13 @@ function ingest_parametric!(b::Bindings, expr::Expr)
         push!(b.internal, defined)
         !(reference in b.internal) && push!(b.external, reference)
 
+    elseif expr.head == :comparison && length(expr.args) == 3 &&
+        expr.args[2] in (:(<:), :(>:)) && VERSION < v"0.5-"
+
+        defined, reference = expr.args[1], expr.args[3]
+        push!(b.internal, defined)
+        !(reference in b.internal) && push!(b.external, reference)
+
     # Chained operator comparison
     elseif expr.head == :comparison && length(expr.args) == 5 &&
         expr.args[2] == expr.args[4] && expr.args[2] in (:(<:), :(>:))

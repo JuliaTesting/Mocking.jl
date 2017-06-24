@@ -31,8 +31,14 @@ function binding_expr(t::Type)
     joinbinding(fullname(type_name.module)..., type_name.name)
 end
 function binding_expr(f::Function)
-    if VERSION < v"0.5-" && isgeneric(f) || VERSION >= v"0.5-" && isa(f, Core.Builtin)
+    if VERSION >= v"0.5-" && isa(f, Core.Builtin)
         return Base.function_name(f)
+    elseif VERSION < v"0.5-" && !isgeneric(f)
+        if isdefined(f, :env) && isa(f.env, Symbol)
+            return f.env
+        else
+            return Base.function_name(f)
+        end
     end
     m = Base.function_module(f, Tuple)
     joinbinding(fullname(m)..., Base.function_name(f))
