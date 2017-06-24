@@ -62,13 +62,18 @@ function ingest_assertion!(b::Bindings, expr::Expr)
             ingest_assertion!(b, ex)
         end
 
+    # ...{<:Integer}
+    elseif expr.head in (:(<:), :(>:))
+        reference = expr.args[1]
+        !(reference in b.internal) && push!(b.external, reference)
+
     # Core.Int and Base.Random.rand
     elseif expr.head == :.
         reference = expr
         !(reference in b.internal) && push!(b.external, reference)
 
-    # ...{<:Integer}
-    elseif expr.head == :call && expr.args[1] in (:(<:), :(>:))
+    # ...{<:Integer} on Julia 0.5 and below
+    elseif expr.head == :call && expr.args[1] in (:(<:), :(>:)) && VERSION < v"0.6"
         reference = expr.args[2]
         !(reference in b.internal) && push!(b.external, reference)
 
