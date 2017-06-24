@@ -33,7 +33,7 @@ immutable Patch
 
     function Patch(signature::Expr, body::Function, translation::Dict)
         trans = adjust_bindings(translation)
-        sig = absolute_signature(signature, trans)
+        sig = name_parameters(absolute_signature(signature, trans))
         modules = Set([v.args[1] for v in values(trans)])  # Square brackets only needed on Julia 0.4
         new(sig, body, modules)
     end
@@ -157,7 +157,7 @@ end
 function ismocked(pe::PatchEnv, func_name::Symbol, args::Tuple)
     if isdefined(pe.mod, func_name)
         func = Core.eval(pe.mod, func_name)
-        types = map(typeof, tuple(args...))
+        types = map(arg -> isa(arg, Type) ? Type{arg} : typeof(arg), args)
         exists = method_exists(func, types)
 
         if pe.debug

@@ -10,6 +10,12 @@ p = @patch f(a::Integer...) = nothing
 @test p.signature == :(f(a::Core.Integer...))
 @test p.modules == Set([:Core])
 
+# Issue #15
+anon = next_gensym("anon", 2)
+p = @patch f(::Type{UInt8}, b::Int64) = nothing
+@test p.signature == :(f($anon::Core.Type{Core.UInt8}, b::Core.Int64))
+@test p.modules == Set([:Core])
+
 patches = [
     @patch f(h::Base.Dates.Hour=Base.Dates.Hour(rand())) = nothing
     @patch f(h::Dates.Hour=Dates.Hour(rand())) = nothing

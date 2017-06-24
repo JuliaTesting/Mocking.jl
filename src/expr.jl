@@ -64,6 +64,23 @@ end
 
 absolute_signature(x::Any, translations::Dict) = x
 
+function name_parameters(expr::Expr)
+    if expr.head == :(::) && length(expr.args) == 1
+        return Expr(expr.head, gensym("anon"), expr.args[1])
+        # return Expr(expr.head, :anon, expr.args[1])
+    else
+        num_args = length(expr.args)
+        args = Array{Any}(num_args)
+        for i in 1:num_args
+            args[i] = name_parameters(expr.args[i])
+        end
+        return Expr(expr.head, args...)
+    end
+end
+
+name_parameters(x::Any) = x
+
+
 
 function joinbinding(symbols::Symbol...)
     result = symbols[1]
