@@ -161,7 +161,7 @@ function ismocked(pe::PatchEnv, func_name::Symbol, args::Tuple)
         exists = method_exists(func, types)
 
         if pe.debug
-            info("calling $func_name($(types...))")
+            info("calling $func_name$(types)")
             if exists
                 m = first(methods(func, types))
                 info("executing mocked function: $m")
