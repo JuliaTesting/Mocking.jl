@@ -62,15 +62,23 @@ function ingest_assertion!(b::Bindings, expr::Expr)
             ingest_assertion!(b, ex)
         end
 
+    # Core.Int and Base.Random.rand
+    elseif expr.head == :.
+        reference = expr
+        !(reference in b.internal) && push!(b.external, reference)
+
     # ...{<:Integer}
     elseif expr.head == :call && expr.args[1] in (:(<:), :(>:))
         reference = expr.args[2]
         !(reference in b.internal) && push!(b.external, reference)
 
-    # Core.Int and Base.Random.rand
-    elseif expr.head == :.
-        reference = expr
-        !(reference in b.internal) && push!(b.external, reference)
+    # typeof(func)
+    elseif expr.head == :call
+        func, args = expr.args[1], expr.args[2:end]
+        !(func in b.internal) && push!(b.external, func)
+        for arg in args
+            ingest_assertion!(b, arg)
+        end
 
     else
         error("expression is not type assertion: $expr")

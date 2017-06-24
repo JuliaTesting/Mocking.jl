@@ -55,3 +55,8 @@ b = Bindings()
 ingest_assertion!(b, :(Base.Dates.Hour))
 @test b.internal == Set([])
 @test b.external == Set([:(Base.Dates.Hour)])
+
+b = Bindings()
+ingest_assertion!(b, :(typeof(cos)))
+@test b.internal == Set([])
+@test b.external == Set([:typeof, :cos])

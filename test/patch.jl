@@ -16,6 +16,10 @@ p = @patch f(::Type{UInt8}, b::Int64) = nothing
 @test p.signature == :(f($anon::Core.Type{Core.UInt8}, b::Core.Int64))
 @test p.modules == Set([:Core])
 
+p = @patch f(t::typeof(cos)) = nothing
+@test p.signature == :(f(t::typeof(Base.MPFR.cos)))
+@test p.modules == Set([:(Base.MPFR)])
+
 patches = [
     @patch f(h::Base.Dates.Hour=Base.Dates.Hour(rand())) = nothing
     @patch f(h::Dates.Hour=Dates.Hour(rand())) = nothing

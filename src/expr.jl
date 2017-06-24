@@ -31,6 +31,7 @@ function binding_expr(t::Type)
     joinbinding(fullname(type_name.module)..., type_name.name)
 end
 function binding_expr(f::Function)
+    isa(f, Core.Builtin) && return Base.function_name(f)
     m = Base.function_module(f, Tuple)
     joinbinding(fullname(m)..., Base.function_name(f))
 end

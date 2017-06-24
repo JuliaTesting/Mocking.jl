@@ -34,7 +34,8 @@ immutable Patch
     function Patch(signature::Expr, body::Function, translation::Dict)
         trans = adjust_bindings(translation)
         sig = name_parameters(absolute_signature(signature, trans))
-        modules = Set([v.args[1] for v in values(trans)])  # Square brackets only needed on Julia 0.4
+        # Square brackets only needed on Julia 0.4
+        modules = Set([b.args[1] for b in values(trans) if isa(b, Expr)])
         new(sig, body, modules)
     end
 end
