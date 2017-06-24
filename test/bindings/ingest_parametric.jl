@@ -42,7 +42,10 @@ ingest_parametric!(b, :(Integer<:A<:Real))
 
 # Invalid parametric
 if VERSION >= v"0.6"
-    @test !@valid_method f{Integer<:A}(::Type{A}) = A
+    method_expr = quote
+        f{Integer<:A}(::Type{A}) = A
+    end
+    @test !valid_method(method_expr)
 end
 b = Bindings()
 ingest_parametric!(b, :(Integer<:A))
@@ -50,7 +53,10 @@ ingest_parametric!(b, :(Integer<:A))
 @test b.external == Set([:A])
 
 @static if VERSION >= v"0.6"
-    @test !@valid_method f{Integer>:A}(::Type{A}) = A
+    method_expr = quote
+        f{Integer>:A}(::Type{A}) = A
+    end
+    @test !valid_method(method_expr)
 end
 b = Bindings()
 ingest_parametric!(b, :(Integer>:A))

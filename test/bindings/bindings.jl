@@ -2,16 +2,20 @@ function genmod()
     Core.eval(:(module $(gensym()) end))
 end
 
+function valid_method(expr::Expr)
+    try
+        !isempty(methods(eval(genmod(), expr)))
+    catch
+        false
+    end
+end
+
 macro valid_method(expr)
     result = quote
-        try
-            !isempty(methods(eval(genmod(), $(esc(expr)))))
-        catch
-            false
-        end
+        valid_method($(QuoteNode(expr)))
     end
     Base.remove_linenums!(result)
-    return result
+    return esc(result)
 end
 
 include("ingest_parametric.jl")
