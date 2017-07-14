@@ -5,6 +5,7 @@ module Mocking
 import Compat: invokelatest
 
 include("expr.jl")
+include("bindings.jl")
 
 export @patch, @mock, Patch, apply
 
@@ -32,8 +33,17 @@ immutable Patch
 
     function Patch(signature::Expr, body::Function, translation::Dict)
         trans = adjust_bindings(translation)
-        sig = absolute_sig(signature, trans)
-        modules = Set([v.args[1] for v in values(trans)])  # Square brackets only needed on Julia 0.4
+        sig = name_parameters(absolute_signature(signature, trans))
+
+        # On VERSION >= v"0.5"
+        # modules = Set(b.args[1] for b in values(trans) if isa(b, Expr))
+        modules = Set()
+        for b in values(trans)
+            if isa(b, Expr)
+                push!(modules, b.args[1])
+            end
+        end
+
         new(sig, body, modules)
     end
 end
@@ -50,9 +60,20 @@ end
 # 0.4
 
 function convert(::Type{Expr}, p::Patch)
+    exprs = Array{Expr}(length(p.modules) + 1)
+
+    # Generate imports for all required modules
+    for (i, m) in enumerate(p.modules)
+        exprs[i] = Expr(:import, splitbinding(m)...)
+    end
+
+    # Generate the new method which will call the user's patch function. We need to perform
+    # this call instead of injecting the body expression to support closures.
     sig, body = p.signature, p.body
     params = call_parameters(sig)
-    return :($sig = $body($(params...)))
+    exprs[end] = :($sig = $body($(params...)))
+
+    return Expr(:block, exprs...)
 end
 
 macro patch(expr::Expr)
@@ -74,21 +95,21 @@ macro patch(expr::Expr)
         throw(ArgumentError("expression is not a function definition"))
     end
 
-    # Determine the modules required for the parameter types
-    bindings = unique(extract_bindings(params))
+    signature = Expr(:call, name, params...)
 
-    signature = QuoteNode(Expr(:call, name, params...))
+    # Determine the bindings used in the signature
+    bindings = Bindings(signature)
 
     # Need to evaluate the body of the function in the context of the `@patch` macro in
     # order to support closures.
     # func = Expr(:(->), Expr(:tuple, params...), body)
     func = Expr(:(=), Expr(:call, gensym(), params...), body)
 
-    # Generate a translation between the binding Symbols and the runtime types and
+    # Generate a translation between the external bindings and the runtime types and
     # functions. The translation will be used to revise all bindings to be absolute.
-    translations = [Expr(:call, :(=>), QuoteNode(b), b) for b in bindings]
+    translations = [Expr(:call, :(=>), QuoteNode(b), b) for b in bindings.external]
 
-    return esc(:(Mocking.Patch( $signature, $func, Dict($(translations...)) )))
+    return esc(:(Mocking.Patch( $(QuoteNode(signature)), $func, Dict($(translations...)) )))
 end
 
 immutable PatchEnv
@@ -116,9 +137,6 @@ function PatchEnv(patch::Patch, debug::Bool=false)
 end
 
 function apply!(pe::PatchEnv, p::Patch)
-    for m in p.modules
-        Core.eval(pe.mod, Expr(:import, splitbinding(m)...))
-    end
     Core.eval(pe.mod, convert(Expr, p))
 end
 
@@ -148,11 +166,11 @@ end
 function ismocked(pe::PatchEnv, func_name::Symbol, args::Tuple)
     if isdefined(pe.mod, func_name)
         func = Core.eval(pe.mod, func_name)
-        types = map(typeof, tuple(args...))
+        types = map(arg -> isa(arg, Type) ? Type{arg} : typeof(arg), args)
         exists = method_exists(func, types)
 
         if pe.debug
-            info("calling $func_name($(types...))")
+            info("calling $func_name$(types)")
             if exists
                 m = first(methods(func, types))
                 info("executing mocked function: $m")
