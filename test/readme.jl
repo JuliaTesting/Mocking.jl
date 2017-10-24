@@ -1,6 +1,6 @@
 # Testcase from example given in Mocking.jl's README
 
-import Compat: is_unix, read, unsafe_string
+import Compat: Sys, read, unsafe_string
 
 # Note: Function only works in UNIX environments.
 function randdev(n::Integer)
@@ -10,7 +10,7 @@ function randdev(n::Integer)
 end
 
 n = 10
-if is_unix()
+if Sys.isunix()
     result = randdev(n)  # Reading /dev/urandom only works on UNIX environments
     @test eltype(result) == UInt8
     @test length(result) == n
@@ -27,7 +27,7 @@ apply(patch) do
     @test randdev(n) == convert(Array{UInt8}, n:-1:1)
 end
 
-if is_unix()
+if Sys.isunix()
     # Outside of the scope of the patched environment `@mock` is essentially a no-op
     @test randdev(n) != convert(Array{UInt8}, n:-1:1)
 end
