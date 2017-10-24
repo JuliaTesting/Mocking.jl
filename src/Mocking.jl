@@ -32,14 +32,22 @@ end
 const DISABLE_PRECOMPILE_STR = PRECOMPILE_FLAG == Symbol() ? "" : "--$PRECOMPILE_FLAG=no"
 const DISABLE_PRECOMPILE_CMD = isempty(DISABLE_PRECOMPILE_STR) ? `` : `$DISABLE_PRECOMPILE_STR`
 
+function is_precompile_enabled()
+    opts = Base.JLOptions()
+    field = PRECOMPILE_FIELD
+
+    # When the pre-compile field is empty it means pre-compilation is unsupported. If the
+    # pre-compile field is missing that means pre-compilation to be assumed to be enabled.
+    return field != Symbol() && (!isdefined(opts, field) || Bool(getfield(opts, field)))
+end
+
 function enable()
     ENABLED::Bool && return  # Abend early if enabled has already been set
     global ENABLED = true
     global PATCH_ENV = PatchEnv()
 
     # TODO: Support programatically disabling the use of the pre-compilation flag.
-    opts = Base.JLOptions()
-    if isdefined(opts, PRECOMPILE_FIELD) && Bool(getfield(opts, PRECOMPILE_FIELD))
+    if is_precompile_enabled()
         warn(
             "Mocking.jl will probably not work when $PRECOMPILE_FLAG is enabled. " *
             "Please start Julia with `$DISABLE_PRECOMPILE_STR`",
