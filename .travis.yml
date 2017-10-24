@@ -19,7 +19,7 @@ notifications:
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia -e 'Pkg.clone(pwd()); Pkg.build("Mocking")'
-  - OPTIONS=$(julia -e 'using Mocking; print(DISABLE_PRECOMPILE_OPTION)')
+  - OPTIONS=$(julia -e 'using Mocking; print(DISABLE_PRECOMPILE_STR)')
   - julia $OPTIONS -e 'Pkg.test("Mocking"; coverage=true)';
 after_success:
   - julia -e 'cd(Pkg.dir("Mocking")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
