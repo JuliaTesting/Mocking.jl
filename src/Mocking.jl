@@ -7,21 +7,38 @@ import Compat: invokelatest
 include("expr.jl")
 include("bindings.jl")
 
-export @patch, @mock, Patch, apply
+export @patch, @mock, Patch, apply, DISABLE_PRECOMPILE_OPTION
 
 # When ENABLED is false the @mock macro is a noop.
 global ENABLED = false
 global PATCH_ENV = nothing
+
+const PRECOMPILE_FIELD = if VERSION >= v"0.7.0-DEV.1698"
+    :use_compiled_modules
+else
+    :use_compilecache
+end
+
+const PRECOMPILE_FLAG = if VERSION >= v"0.7.0-DEV.1698"
+    Symbol("compiled-modules")
+else
+    :compilecache
+end
+
+const DISABLE_PRECOMPILE_OPTION = "--$PRECOMPILE_FLAG=no"
 
 function enable()
     ENABLED::Bool && return  # Abend early if enabled has already been set
     global ENABLED = true
     global PATCH_ENV = PatchEnv()
 
-    # TODO: Support programatically disabling the use of the compilecache.
+    # TODO: Support programatically disabling the use of the pre-compilation flag.
     opts = Base.JLOptions()
-    if isdefined(opts, :use_compilecache) && Bool(opts.use_compilecache)
-        warn("Mocking.jl will probably not work when compilecache is enabled. Please start Julia with `--compilecache=no`")
+    if isdefined(opts, PRECOMPILE_FIELD) && Bool(getfield(opts, PRECOMPILE_FIELD))
+        warn(
+            "Mocking.jl will probably not work when $PRECOMPILE_FLAG is enabled. " *
+            "Please start Julia with `$DISABLE_PRECOMPILE_OPTION`",
+        )
     end
 end
 
