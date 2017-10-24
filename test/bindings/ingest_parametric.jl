@@ -3,85 +3,71 @@ import Mocking: Bindings, ingest_parametric!
 # Note: The `f{A}` parametric syntax and `where` are equal when looking at individual
 # components.
 
-@test @valid_method f{A}(::Type{A}) = A
+@test @valid_method f(::Type{A}) where A = A
 b = Bindings()
 ingest_parametric!(b, :A)
 @test b.internal == Set([:A])
 @test b.external == Set([])
 
-if VERSION >= v"0.6"
-    @test @valid_method f{A,B<:A}(::Type{A}, ::Type{B}) = A, B
-end
+@test @valid_method f(::Type{A}, ::Type{B}) where {A,B<:A} = A, B
 ingest_parametric!(b, :(B<:A))
 @test b.internal == Set([:A, :B])
 @test b.external == Set([])
 
-@test @valid_method f{A<:Integer}(::Type{A}) = A
+@test @valid_method f(::Type{A}) where {A<:Integer} = A
 b = Bindings()
 ingest_parametric!(b, :(A<:Integer))
 @test b.internal == Set([:A])
 @test b.external == Set([:Integer])
 
-@static if VERSION >= v"0.6"
-    @test @valid_method f{A>:Integer}(::Type{A}) = A
-end
+@test @valid_method f(::Type{A}) where {A>:Integer} = A
 b = Bindings()
 ingest_parametric!(b, :(A>:Integer))
 @test b.internal == Set([:A])
 @test b.external == Set([:Integer])
 
-@static if VERSION >= v"0.6"
-    @test @valid_method f{Integer<:A<:Real}(::Type{A}) = A
-end
+@test @valid_method f(::Type{A}) where {Integer<:A<:Real} = A
 b = Bindings()
 ingest_parametric!(b, :(Integer<:A<:Real))
 @test b.internal == Set([:A])
 @test b.external == Set([:Integer, :Real])
 
-@test @valid_method f{Int<:Integer}(x::Int) = x
+@test @valid_method f(x::Int) where {Int<:Integer} = x
+b = Bindings()
+ingest_parametric!(b, :(Int<:Integer))
+@test b.internal == Set([:Int])
+@test b.external == Set([:Integer])
 
 # Invalid parametric
-if VERSION >= v"0.6"
-    method_expr = quote
-        f{Integer<:A}(::Type{A}) = A
-    end
-    @test !valid_method(method_expr)
+method_expr = quote
+    f(::Type{A}) where {Integer<:A} = A
 end
+@test !valid_method(method_expr)
 b = Bindings()
 ingest_parametric!(b, :(Integer<:A))
 @test b.internal == Set([:Integer])
 @test b.external == Set([:A])
 
-@static if VERSION >= v"0.6"
-    method_expr = quote
-        f{Integer>:A}(::Type{A}) = A
-    end
-    @test !valid_method(method_expr)
+method_expr = quote
+    f(::Type{A}) where {Integer>:A} = A
 end
+@test !valid_method(method_expr)
 b = Bindings()
 ingest_parametric!(b, :(Integer>:A))
 @test b.internal == Set([:Integer])
 @test b.external == Set([:A])
 
-@static if VERSION >= v"0.6"
-    @test !@valid_method f{Integer>:A}(::Type{A}) = A
-end
+@test !@valid_method f(::Type{A}) where {Integer>:A} = A
 b = Bindings()
 ingest_parametric!(b, :(Integer>:A))
 @test b.internal == Set([:Integer])
 @test b.external == Set([:A])
 
-@static if VERSION >= v"0.6"
-    @test !@valid_method f{Int<:A>:Int}(::Type{A}) = A
-end
+@test !@valid_method f(::Type{A}) where {Int<:A>:Int} = A
 @test_throws Exception ingest_parametric!(Bindings(), :(Int<:A>:Int))
 
-@static if VERSION >= v"0.6"
-    @test !@valid_method f{Int>:A<:Int}(::Type{A}) = A
-end
+@test !@valid_method f(::Type{A}) where {Int>:A<:Int} = A
 @test_throws Exception ingest_parametric!(Bindings(), :(Int>:A<:Int))
 
-@static if VERSION >= v"0.6"
-    @test !@valid_method f{Int<:A<:Real<:Number}(::Type{A}) = A
-end
+@test !@valid_method f(::Type{A}) where {Int<:A<:Real<:Number} = A
 @test_throws Exception ingest_parametric!(Bindings(), :(Int<:A<:Real<:Number))
