@@ -1,4 +1,4 @@
-import Compat: readstring
+import Compat: read
 
 # Patches should allow using imported bindings in the body of the patch
 @test_throws UndefVarError Minute
@@ -20,15 +20,15 @@ end
 @test_throws UndefVarError AbstractCmd
 @test isdefined(Base, :AbstractCmd)
 
-patch = @patch readstring(cmd::Base.AbstractCmd) = "bar"
+patch = @patch read(cmd::Base.AbstractCmd, ::Type{String}) = "bar"
 apply(patch) do
-    @test (@mock readstring(`foo`)) == "bar"
+    @test (@mock read(`foo`, String)) == "bar"
 end
 
 # Patches should allow using imported bindings syntax in the signature
 import Base: AbstractCmd
 
-patch = @patch readstring(cmd::AbstractCmd) = "bar"
+patch = @patch read(cmd::AbstractCmd, ::Type{String}) = "bar"
 apply(patch) do
-    @test (@mock readstring(`foo`)) == "bar"
+    @test (@mock read(`foo`, String)) == "bar"
 end

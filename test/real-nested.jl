@@ -1,7 +1,7 @@
-import Compat: readstring
+import Compat: read
 
 let
-    readfile(filename) = (@mock isfile(filename)) ? readstring(@mock open(filename)) : ""
+    readfile(filename) = (@mock isfile(filename)) ? read((@mock open(filename)), String) : ""
 
     # Testing with both generic and anonymous functions
     patches = Patch[

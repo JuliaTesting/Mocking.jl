@@ -1,4 +1,4 @@
-import Compat: readstring
+import Compat: read
 
 let
     # Ensure that open cannot find the file "foo"
@@ -9,19 +9,19 @@ let
     # will be preferred over the original `open(::AbstractString)` for `open("foo")`
     patch = @patch open(name) = IOBuffer("bar")
     apply(patch) do
-        @test readstring(@mock open("foo")) == "bar"
+        @test read((@mock open("foo")), String) == "bar"
 
         # The `open(::Any)` patch could result in unintended (or intended) consequences
-        @test readstring(@mock open(`echo helloworld`)) == "bar"
+        @test read((@mock open(`echo helloworld`)), String) == "bar"
     end
 
     # Better to be specific with your patches
     patch = @patch open(name::AbstractString) = IOBuffer("bar")
     apply(patch) do
-        @test readstring(@mock open("foo")) == "bar"
+        @test read((@mock open("foo")), String) == "bar"
 
         # The more specific `open(::AbstractString)` patches only a single method
-        io, pobj = (@mock open(`echo helloworld`))
-        @test readstring(io) == "helloworld\n"
+        io, pobj = @mock open(`echo helloworld`)
+        @test read(io, String) == "helloworld\n"
     end
 end
