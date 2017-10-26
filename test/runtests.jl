@@ -9,6 +9,7 @@ function next_gensym(str::AbstractString, offset::Integer=1)
     return Symbol(string(m.captures[1], parse(Int, m.captures[2]) + offset))
 end
 
+include("precompile.jl")
 include("expr.jl")
 include("bindings/bindings.jl")
 include("patch.jl")
