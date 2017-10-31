@@ -1,7 +1,8 @@
 using Mocking
 Mocking.enable()
 
-using Base.Test
+import Compat: Test
+using Test
 import Mocking: apply
 
 function next_gensym(str::AbstractString, offset::Integer=1)
