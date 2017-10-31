@@ -17,13 +17,8 @@ p = @patch f(::Type{UInt8}, b::Int64) = nothing
 @test p.modules == Set([:Core])
 
 p = @patch f(t::typeof(cos)) = nothing
-if VERSION < v"0.5-"
-    @test p.signature == :(f(t::typeof(Base.cos)))
-    @test p.modules == Set([:Base])
-else
-    @test p.signature == :(f(t::typeof(Base.MPFR.cos)))
-    @test p.modules == Set([:(Base.MPFR)])
-end
+@test p.signature == :(f(t::typeof(Base.MPFR.cos)))
+@test p.modules == Set([:(Base.MPFR)])
 
 patches = [
     @patch f(h::Base.Dates.Hour=Base.Dates.Hour(rand())) = nothing

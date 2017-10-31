@@ -15,22 +15,18 @@ global PATCH_ENV = nothing
 
 const PRECOMPILE_FLAG = if VERSION >= v"0.7.0-DEV.1698"
     Symbol("compiled-modules")
-elseif VERSION >= v"0.5.0-dev+977"
-    :compilecache
 else
-    Symbol()
+    :compilecache
 end
 
 const PRECOMPILE_FIELD = if VERSION >= v"0.7.0-DEV.1698"
     :use_compiled_modules
-elseif VERSION >= v"0.5.0-dev+977"
-    :use_compilecache
 else
-    Symbol()
+    :use_compilecache
 end
 
-const DISABLE_PRECOMPILE_STR = PRECOMPILE_FLAG == Symbol() ? "" : "--$PRECOMPILE_FLAG=no"
-const DISABLE_PRECOMPILE_CMD = isempty(DISABLE_PRECOMPILE_STR) ? `` : `$DISABLE_PRECOMPILE_STR`
+const DISABLE_PRECOMPILE_STR = "--$PRECOMPILE_FLAG=no"
+const DISABLE_PRECOMPILE_CMD = `$DISABLE_PRECOMPILE_STR`
 
 function is_precompile_enabled()
     opts = Base.JLOptions()
