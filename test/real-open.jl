@@ -21,7 +21,12 @@ let
         @test read((@mock open("foo")), String) == "bar"
 
         # The more specific `open(::AbstractString)` patches only a single method
-        io, pobj = @mock open(`echo helloworld`)
+        result = @mock open(`echo helloworld`)
+        if VERSION >= v"0.7.0-DEV.3"
+            io = result
+        else
+            io, pobj = result
+        end
         @test read(io, String) == "helloworld\n"
     end
 end
