@@ -1,5 +1,4 @@
 import Base.Dates: Hour
-import Compat: @static
 
 @test Mocking.joinbinding(:Foo) == :(Foo)
 @test Mocking.joinbinding(:Foo, :Bar) == :(Foo.Bar)
