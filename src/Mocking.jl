@@ -2,8 +2,6 @@ __precompile__(true)
 
 module Mocking
 
-import Compat: invokelatest
-
 include("expr.jl")
 include("bindings.jl")
 
@@ -235,7 +233,7 @@ macro mock(expr)
         local $env_var = Mocking.get_active_env()
         local $args_var = tuple($(args...))
         if Mocking.ismocked($env_var, $func_name, $args_var)
-            Mocking.invokelatest($env_var.mod.$func, $args_var...)
+            Base.invokelatest($env_var.mod.$func, $args_var...)
         else
             $func($args_var...)
         end
