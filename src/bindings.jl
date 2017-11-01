@@ -2,7 +2,7 @@
 # parametric variables) into those created by the function signature and those that are
 # external. The external bindings will be turned into absolute bindings.
 
-immutable Bindings
+struct Bindings
     internal::Set
     external::Set
 end

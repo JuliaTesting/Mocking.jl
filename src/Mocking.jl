@@ -51,7 +51,7 @@ function enable()
     end
 end
 
-immutable Patch
+struct Patch
     signature::Expr
     body::Function
     modules::Set
@@ -138,7 +138,7 @@ macro patch(expr::Expr)
     return esc(:(Mocking.Patch( $(QuoteNode(signature)), $func, Dict($(translations...)) )))
 end
 
-immutable PatchEnv
+struct PatchEnv
     mod::Module
     debug::Bool
 
