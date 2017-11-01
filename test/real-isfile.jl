@@ -1,6 +1,6 @@
 # Replacing `isfile(path...)` could be an issue due to its use of Varargs
 
-let
+@testset "isfile" begin
     null_file = string(@__FILE__, ".null")  # Note: tempfile() on Windows creates a file
     @test isfile(null_file) == false
 

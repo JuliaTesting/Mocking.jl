@@ -1,6 +1,6 @@
 import Compat: read
 
-let
+@testset "open" begin
     # Ensure that open cannot find the file "foo"
     @test !isfile("foo")
     @test_throws SystemError open("foo")

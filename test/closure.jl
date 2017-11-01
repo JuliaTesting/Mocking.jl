@@ -1,4 +1,4 @@
-let magic
+@testset "closure" begin
     magic(x) = false
     sentinel = gensym("sentinel")
     @test magic(sentinel) == false

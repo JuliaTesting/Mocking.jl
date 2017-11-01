@@ -1,5 +1,5 @@
 # Issue #15
-let f, patch
+@testset "anonymous parameter" begin
     f(::Type{T}, n::Int) where T<:Unsigned = rand(T, n)
 
     patch = @patch f(::Type{UInt8}, n::Int) = collect(UnitRange{UInt8}(1:n))
