@@ -8,8 +8,8 @@ global_scope() = "foo"
 
 # Create a patched version of func() and return the alternative
 # version at call sites using the @mock macro
-patch = (@patch global_scope() = "bar")
-apply(patch) do
+global_patch = (@patch global_scope() = "bar")
+apply(global_patch) do
     @test (@mock global_scope()) != global_scope()
 end
 

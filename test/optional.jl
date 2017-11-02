@@ -1,7 +1,7 @@
 import Base.Dates: Hour
 
 # Creating a patch with an optional parameter
-let
+@testset "patch with optional parameter" begin
     hourvalue(h::Hour=Hour(0)) = Base.Dates.value(h)
 
     patch = @patch hourvalue(h::Hour=Hour(21)) = 2 * Base.Dates.value(h)
@@ -12,7 +12,7 @@ let
 end
 
 # Creating a patch with an keyword parameter
-let
+@testset "patch with keyword parameter" begin
     hourvalue(; hour::Hour=Hour(0)) = Base.Dates.value(hour)
 
     patch = @patch hourvalue(; hour::Hour=Hour(21)) = 2 * Base.Dates.value(hour)

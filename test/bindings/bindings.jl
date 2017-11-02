@@ -18,9 +18,10 @@ macro valid_method(expr)
     return esc(result)
 end
 
-include("ingest_parametric.jl")
-include("ingest_assertion.jl")
-include("ingest_default.jl")
-include("ingest_parameter.jl")
-include("ingest_signature.jl")
-VERSION >= v"0.6" && include("ingest_signature_0.6.jl")
+@testset "bindings" begin
+    include("ingest_parametric.jl")
+    include("ingest_assertion.jl")
+    include("ingest_default.jl")
+    include("ingest_parameter.jl")
+    include("ingest_signature.jl")
+end

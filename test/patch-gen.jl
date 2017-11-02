@@ -1,5 +1,5 @@
 # https://github.com/invenia/Mocking.jl/issues/14
-let patch
+@testset "patch generation" begin
     statuscode(url::AbstractString) = 500
 
     function foo(status::Int)

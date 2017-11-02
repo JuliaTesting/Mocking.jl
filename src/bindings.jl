@@ -2,7 +2,7 @@
 # parametric variables) into those created by the function signature and those that are
 # external. The external bindings will be turned into absolute bindings.
 
-immutable Bindings
+struct Bindings
     internal::Set
     external::Set
 end
@@ -29,13 +29,6 @@ Bindings(expr::Expr) = ingest_signature!(Bindings(), expr)
 function ingest_parametric!(b::Bindings, expr::Expr)
     if expr.head in (:(<:), :(>:))
         defined, reference = expr.args
-        push!(b.internal, defined)
-        !(reference in b.internal) && push!(b.external, reference)
-
-    elseif expr.head == :comparison && length(expr.args) == 3 &&
-        expr.args[2] in (:(<:), :(>:)) && VERSION < v"0.5-"
-
-        defined, reference = expr.args[1], expr.args[3]
         push!(b.internal, defined)
         !(reference in b.internal) && push!(b.external, reference)
 
@@ -77,11 +70,6 @@ function ingest_assertion!(b::Bindings, expr::Expr)
     # Core.Int and Base.Random.rand
     elseif expr.head == :.
         reference = expr
-        !(reference in b.internal) && push!(b.external, reference)
-
-    # ...{<:Integer} on Julia 0.5 and below
-    elseif expr.head == :call && expr.args[1] in (:(<:), :(>:)) && VERSION < v"0.6"
-        reference = expr.args[2]
         !(reference in b.internal) && push!(b.external, reference)
 
     # typeof(func)

@@ -3,7 +3,7 @@
 # WARNING: Do not use the following code as a template as this test is for illustration
 # purposes only. Typically the way this problem is handled is by using `@mock foo(...)`
 # within the original function declaration of `foo(::AbstractArray)`.
-let
+@testset "mock in patch" begin
     foo(arr::AbstractArray{Float64}) = map(foo, arr)  # Typically foo should use @mock here
     foo(x::Float64) = floor(x)
 
