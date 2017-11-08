@@ -154,3 +154,11 @@ function call_parameters(expr::Expr)
     end
     return positional
 end
+
+function is_call(expr::Expr)
+    return if expr.head == :call  # f(x)
+        true
+    elseif expr.head == :.
+        isa(expr.args[2], Expr) && expr.args[2].head == :tuple  # f.(x)
+    end
+end
