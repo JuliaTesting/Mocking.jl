@@ -84,8 +84,8 @@ Notes
 Mocking.jl is intended to be used for testing only and will not affect the performance of
 your code when using `@mock`. In fact the `@mock` is actually a no-op when `Mocking.enable`
 is not called. One side effect of this behaviour is that pre-compiled packages won't test
-correctly with Mocking unless you start Julia with `--compiled-modules=no` (>=0.7) or
-`--compilecache=no` (<=0.6).
+correctly with Mocking unless you start Julia with `--compiled-modules=no` (≥0.7) or
+`--compilecache=no` (≤0.6).
 
 ```
 $ julia --compilecache=no -e Pkg.test("...")
