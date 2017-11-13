@@ -5,8 +5,9 @@ module Mocking
 include("expr.jl")
 include("bindings.jl")
 include("options.jl")
+include("deprecated.jl")
 
-export @patch, @mock, Patch, apply, DISABLE_PRECOMPILE_STR, DISABLE_PRECOMPILE_CMD
+export @patch, @mock, Patch, apply, DISABLE_COMPILE_MODULES_STR, DISABLE_COMPILE_MODULES_CMD
 
 # When ENABLED is false the @mock macro is a noop.
 global ENABLED = false
@@ -23,9 +24,9 @@ function enable(; force::Bool=false)
             use_precompile(false)
         else
             warn(
-                "Mocking.jl will probably not work when $PRECOMPILE_FLAG is enabled. " *
-                "Please start Julia with `$DISABLE_PRECOMPILE_STR` " *
-                "or alternatively call `Mocking.enable(force=true).`"
+                "Mocking.jl will probably not work when $COMPILE_MODULES_FLAG is enabled. ",
+                "Please start Julia with `$DISABLE_COMPILE_MODULES_STR` ",
+                "or alternatively call `Mocking.enable(force=true).`",
             )
         end
     end
