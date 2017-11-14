@@ -4,48 +4,31 @@ module Mocking
 
 include("expr.jl")
 include("bindings.jl")
+include("options.jl")
+include("deprecated.jl")
 
-export @patch, @mock, Patch, apply, DISABLE_PRECOMPILE_STR, DISABLE_PRECOMPILE_CMD
+export @patch, @mock, Patch, apply, DISABLE_COMPILE_MODULES_STR, DISABLE_COMPILE_MODULES_CMD
 
 # When ENABLED is false the @mock macro is a noop.
 global ENABLED = false
 global PATCH_ENV = nothing
 
-const PRECOMPILE_FLAG = if VERSION >= v"0.7.0-DEV.1698"
-    Symbol("compiled-modules")
-else
-    :compilecache
-end
-
-const PRECOMPILE_FIELD = if VERSION >= v"0.7.0-DEV.1698"
-    :use_compiled_modules
-else
-    :use_compilecache
-end
-
-const DISABLE_PRECOMPILE_STR = "--$PRECOMPILE_FLAG=no"
-const DISABLE_PRECOMPILE_CMD = `$DISABLE_PRECOMPILE_STR`
-
-function is_precompile_enabled()
-    opts = Base.JLOptions()
-    field = PRECOMPILE_FIELD
-
-    # When the pre-compile field is empty it means pre-compilation is unsupported. If the
-    # pre-compile field is missing that means pre-compilation to be assumed to be enabled.
-    return field != Symbol() && (!isdefined(opts, field) || Bool(getfield(opts, field)))
-end
-
-function enable()
+function enable(; force::Bool=false)
     ENABLED::Bool && return  # Abend early if enabled has already been set
     global ENABLED = true
     global PATCH_ENV = PatchEnv()
 
-    # TODO: Support programatically disabling the use of the pre-compilation flag.
     if is_precompile_enabled()
-        warn(
-            "Mocking.jl will probably not work when $PRECOMPILE_FLAG is enabled. " *
-            "Please start Julia with `$DISABLE_PRECOMPILE_STR`",
-        )
+        if force
+            # Disable using pre-compiled packages when Mocking is enabled
+            use_precompile(false)
+        else
+            warn(
+                "Mocking.jl will probably not work when $COMPILE_MODULES_FLAG is enabled. ",
+                "Please start Julia with `$DISABLE_COMPILE_MODULES_STR` ",
+                "or alternatively call `Mocking.enable(force=true).`",
+            )
+        end
     end
 end
 
