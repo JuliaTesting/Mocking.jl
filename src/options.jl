@@ -21,7 +21,7 @@ let
     fields = [:($(fieldname(T,i))::$(fieldtype(T,i))) for i in 1:nfields(T)]
 
     @eval begin
-        type JLOptionsMutable
+        mutable struct JLOptionsMutable
             $(fields...)
         end
     end
