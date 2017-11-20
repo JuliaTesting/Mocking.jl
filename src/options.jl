@@ -1,3 +1,5 @@
+import Compat: fieldcount
+
 # Name of the `julia` command-line option
 const COMPILED_MODULES_FLAG = if VERSION >= v"0.7.0-DEV.1698"
     Symbol("compiled-modules")
@@ -18,10 +20,10 @@ const DISABLE_COMPILED_MODULES_CMD = `$DISABLE_COMPILED_MODULES_STR`
 # Generate a mutable version of JLOptions
 let
     T = Base.JLOptions
-    fields = [:($(fieldname(T,i))::$(fieldtype(T,i))) for i in 1:nfields(T)]
+    fields = [:($(fieldname(T,i))::$(fieldtype(T,i))) for i in 1:fieldcount(T)]
 
     @eval begin
-        type JLOptionsMutable
+        mutable struct JLOptionsMutable
             $(fields...)
         end
     end
