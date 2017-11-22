@@ -1,6 +1,8 @@
-import Base.Dates: Hour
+import Dates
+import Dates: Hour
 
 const INT_EXPR = Int === Int32 ? :(Core.Int32) : :(Core.Int64)
+const HOUR_EXPR = VERSION < v"0.7.0-DEV.2575" ? :(Base.Dates.Hour) : :(Dates.Hour)
 
 @testset "joinbinding" begin
     @test Mocking.joinbinding(:Foo) == :(Foo)
@@ -18,9 +20,8 @@ end
     @test Mocking.binding_expr(Int) == INT_EXPR  # typealias. TODO: Change to Core.Int? Shouldn't actually matter
     @test Mocking.binding_expr(Int64) == :(Core.Int64)  # concrete type
     @test Mocking.binding_expr(Integer) == :(Core.Integer)  # abstract type
-    @test Mocking.binding_expr(Hour) == :(Base.Dates.Hour)  # unexported type
-    @test Mocking.binding_expr(Dates.Hour) == :(Base.Dates.Hour)  # submodule
-    @test Mocking.binding_expr(Base.Dates.Hour) == :(Base.Dates.Hour)  # full type binding
+    @test Mocking.binding_expr(Hour) == HOUR_EXPR  # unexported type
+    @test Mocking.binding_expr(Dates.Hour) == HOUR_EXPR  # submodule
     @test Mocking.binding_expr(rand) == :(Base.Random.rand)  # function
     @test Mocking.binding_expr(AbstractArray{Int64}) == :(Core.AbstractArray)  # Core.AbstractArray{Int64}?
     # @test Mocking.binding_expr(AbstractArray{T}) == :(Core.AbstractArray{T})

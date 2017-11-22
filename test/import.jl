@@ -1,10 +1,11 @@
+import Dates
 import Compat: read
 
 # Patches should allow using imported bindings in the body of the patch
 @testset "imported binding in body" begin
     @test_throws UndefVarError Minute
-    @test isdefined(Base.Dates, :Minute)
-    import Base.Dates: Minute, Hour
+    @test isdefined(Dates, :Minute)
+    import Dates: Minute, Hour
 
     myminute(x::Integer) = Minute(x)
 

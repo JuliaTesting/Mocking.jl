@@ -1,5 +1,4 @@
 import Mocking: Bindings, ingest_assertion!
-import Base.Dates: Hour
 
 @testset "assertion" begin
     b = Bindings([:T], [])
