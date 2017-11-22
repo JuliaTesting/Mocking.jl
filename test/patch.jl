@@ -30,12 +30,13 @@ import Dates: Hour
 
     @testset "assertion qualification" begin
         patches = [
-            @patch f(h::Dates.Hour=Dates.Hour(rand())) = nothing
-            @patch f(h::Hour=Hour(rand())) = nothing
+            @patch f(h::Base.Core.Int64=rand(Base.Core.Int64)) = nothing
+            @patch f(h::Core.Int64=rand(Core.Int64)) = nothing
+            @patch f(h::Int64=rand(Int64)) = nothing
         ]
         for p in patches
-            @test p.signature == :(f(h::Dates.Hour=Dates.Hour(Base.Random.rand())))
-            @test p.modules == Set([:(Dates), :(Base.Random)])
+            @test p.signature == :(f(h::Core.Int64=Base.Random.rand(Core.Int64)))
+            @test p.modules == Set([:Core, :(Base.Random)])
         end
     end
 end
