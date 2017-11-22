@@ -106,6 +106,11 @@ function ingest_default!(b::Bindings, expr::Expr)
             ingest_default!(b, arg)
         end
 
+    # Core.Int and Base.Random.rand
+    elseif expr.head == :.
+        reference = expr
+        !(reference in b.internal) && push!(b.external, reference)
+
     else
         error("expression is not valid as a parameter default: $expr")
     end
