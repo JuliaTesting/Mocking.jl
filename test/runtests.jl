@@ -2,12 +2,9 @@ using Mocking
 Mocking.enable(force=true)
 
 VERSION < v"0.7-" && import Compat: Test
+import Compat: Dates
 using Test
 import Mocking: apply
-
-if VERSION < v"0.7.0-DEV.2575"
-    const Dates = Base.Dates
-end
 
 function next_gensym(str::AbstractString, offset::Integer=1)
     m = match(r"^(.*?)(\d+)$", string(gensym(str)))
