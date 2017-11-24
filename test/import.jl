@@ -1,4 +1,4 @@
-import Dates
+import Compat: Dates
 import Compat: read
 
 # Patches should allow using imported bindings in the body of the patch

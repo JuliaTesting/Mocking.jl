@@ -1,4 +1,4 @@
-import Dates
+import Compat: Dates
 import Dates: Hour
 
 # Creating a patch with an optional parameter

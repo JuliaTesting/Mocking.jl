@@ -1,4 +1,4 @@
-import Dates
+import Compat: Dates
 import Dates: Hour
 
 const INT_EXPR = Int === Int32 ? :(Core.Int32) : :(Core.Int64)
