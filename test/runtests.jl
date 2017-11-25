@@ -2,6 +2,7 @@ using Mocking
 Mocking.enable(force=true)
 
 VERSION < v"0.7-" && import Compat: Test
+import Compat: Dates
 using Test
 import Mocking: apply
 

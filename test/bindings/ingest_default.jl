@@ -15,4 +15,9 @@ import Mocking: Bindings, ingest_default!
     ingest_default!(b, :(f(rand(Bool))))
     @test b.internal == Set()
     @test b.external == Set([:f, :rand, :Bool])
+
+    b = Bindings()
+    ingest_default!(b, :(f(rand(Base.Bool))))
+    @test b.internal == Set()
+    @test b.external == Set([:f, :rand, :(Base.Bool)])
 end
