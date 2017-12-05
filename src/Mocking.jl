@@ -82,7 +82,7 @@ function convert(::Type{Expr}, p::Patch)
     # this call instead of injecting the body expression to support closures.
     sig, body = p.signature, p.body
     params = call_parameters(sig)
-    exprs[end] = :($sig = $body($(params...)))
+    exprs[end] = Expr(:(=), sig, Expr(:block, Expr(:call, body, params...)))
 
     return Expr(:block, exprs...)
 end
