@@ -50,12 +50,14 @@ end
     end
 
     @testset "assertion expression" begin
+        mod = VERSION < v"0.7.0-DEV.2762" ? :(Base.MPFR) : :Base
+        import_mod = VERSION < v"0.7.0-DEV.2762" ? :(import Base.MPFR) : :(import Base)
         p = @patch f(t::typeof(cos)) = nothing
-        @test p.signature == :(f(t::typeof(Base.MPFR.cos)))
-        @test p.modules == Set([:(Base.MPFR)])
+        @test p.signature == :(f(t::typeof($mod.cos)))
+        @test p.modules == Set([:($mod)])
         expected = quote
-            import Base.MPFR
-            f(t::typeof(Base.MPFR.cos)) = $(p.body)(t)
+            $import_mod
+            f(t::typeof($mod.cos)) = $(p.body)(t)
         end
         @test Mocking.convert(Expr, p) == strip_lineno!(expected)
     end
