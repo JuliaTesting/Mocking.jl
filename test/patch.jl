@@ -50,12 +50,12 @@ end
     end
 
     @testset "assertion expression" begin
-        p = @patch f(t::typeof(cos)) = nothing
-        @test p.signature == :(f(t::typeof(Base.MPFR.cos)))
-        @test p.modules == Set([:(Base.MPFR)])
+        p = @patch f(t::typeof(+)) = nothing
+        @test p.signature == :(f(t::typeof(Base.:+)))
+        @test p.modules == Set([:Base])
         expected = quote
-            import Base.MPFR
-            f(t::typeof(Base.MPFR.cos)) = $(p.body)(t)
+            import Base
+            f(t::typeof(Base.:+)) = $(p.body)(t)
         end
         @test Mocking.convert(Expr, p) == strip_lineno!(expected)
     end
