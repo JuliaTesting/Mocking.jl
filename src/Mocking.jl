@@ -75,7 +75,11 @@ function convert(::Type{Expr}, p::Patch)
 
     # Generate imports for all required modules
     for (i, m) in enumerate(p.modules)
-        exprs[i] = Expr(:import, splitbinding(m)...)
+        if VERSION > v"0.7.0-DEV.3187"
+            exprs[i] = Expr(:import, Expr(:., splitbinding(m)...))
+        else
+            exprs[i] = Expr(:import, splitbinding(m)...)
+        end
     end
 
     # Generate the new method which will call the user's patch function. We need to perform
