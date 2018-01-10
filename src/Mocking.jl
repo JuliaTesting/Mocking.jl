@@ -205,6 +205,7 @@ get_active_env() = PATCH_ENV::PatchEnv
 
 macro mock(expr)
     isa(expr, Expr) || error("argument is not an expression")
+    expr.head == :do && (expr = rewrite_do(expr))
     expr.head == :call || error("expression is not a function call")
     ENABLED::Bool || return esc(expr)  # @mock is a no-op when Mocking is not ENABLED
 
