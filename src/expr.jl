@@ -154,3 +154,10 @@ function call_parameters(expr::Expr)
     end
     return positional
 end
+
+# New do-block syntax introduced in: https://github.com/JuliaLang/julia/pull/23718
+function rewrite_do(expr::Expr)
+    expr.head == :do || error("expression is not a do-block")
+    call, body = expr.args
+    Expr(:call, call.args[1], body, call.args[2:end]...)
+end

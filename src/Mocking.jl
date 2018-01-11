@@ -75,7 +75,11 @@ function convert(::Type{Expr}, p::Patch)
 
     # Generate imports for all required modules
     for (i, m) in enumerate(p.modules)
-        exprs[i] = Expr(:import, splitbinding(m)...)
+        if VERSION > v"0.7.0-DEV.3187"
+            exprs[i] = Expr(:import, Expr(:., splitbinding(m)...))
+        else
+            exprs[i] = Expr(:import, splitbinding(m)...)
+        end
     end
 
     # Generate the new method which will call the user's patch function. We need to perform
@@ -201,6 +205,7 @@ get_active_env() = PATCH_ENV::PatchEnv
 
 macro mock(expr)
     isa(expr, Expr) || error("argument is not an expression")
+    expr.head == :do && (expr = rewrite_do(expr))
     expr.head == :call || error("expression is not a function call")
     ENABLED::Bool || return esc(expr)  # @mock is a no-op when Mocking is not ENABLED
 
