@@ -2,6 +2,8 @@ __precompile__(true)
 
 module Mocking
 
+import Compat: uninitialized
+
 include("expr.jl")
 include("bindings.jl")
 include("options.jl")
@@ -71,7 +73,7 @@ end
 # 0.4
 
 function convert(::Type{Expr}, p::Patch)
-    exprs = Array{Expr}(length(p.modules) + 1)
+    exprs = Array{Expr}(uninitialized, length(p.modules) + 1)
 
     # Generate imports for all required modules
     for (i, m) in enumerate(p.modules)

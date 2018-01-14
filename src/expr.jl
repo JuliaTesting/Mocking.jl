@@ -53,7 +53,7 @@ function absolute_signature(expr::Expr, translations::Dict)
         return get(translations, expr, expr)
     else
         num_args = length(expr.args)
-        args = Array{Any}(num_args)
+        args = Array{Any}(uninitialized, num_args)
         for i in 1:num_args
             args[i] = absolute_signature(expr.args[i], translations)
         end
@@ -73,7 +73,7 @@ function name_parameters(expr::Expr)
         # return Expr(expr.head, :anon, expr.args[1])
     else
         num_args = length(expr.args)
-        args = Array{Any}(num_args)
+        args = Array{Any}(uninitialized, num_args)
         for i in 1:num_args
             args[i] = name_parameters(expr.args[i])
         end
