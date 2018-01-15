@@ -67,8 +67,8 @@ end
             @patch f(h::Int64=rand(Int64)) = nothing
         ]
         for p in patches
-            @test p.signature == :(f(h::Core.Int64=Base.Random.rand(Core.Int64)))
-            @test p.modules == Set([:Core, :(Base.Random)])
+            @test p.signature == :(f(h::Core.Int64=$RAND_EXPR(Core.Int64)))
+            @test p.modules == Set([:Core, RAND_MOD_EXPR])
         end
     end
 end
