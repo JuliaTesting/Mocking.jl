@@ -60,7 +60,7 @@ function set_compiled_modules(state::Bool)
 
     # Avoid modifying the global when the value hasn't changed
     if getfield(opts, COMPILED_MODULES_FIELD) != value
-        warn("Using experimental code which modifies jl_options global struct")
+        @warn("Using experimental code which modifies jl_options global struct")
         setfield!(opts, COMPILED_MODULES_FIELD, value)
         unsafe_store!(jl_options, opts)
     end

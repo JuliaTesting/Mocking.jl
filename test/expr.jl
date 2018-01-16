@@ -1,9 +1,6 @@
 import Compat: Dates
 import Dates: Hour
 
-const INT_EXPR = Int === Int32 ? :(Core.Int32) : :(Core.Int64)
-const HOUR_EXPR = VERSION < v"0.7.0-DEV.2575" ? :(Base.Dates.Hour) : :(Dates.Hour)
-
 @testset "joinbinding" begin
     @test Mocking.joinbinding(:Foo) == :(Foo)
     @test Mocking.joinbinding(:Foo, :Bar) == :(Foo.Bar)
@@ -22,7 +19,7 @@ end
     @test Mocking.binding_expr(Integer) == :(Core.Integer)  # abstract type
     @test Mocking.binding_expr(Hour) == HOUR_EXPR  # unexported type
     @test Mocking.binding_expr(Dates.Hour) == HOUR_EXPR  # submodule
-    @test Mocking.binding_expr(rand) == :(Base.Random.rand)  # function
+    @test Mocking.binding_expr(rand) == RAND_EXPR  # function
     @test Mocking.binding_expr(AbstractArray{Int64}) == :(Core.AbstractArray)  # Core.AbstractArray{Int64}?
     # @test Mocking.binding_expr(AbstractArray{T}) == :(Core.AbstractArray{T})
 end

@@ -2,6 +2,19 @@ __precompile__(true)
 
 module Mocking
 
+import Compat: uninitialized
+
+# Avoid using MicroLogging for compatibility as it significantly changes the formatting.
+if VERSION < v"0.7.0-DEV.2988"
+    for func in (:info, :warn)
+        @eval begin
+            macro $func(args...)
+                Expr(:call, $func, map(esc, args)...)
+            end
+        end
+    end
+end
+
 include("expr.jl")
 include("bindings.jl")
 include("options.jl")
@@ -27,7 +40,7 @@ function enable(; force::Bool=false)
             # Disable using compiled modules when Mocking is enabled
             set_compiled_modules(false)
         else
-            warn(
+            @warn(
                 "Mocking.jl will probably not work when $COMPILED_MODULES_FLAG is ",
                 "enabled. Please start `julia` with `$DISABLE_COMPILED_MODULES_STR` ",
                 "or alternatively call `Mocking.enable(force=true).`",
@@ -71,7 +84,7 @@ end
 # 0.4
 
 function convert(::Type{Expr}, p::Patch)
-    exprs = Array{Expr}(length(p.modules) + 1)
+    exprs = Array{Expr}(uninitialized, length(p.modules) + 1)
 
     # Generate imports for all required modules
     for (i, m) in enumerate(p.modules)
@@ -185,13 +198,13 @@ function ismocked(pe::PatchEnv, func_name::Symbol, args::Tuple)
         exists = method_exists(func, types)
 
         if pe.debug
-            info("calling $func_name$(types)")
+            @info("calling $func_name$(types)")
             if exists
                 m = first(methods(func, types))
-                info("executing mocked function: $m")
+                @info("executing mocked function: $m")
             else
                 m = first(methods(Core.eval(func_name), types))
-                info("executing original function: $m")
+                @info("executing original function: $m")
             end
         end
 
