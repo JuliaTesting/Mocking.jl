@@ -1,9 +1,11 @@
-# Note: Needed for compatibility with the Julia 0.6 type system change:
-# https://github.com/JuliaLang/julia/pull/18457
-if isdefined(Base, :unwrap_unionall)
-    import Base: unwrap_unionall
-else
-    unwrap_unionall(t::Type) = t
+using Base: unwrap_unionall
+
+if VERSION < v"0.7.0-DEV.3539"
+    nameof(f::Function) = Base.function_name(f)
+end
+
+if VERSION < v"0.7.0-DEV.3460"
+    parentmodule(f, t) = Base.function_module(f, t)
 end
 
 
@@ -32,10 +34,10 @@ function binding_expr(t::Type)
 end
 function binding_expr(f::Function)
     if isa(f, Core.Builtin)
-        return Base.function_name(f)
+        return nameof(f)
     end
-    m = Base.function_module(f, Tuple)
-    joinbinding(fullname(m)..., Base.function_name(f))
+    m = parentmodule(f, Tuple)
+    joinbinding(fullname(m)..., nameof(f))
 end
 
 
