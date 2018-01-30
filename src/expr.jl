@@ -1,10 +1,4 @@
-# Note: Needed for compatibility with the Julia 0.6 type system change:
-# https://github.com/JuliaLang/julia/pull/18457
-if isdefined(Base, :unwrap_unionall)
-    import Base: unwrap_unionall
-else
-    unwrap_unionall(t::Type) = t
-end
+using Base: unwrap_unionall
 
 if VERSION < v"0.7.0-DEV.3539"
     nameof(f::Function) = Base.function_name(f)
