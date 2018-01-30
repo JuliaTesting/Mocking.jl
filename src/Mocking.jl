@@ -15,6 +15,10 @@ if VERSION < v"0.7.0-DEV.2988"
     end
 end
 
+if VERSION < v"0.7.0-DEV.3455"
+    hasmethod(f, t) = Base.method_exists(f, t)
+end
+
 include("expr.jl")
 include("bindings.jl")
 include("options.jl")
@@ -195,7 +199,7 @@ function ismocked(pe::PatchEnv, func_name::Symbol, args::Tuple)
     if isdefined(pe.mod, func_name)
         func = Core.eval(pe.mod, func_name)
         types = map(arg -> isa(arg, Type) ? Type{arg} : typeof(arg), args)
-        exists = method_exists(func, types)
+        exists = hasmethod(func, types)
 
         if pe.debug
             @info("calling $func_name$(types)")
