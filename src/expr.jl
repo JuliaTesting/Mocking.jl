@@ -10,6 +10,10 @@ if VERSION < v"0.7.0-DEV.3539"
     nameof(f::Function) = Base.function_name(f)
 end
 
+if VERSION < v"0.7.0-DEV.3460"
+    parentmodule(f, t) = Base.function_module(f, t)
+end
+
 
 """
     binding_expr(x) -> Expr
@@ -38,7 +42,7 @@ function binding_expr(f::Function)
     if isa(f, Core.Builtin)
         return nameof(f)
     end
-    m = Base.function_module(f, Tuple)
+    m = parentmodule(f, Tuple)
     joinbinding(fullname(m)..., nameof(f))
 end
 
