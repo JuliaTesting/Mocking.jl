@@ -2,18 +2,7 @@ __precompile__(true)
 
 module Mocking
 
-import Compat: uninitialized
-
-# Avoid using MicroLogging for compatibility as it significantly changes the formatting.
-if VERSION < v"0.7.0-DEV.2988"
-    for func in (:info, :warn)
-        @eval begin
-            macro $func(args...)
-                Expr(:call, $func, map(esc, args)...)
-            end
-        end
-    end
-end
+import Compat: uninitialized, @info, @warn
 
 if VERSION < v"0.7.0-DEV.3455"
     hasmethod(f, t) = Base.method_exists(f, t)
