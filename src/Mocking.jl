@@ -2,7 +2,7 @@ __precompile__(true)
 
 module Mocking
 
-import Compat: uninitialized, @info, @warn, invokelatest
+import Compat: invokelatest, undef, @info, @warn
 
 if VERSION < v"0.7.0-DEV.3455"
     hasmethod(f, t) = Base.method_exists(f, t)
@@ -77,7 +77,7 @@ end
 # 0.4
 
 function convert(::Type{Expr}, p::Patch)
-    exprs = Array{Expr}(uninitialized, length(p.modules) + 1)
+    exprs = Array{Expr}(undef, length(p.modules) + 1)
 
     # Generate imports for all required modules
     for (i, m) in enumerate(p.modules)
