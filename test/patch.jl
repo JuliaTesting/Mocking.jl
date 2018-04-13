@@ -71,4 +71,10 @@ end
             @test p.modules == Set([:Core, RAND_MOD_EXPR])
         end
     end
+
+    @testset "array default" begin
+        p = @patch f(a=[]) = a
+        @test p.signature == :(f(a=[]))
+        @test p.modules == Set()
+    end
 end
