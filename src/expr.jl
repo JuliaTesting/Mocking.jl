@@ -32,6 +32,15 @@ function binding_expr(t::Type)
     type_name = unwrap_unionall(t).name
     joinbinding(fullname(type_name.module)..., type_name.name)
 end
+function binding_expr(u::Union)
+    a = binding_expr(u.a)
+    b = binding_expr(u.b)
+    if b.head == :curly && b.args[1] == :Union
+        Expr(:curly, :Union, a, b.args[2:end]...)
+    else
+        Expr(:curly, :Union, a, b)
+    end
+end
 function binding_expr(f::Function)
     if isa(f, Core.Builtin)
         return nameof(f)

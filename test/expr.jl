@@ -21,6 +21,7 @@ end
     @test Mocking.binding_expr(Dates.Hour) == HOUR_EXPR  # submodule
     @test Mocking.binding_expr(rand) == RAND_EXPR  # function
     @test Mocking.binding_expr(AbstractArray{Int64}) == :(Core.AbstractArray)  # Core.AbstractArray{Int64}?
+    @test Mocking.binding_expr(Union{Int16,Int32,Int64}) == :(Union{Core.Int16,Core.Int32,Core.Int64})
     # @test Mocking.binding_expr(AbstractArray{T}) == :(Core.AbstractArray{T})
 end
 
