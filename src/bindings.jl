@@ -101,7 +101,7 @@ function ingest_default!(b::Bindings, expr::Expr)
             ingest_default!(b, arg)
         end
 
-    elseif expr.head == :... || expr.head == :vect
+    elseif expr.head == :... || expr.head == :vect || expr.head == :tuple
         for arg in expr.args
             ingest_default!(b, arg)
         end

@@ -77,4 +77,10 @@ end
         @test p.signature == :(f(a=[]))
         @test p.modules == Set()
     end
+
+    @testset "tuple default" begin
+        p = @patch f(a=()) = a
+        @test p.signature == :(f(a=()))
+        @test p.modules == Set()
+    end
 end
