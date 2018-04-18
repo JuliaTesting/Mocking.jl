@@ -36,6 +36,16 @@ end
         @test Mocking.convert(Expr, p) == strip_lineno!(expected)
     end
 
+    @testset "variable keyword parameters" begin
+        p = @patch f(; a...) = nothing
+        @test p.signature == :(f(; a...))
+        @test p.modules == Set()
+        expected = quote
+            f(; a...) = $(p.body)(; a...)
+        end
+        @test Mocking.convert(Expr, p) == strip_lineno!(expected)
+    end
+
     # Issue #15
     @testset "anonymous parameter" begin
         anon = next_gensym("anon", 1)
