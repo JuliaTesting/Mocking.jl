@@ -145,8 +145,13 @@ function call_parameters(expr::Expr)
             # Keyword parameters
             if expr.head == :parameters
                 for ex in expr.args
-                    name = variable_name(ex)
-                    push!(keywords, Expr(:kw, name, name))
+                    if ex.head == :...
+                        name = variable_name(ex.args[1])
+                        push!(keywords, Expr(:..., name))
+                    else
+                        name = variable_name(ex)
+                        push!(keywords, Expr(:kw, name, name))
+                    end
                 end
 
             # Varargs parameter
