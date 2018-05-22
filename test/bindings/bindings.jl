@@ -1,10 +1,10 @@
 function genmod()
-    Core.eval(:(module $(gensym()) end))
+    Core.eval(@__MODULE__, :(module $(gensym()) end))
 end
 
 function valid_method(expr::Expr)
     try
-        !isempty(methods(eval(genmod(), expr)))
+        !isempty(methods(Core.eval(genmod(), expr)))
     catch
         false
     end

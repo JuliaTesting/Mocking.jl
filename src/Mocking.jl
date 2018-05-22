@@ -2,11 +2,8 @@ __precompile__(true)
 
 module Mocking
 
-import Compat: invokelatest, undef, @info, @warn
-
-if VERSION < v"0.7.0-DEV.3455"
-    hasmethod(f, t) = Base.method_exists(f, t)
-end
+using Compat
+using Compat: invokelatest, @info, @warn
 
 include("expr.jl")
 include("bindings.jl")
