@@ -1,9 +1,9 @@
 using Mocking
 Mocking.enable(force=true)
 
-VERSION < v"0.7-" && import Compat: Test
+using Compat
+using Compat.Test
 import Compat: Dates
-using Test
 import Mocking: apply
 
 const INT_EXPR = Int === Int32 ? :(Core.Int32) : :(Core.Int64)
