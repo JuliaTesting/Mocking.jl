@@ -2,8 +2,7 @@ __precompile__(true)
 
 module Mocking
 
-using Compat
-using Compat: invokelatest, @info, @warn
+using Compat: @__MODULE__, hasmethod, invokelatest, undef, @info, @warn
 
 include("expr.jl")
 include("bindings.jl")
