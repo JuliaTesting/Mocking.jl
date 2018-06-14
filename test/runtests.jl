@@ -1,7 +1,7 @@
 using Mocking
 Mocking.enable(force=true)
 
-using Compat
+using Compat: @__MODULE__
 using Compat.Test
 import Compat: Dates
 import Mocking: apply
