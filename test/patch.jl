@@ -1,5 +1,5 @@
 import Compat: Dates
-import Dates: Hour
+import .Dates: Hour
 
 function strip_lineno!(expr::Expr)
    filter!(expr.args) do ex
