@@ -1,5 +1,5 @@
 import Compat: Dates
-import Dates: Hour
+import .Dates: Hour
 
 # Creating a patch with an optional parameter
 @testset "patch with optional parameter" begin
