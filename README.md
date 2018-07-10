@@ -7,6 +7,12 @@ Mocking
 
 Allows Julia function calls to be temporarily overloaded for purpose of testing.
 
+Contents
+--------
+
+- [Usage](#usage)
+- [Gotchas](#gotchas)
+- [Notes](#notes)
 
 Usage
 -----
@@ -77,6 +83,14 @@ end
 @test randdev(n) != convert(Array{UInt8}, n:-1:1)
 ```
 
+Gotchas
+-------
+
+Remember to:
+
+- use `@mock` at desired call sites
+- start julia with `--compiled-modules=no` (`--compilecache=no` for ≤0.6) or pass `force=true` to `Mocking.enable`
+- run `Mocking.enable` before importing the module(s) being tested
 
 Notes
 -----
