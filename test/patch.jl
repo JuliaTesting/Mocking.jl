@@ -16,6 +16,8 @@ end
 # Test for nested modules
 module ModA
 
+using Mocking
+
 module ModB
 
 abstract type AbstractFoo end
@@ -26,12 +28,13 @@ end
 
 end
 
-bar(f::ModB.AbstractFoo) = println("blah")
+bar(f::ModB.AbstractFoo) = "default"
+baz(f::ModB.AbstractFoo) = @mock bar(f)
 
 end
 
 import ModA
-import ModA: bar, ModB
+import ModA: bar, baz, ModB
 
 @testset "patch" begin
     @testset "basic" begin
@@ -98,16 +101,17 @@ import ModA: bar, ModB
         ]
         for p in patches
             @test p.signature == :(f(h::Core.Int64=$RAND_EXPR(Core.Int64)))
-            @test p.modules == Set([:Core, RAND_MOD_EXPR])
+            @test p.modules == Set([:Core, :Base, RAND_MOD_EXPR])
         end
     end
 
     @testset "nested modules" begin
-        p = @patch bar(f::ModB.AbstractFoo) = println("blar")
-        @test p.modules == Set([:(ModA.ModB)])
-        @test_throws UndefVarError Mocking.apply(p) do
-            bar(ModB.Foo("X"))
+        p = @patch bar(f::ModB.AbstractFoo) = "patched"
+        @test p.modules == Set([:ModA, :(ModA.ModB)])
+        resp = Mocking.apply(p) do
+            baz(ModB.Foo("X"))
         end
+        @test resp == "patched"
     end
 
     @testset "array default" begin
