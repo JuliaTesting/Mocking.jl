@@ -13,6 +13,26 @@ function strip_lineno!(expr::Expr)
    return expr
 end
 
+# Test for nested modules
+module ModA
+
+module ModB
+
+abstract type AbstractFoo end
+
+struct Foo <: AbstractFoo
+    x::String
+end
+
+end
+
+bar(f::ModB.AbstractFoo) = println("blah")
+
+end
+
+import ModA
+import ModA: bar, ModB
+
 @testset "patch" begin
     @testset "basic" begin
         p = @patch f(a, b::Int64, c=3, d::Integer=4; e=5, f::Int=6) = nothing
@@ -79,6 +99,14 @@ end
         for p in patches
             @test p.signature == :(f(h::Core.Int64=$RAND_EXPR(Core.Int64)))
             @test p.modules == Set([:Core, RAND_MOD_EXPR])
+        end
+    end
+
+    @testset "nested modules" begin
+        p = @patch bar(f::ModB.AbstractFoo) = println("blar")
+        @test p.modules == Set([:(ModA.ModB)])
+        @test_throws UndefVarError Mocking.apply(p) do
+            bar(ModB.Foo("X"))
         end
     end
 
