@@ -53,7 +53,12 @@ struct Patch
         modules = Set()
         for b in values(trans)
             if isa(b, Expr)
-                push!(modules, b.args[1])
+                m = b.args[1]
+                while isa(m, Expr)
+                    push!(modules, m)
+                    m = m.args[1]
+                end
+                push!(modules, m)
             end
         end
 
