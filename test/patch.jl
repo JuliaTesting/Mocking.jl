@@ -33,8 +33,8 @@ baz(f::ModB.AbstractFoo) = @mock bar(f)
 
 end
 
-import ModA
-import ModA: bar, baz, ModB
+import .ModA
+import .ModA: bar, baz, ModB
 
 @testset "patch" begin
     @testset "basic" begin
