@@ -26,12 +26,12 @@ struct Foo <: AbstractFoo
     x::String
 end
 
-end
+end # ModB
 
 bar(f::ModB.AbstractFoo) = "default"
 baz(f::ModB.AbstractFoo) = @mock bar(f)
 
-end
+end # ModA
 
 import .ModA
 import .ModA: bar, baz, ModB
@@ -101,17 +101,22 @@ import .ModA: bar, baz, ModB
         ]
         for p in patches
             @test p.signature == :(f(h::Core.Int64=$RAND_EXPR(Core.Int64)))
-            @test p.modules == Set([:Core, :Base, RAND_MOD_EXPR])
+            @test p.modules == Set([:Core, RAND_MOD_EXPR])
         end
     end
 
     @testset "nested modules" begin
-        p = @patch bar(f::ModB.AbstractFoo) = "patched"
-        @test p.modules == Set([:ModA, :(ModA.ModB)])
+        p = @patch bar(f::ModB.AbstractFoo) = nothing
+        expected = quote
+            import ModA
+            import ModA.ModB
+            bar(f::ModA.ModB.AbstractFoo) = $(p.body)(f)
+        end
+        @test Mocking.convert(Expr, p) == strip_lineno!(expected)
         resp = Mocking.apply(p) do
             baz(ModB.Foo("X"))
         end
-        @test resp == "patched"
+        @test resp === nothing
     end
 
     @testset "array default" begin
