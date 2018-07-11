@@ -73,14 +73,21 @@ end
 # 0.4
 
 function convert(::Type{Expr}, p::Patch)
-    exprs = Array{Expr}(undef, length(p.modules) + 1)
+    exprs = Expr[]
 
     # Generate imports for all required modules
-    for (i, m) in enumerate(p.modules)
-        if VERSION > v"0.7.0-DEV.3187"
-            exprs[i] = Expr(:import, Expr(:., splitbinding(m)...))
-        else
-            exprs[i] = Expr(:import, splitbinding(m)...)
+    for m in p.modules
+        bindings = splitbinding(m)
+
+        :Main in bindings && error("Mocking cannot handle bindings from Main.")
+
+        for i in 1:length(bindings)
+            import_expr = if VERSION > v"0.7.0-DEV.3187"
+                Expr(:import, Expr(:., bindings[1:i]...))
+            else
+                Expr(:import, bindings[1:i]...)
+            end
+            push!(exprs, import_expr)
         end
     end
 
@@ -88,7 +95,7 @@ function convert(::Type{Expr}, p::Patch)
     # this call instead of injecting the body expression to support closures.
     sig, body = p.signature, p.body
     params = call_parameters(sig)
-    exprs[end] = Expr(:(=), sig, Expr(:block, Expr(:call, body, params...)))
+    push!(exprs, Expr(:(=), sig, Expr(:block, Expr(:call, body, params...))))
 
     return Expr(:block, exprs...)
 end
