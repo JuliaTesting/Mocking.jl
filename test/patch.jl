@@ -116,7 +116,7 @@ import .ModA: bar, baz, ModB
         As a result, we're opting to throw an error in that condition.
         NOTE: Dropping 0.6 should allow us to use Cassette.jl and avoid this issue.
         =#
-        p = @patch bar(f::ModB.AbstractFoo) = nothing
+        p = @patch bar(f::ModB.AbstractFoo) = "mock"
         if VERSION >= v"0.7.0-DEV.1877"
             @test_throws ErrorException Mocking.convert(Expr, p)
         else
@@ -126,10 +126,9 @@ import .ModA: bar, baz, ModB
                 bar(f::ModA.ModB.AbstractFoo) = $(p.body)(f)
             end
             @test Mocking.convert(Expr, p) == strip_lineno!(expected)
-            resp = Mocking.apply(p) do
-                baz(ModB.Foo("X"))
+            Mocking.apply(p) do
+                @test baz(ModB.Foo("X")) == "mock"
             end
-            @test resp === nothing
         end
     end
 
