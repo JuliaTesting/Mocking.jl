@@ -79,6 +79,8 @@ function convert(::Type{Expr}, p::Patch)
     for m in p.modules
         bindings = splitbinding(m)
 
+        :Main in bindings && error("Mocking cannot handle bindings from Main.")
+
         for i in 1:length(bindings)
             import_expr = if VERSION > v"0.7.0-DEV.3187"
                 Expr(:import, Expr(:., bindings[1:i]...))

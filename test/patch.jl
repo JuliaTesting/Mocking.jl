@@ -106,17 +106,31 @@ import .ModA: bar, baz, ModB
     end
 
     @testset "nested modules" begin
+        #=
+        On 0.7 we cannot handle patching a relative module in Main because:
+
+        1. `import Main` will throw an error
+        2. bindings must be absolute in order to transplant them into the
+        patch environment (e.g., temporary Mocking submodule).
+
+        As a result, we're opting to throw an error in that condition.
+        NOTE: Dropping 0.6 should allow us to use Cassette.jl and avoid this issue.
+        =#
         p = @patch bar(f::ModB.AbstractFoo) = nothing
-        expected = quote
-            import ModA
-            import ModA.ModB
-            bar(f::ModA.ModB.AbstractFoo) = $(p.body)(f)
+        if VERSION >= v"0.7.0-DEV.1877"
+            @test_throws ErrorException Mocking.convert(Expr, p)
+        else
+            expected = quote
+                import ModA
+                import ModA.ModB
+                bar(f::ModA.ModB.AbstractFoo) = $(p.body)(f)
+            end
+            @test Mocking.convert(Expr, p) == strip_lineno!(expected)
+            resp = Mocking.apply(p) do
+                baz(ModB.Foo("X"))
+            end
+            @test resp === nothing
         end
-        @test Mocking.convert(Expr, p) == strip_lineno!(expected)
-        resp = Mocking.apply(p) do
-            baz(ModB.Foo("X"))
-        end
-        @test resp === nothing
     end
 
     @testset "array default" begin
