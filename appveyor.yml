@@ -1,50 +1,23 @@
 environment:
-  JULIA_PROJECT: "@."
   matrix:
-  - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x86/0.6/julia-0.6-latest-win32.exe"
-  - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/0.6/julia-0.6-latest-win64.exe"
-  - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x86/0.7/julia-0.7-latest-win32.exe"
-  - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/0.7/julia-0.7-latest-win64.exe"
-  - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x86/julia-latest-win32.exe"
-  - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x64/julia-latest-win64.exe"
+  - julia_version: 0.6
+  - julia_version: 0.7
+  - julia_version: latest
 
-# branches:
-#   only:
-#     - master
-#     - /release-.*/
-
-notifications:
-  - provider: Email
-    on_build_success: false
-    on_build_failure: false
-    on_build_status_changed: false
+platform:
+  - x86 # 32-bit
+  - x64 # 64-bit
 
 install:
-  - ps: "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12"
-# Download most recent Julia Windows binary
-  - ps: (new-object net.webclient).DownloadFile(
-        $env:JULIA_URL,
-        "C:\projects\julia-binary.exe")
-# Run installer silently, output to C:\projects\julia
-  - C:\projects\julia-binary.exe /S /D=C:\projects\julia
+  - ps: iex ((new-object net.webclient).DownloadString("https://raw.githubusercontent.com/omus/Appveyor.jl/cv/coverage-upload/bin/install.ps1"))
 
 build_script:
-# Need to convert from shallow to complete for Pkg.clone to work
-  - IF EXIST .git\shallow (git fetch --unshallow)
-  - C:\projects\julia\bin\julia -e "
-      VERSION >= v\"0.7.0-DEV.3630\" && using InteractiveUtils; versioninfo();
-      VERSION >= v\"0.7.0-DEV.3656\" && using Pkg;
-      if VERSION >= v\"0.7.0-DEV.5183\"
-          Pkg.build();
-      else
-          Pkg.clone(pwd(), \"Mocking\"); Pkg.build(\"Mocking\");
-      end"
+  - echo "%JL_BUILD_SCRIPT%"
+  - C:\julia\bin\julia -e "%JL_BUILD_SCRIPT%"
 
 test_script:
-  - C:\projects\julia\bin\julia --check-bounds=yes -e "
-      VERSION >= v\"0.7.0-DEV.3656\" && using Pkg;
-      if VERSION >= v\"0.7.0-DEV.5183\"
-          Pkg.test();
-      else
-          Pkg.test(\"Mocking\");
-      end"
+  - echo "%JL_TEST_SCRIPT%"
+  - C:\julia\bin\julia -e "%JL_TEST_SCRIPT%"
+
+after_test:
+  - C:\julia\bin\julia -e "%JL_AFTER_SCRIPT%"
