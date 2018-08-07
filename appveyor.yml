@@ -6,7 +6,7 @@ environment:
 
 platform:
   - x86 # 32-bit
-  - x64 # 64-bit
+  - x64 # 64-bits
 
 install:
   - ps: iex ((new-object net.webclient).DownloadString("https://raw.githubusercontent.com/omus/Appveyor.jl/cv/coverage-upload/bin/install.ps1"))
