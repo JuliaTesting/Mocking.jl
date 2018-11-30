@@ -1,5 +1,11 @@
 import Base: @deprecate_binding, @deprecate
 
-# BEGIN Mocking 0.5 deprecations
+macro mock(expr)
+    @warn "@mock is deprecated to nothing. It is no longer required" max_log=1
+    return expr
+end
 
-# END Mocking 0.5 deprecations
+function enable(;force::Bool=false)
+    @warn "enable is deprecated to nothing. It is no longer required" max_log=1
+    return
+end

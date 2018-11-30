@@ -167,24 +167,23 @@ end
 
 function ingest_signature!(b::Bindings, expr::Expr)
     if expr.head == :call
-        func = expr.args[1]
+        @capture(expr,
+            (func_){typeparams__}(args__) |
+            (func_)(args__) 
+        ) || error("Not a valid function call.")
 
         # f(...)
-        if isa(func, Symbol)
-            push!(b.internal, func)
+        push!(b.external, func)
 
         # f{T}(...)
-        elseif isa(func, Expr) && func.head == :curly
-            push!(b.internal, func.args[1])
-            for parametric in func.args[2:end]
+        if typeparams != nothing 
+            for parametric in typeparams
                 ingest_parametric!(b, parametric)
             end
-        else
-            error("expression is not a valid function call: $func")
         end
 
-        # Function parameters and keywords
-        for parameter in expr.args[2:end]
+        # Function arguments and keywords
+        for parameter in args
             ingest_parameter!(b, parameter)
         end
 

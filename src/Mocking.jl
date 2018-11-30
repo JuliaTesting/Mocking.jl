@@ -1,42 +1,21 @@
 __precompile__(true)
 
 module Mocking
-
+using MacroTools
+using Cassette
+using Cassette: @context
+#TODO: strip out Compat
 using Compat: @__MODULE__, hasmethod, invokelatest, undef, @info, @warn
 
 include("expr.jl")
 include("bindings.jl")
-include("options.jl")
 include("deprecated.jl")
 
 export
     # Mocking.jl
-    @patch, @mock, Patch, apply,
-    # options.jl
-    DISABLE_COMPILED_MODULES_STR, DISABLE_COMPILED_MODULES_CMD
-
-# When ENABLED is false the @mock macro is a noop.
-global ENABLED = false
-global PATCH_ENV = nothing
-
-function enable(; force::Bool=false)
-    ENABLED::Bool && return  # Abend early if enabled has already been set
-    global ENABLED = true
-    global PATCH_ENV = PatchEnv()
-
-    if compiled_modules_enabled()
-        if force
-            # Disable using compiled modules when Mocking is enabled
-            set_compiled_modules(false)
-        else
-            @warn(
-                "Mocking.jl will probably not work when $COMPILED_MODULES_FLAG is ",
-                "enabled. Please start `julia` with `$DISABLE_COMPILED_MODULES_STR` ",
-                "or alternatively call `Mocking.enable(force=true).`",
-            )
-        end
-    end
-end
+    @patch, Patch, apply,
+    # deprecated.jl
+    @mock
 
 struct Patch
     signature::Expr
@@ -79,15 +58,8 @@ function convert(::Type{Expr}, p::Patch)
     for m in p.modules
         bindings = splitbinding(m)
 
-        :Main in bindings && error("Mocking cannot handle bindings from Main.")
-
         for i in 1:length(bindings)
-            import_expr = if VERSION > v"0.7.0-DEV.3187"
-                Expr(:import, Expr(:., bindings[1:i]...))
-            else
-                Expr(:import, bindings[1:i]...)
-            end
-            push!(exprs, import_expr)
+            push!(exprs, Expr(:import, Expr(:., bindings[1:i]...)))
         end
     end
 
@@ -101,24 +73,11 @@ function convert(::Type{Expr}, p::Patch)
 end
 
 macro patch(expr::Expr)
-    if expr.head == :function
-        name = expr.args[1].args[1]
-        params = expr.args[1].args[2:end]
-        body = expr.args[2]
-
-    # Short-form function syntax
-    elseif expr.head == :(=) && expr.args[1].head == :call
-        name = expr.args[1].args[1]
-        params = expr.args[1].args[2:end]
-        body = expr.args[2]
-
-    # Anonymous function syntax
-    # elseif expr.head == :(->)
-        # TODO: Determine how this could be supported
-    else
-        throw(ArgumentError("expression is not a function definition"))
-    end
-
+    @capture(expr,
+        function name_(params__) body_ end |
+        (name_(params__) = body_)
+    ) || throw(ArgumentError("expression is not a function definition"))
+    
     signature = Expr(:call, name, params...)
 
     # Determine the bindings used in the signature
@@ -136,32 +95,76 @@ macro patch(expr::Expr)
     return esc(:(Mocking.Patch( $(QuoteNode(signature)), $func, Dict($(translations...)) )))
 end
 
-struct PatchEnv
-    mod::Module
+
+
+"""
+    code_for_apply_patch(ctx_name, patch)
+
+Returns an `Expr` that when evaluted will apply this patch
+to the context of the name that was passed in.
+
+`ctx_name` a Symbol that is the name of the context
+Should be unique per `apply` block
+"""
+function code_for_apply_patch(ctx_name, patch)
+
+    # Todo move all this setup into the patch constructor/macro
+    @capture(patch.signature,
+        (opname_(args__; kwargs__)) |
+        (opname_(args__))
+    ) || error("Invalid patch signature: `$(patch.signature)`")
+
+    patch_expr = Mocking.convert(Expr, patch)
+    invoke_body = patch_expr.args[end].args[end].args[end]
+    
+    return Expr(
+        :(=),
+        Expr(
+            :call,
+            :(Cassette.execute),
+            :(:: $ctx_name), # Context
+            :(::typeof($(opname))), # function
+            args..., #sig
+            #$(esc(patch)).kwargs..., #TODO kwargs https://github.com/jrevels/Cassette.jl/issues/48
+        ),
+        invoke_body
+    )
+end
+
+
+
+
+
+
+
+struct PatchEnv{CTX <: Cassette.Context}
+    ctx::CTX
     debug::Bool
-
-    function PatchEnv(debug::Bool=false)
-        # Be careful not to call this code during pre-compilation otherwise we'll see the
-        # warning: "incremental compilation may be broken for this module"
-        m = Core.eval(Mocking, :(module $(gensym()) end))
-        new(m, debug)
-    end
 end
 
-function PatchEnv(patches::Array{Patch}, debug::Bool=false)
-    pe = PatchEnv(debug)
-    apply!(pe, patches)
-    return pe
+function PatchEnv(debug::Bool=false)
+    ctx_name = gensym(:MockEnv)
+    CTX = @eval @context $(ctx_name) # declare the context
+    ctx = @eval $CTX() # Get an intance of it
+    PatchEnv{CTX}(ctx, debug)
 end
 
-function PatchEnv(patch::Patch, debug::Bool=false)
+function PatchEnv(patch, debug::Bool=false)
     pe = PatchEnv(debug)
     apply!(pe, patch)
     return pe
 end
 
-function apply!(pe::PatchEnv, p::Patch)
-    Core.eval(pe.mod, convert(Expr, p))
+"""
+    apply!(pe::PatchEnv, patch[es])
+
+Applies the patches to the PatchEnv.
+
+### Implememtation note:
+This adds new methods to the `Cassette.execute` for the context of the PatchEnv.
+"""
+function apply!(pe::PatchEnv{CTX}, p::Patch) where CTX
+    return eval(code_for_apply_patch(CTX, p))
 end
 
 function apply!(pe::PatchEnv, patches::Array{Patch})
@@ -171,77 +174,16 @@ function apply!(pe::PatchEnv, patches::Array{Patch})
 end
 
 function apply(body::Function, pe::PatchEnv)
-    original_pe = get_active_env()
-    set_active_env(pe)
-    try
-        return body()
-    finally
-        set_active_env(original_pe)
-    end
+    return @eval Cassette.overdub($(pe.ctx), $body)
 end
 
-function apply(body::Function, patches::Array{Patch}; debug::Bool=false)
-    apply(body, PatchEnv(patches, debug))
-end
-function apply(body::Function, patch::Patch; debug::Bool=false)
-    apply(body, PatchEnv(patch, debug))
+function apply(body::Function, patch; debug::Bool=false)
+    return apply(body, PatchEnv(patch, debug))
 end
 
 function ismocked(pe::PatchEnv, func_name::Symbol, args::Tuple)
-    if isdefined(pe.mod, func_name)
-        func = Core.eval(pe.mod, func_name)
-        types = map(arg -> isa(arg, Type) ? Type{arg} : typeof(arg), args)
-        exists = hasmethod(func, types)
-
-        if pe.debug
-            @info("calling $func_name$(types)")
-            if exists
-                m = first(methods(func, types))
-                @info("executing mocked function: $m")
-            else
-                m = first(methods(Core.eval(func_name), types))
-                @info("executing original function: $m")
-            end
-        end
-
-        return exists
-    end
-    return false
+    # TODO: redefine this in terms of `methodswith(pe.ctx, Cassette.execute...)`
+    # If required
+    error("`ismocked` is not implemented")
 end
-
-set_active_env(pe::PatchEnv) = (global PATCH_ENV = pe)
-get_active_env() = PATCH_ENV::PatchEnv
-
-macro mock(expr)
-    isa(expr, Expr) || error("argument is not an expression")
-    expr.head == :do && (expr = rewrite_do(expr))
-    expr.head == :call || error("expression is not a function call")
-    ENABLED::Bool || return esc(expr)  # @mock is a no-op when Mocking is not ENABLED
-
-    func = expr.args[1]
-    func_name = QuoteNode(func)
-    args = filter(x -> !Mocking.iskwarg(x), expr.args[2:end])
-    kwargs = extract_kwargs(expr)
-
-    env_var = gensym("env")
-    args_var = gensym("args")
-
-    # Note: The fix to Julia issue #265 (PR #17057) introduced changes where no compiled
-    # calls could be made to functions compiled afterwards. Since the `Mocking.apply`
-    # do-block syntax compiles the body of the do-block function before evaluating the
-    # "outer" function this means our patch functions will be compiled after the "inner"
-    # function.
-    result = quote
-        local $env_var = Mocking.get_active_env()
-        local $args_var = tuple($(args...))
-        if Mocking.ismocked($env_var, $func_name, $args_var)
-            Mocking.invokelatest($env_var.mod.$func, $args_var...; $(kwargs...))
-        else
-            $func($args_var...; $(kwargs...))
-        end
-    end
-
-    return esc(result)
-end
-
 end # module

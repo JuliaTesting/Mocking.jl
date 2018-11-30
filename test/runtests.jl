@@ -17,7 +17,6 @@ function next_gensym(str::AbstractString, offset::Integer=1)
 end
 
 @testset "Mocking" begin
-    include("compiled-modules.jl")
     include("expr.jl")
     include("bindings/bindings.jl")
     include("patch.jl")

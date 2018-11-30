@@ -2,6 +2,7 @@ import Compat: Dates
 import .Dates: Hour
 
 function strip_lineno!(expr::Expr)
+   #TODO: remove this and use the helper from MacroTools.jl
    filter!(expr.args) do ex
        isa(ex, LineNumberNode) && return false
        if isa(ex, Expr)
@@ -15,29 +16,28 @@ end
 
 # Test for nested modules
 module ModA
+   using Mocking
+   
+   module ModB
+      abstract type AbstractFoo end
+      struct Foo <: AbstractFoo
+          x::String
+      end
+   end # ModB
 
-using Mocking
-
-module ModB
-
-abstract type AbstractFoo end
-
-struct Foo <: AbstractFoo
-    x::String
-end
-
-end # ModB
-
-bar(f::ModB.AbstractFoo) = "default"
-baz(f::ModB.AbstractFoo) = @mock bar(f)
-
+   bar(f::ModB.AbstractFoo) = "default"
+   baz(f::ModB.AbstractFoo) = @mock bar(f)
 end # ModA
 
 import .ModA
 import .ModA: bar, baz, ModB
 
+function f end # Must declare function before mocking it
+
 @testset "patch" begin
     @testset "basic" begin
+        
+
         p = @patch f(a, b::Int64, c=3, d::Integer=4; e=5, f::Int=6) = nothing
         @test p.signature == :(f(a, b::Core.Int64, c=3, d::Core.Integer=4; e=5, f::$INT_EXPR=6))
         @test p.modules == Set([:Core])
@@ -105,32 +105,18 @@ import .ModA: bar, baz, ModB
         end
     end
 
-    @testset "nested modules" begin
-        #=
-        On 0.7 we cannot handle patching a relative module in Main because:
-
-        1. `import Main` will throw an error
-        2. bindings must be absolute in order to transplant them into the
-        patch environment (e.g., temporary Mocking submodule).
-
-        As a result, we're opting to throw an error in that condition.
-        NOTE: Dropping 0.6 should allow us to use Cassette.jl and avoid this issue.
-        =#
-        p = @patch bar(f::ModB.AbstractFoo) = "mock"
-        if VERSION >= v"0.7.0-DEV.1877"
-            @test_throws ErrorException Mocking.convert(Expr, p)
-        else
-            expected = quote
-                import ModA
-                import ModA.ModB
-                bar(f::ModA.ModB.AbstractFoo) = $(p.body)(f)
-            end
-            @test Mocking.convert(Expr, p) == strip_lineno!(expected)
-            Mocking.apply(p) do
-                @test baz(ModB.Foo("X")) == "mock"
-            end
-        end
-    end
+   @testset "nested modules" begin
+      p = @patch bar(f::ModB.AbstractFoo) = "mock"
+      expected = quote
+         import ModA
+         import ModA.ModB
+         bar(f::ModA.ModB.AbstractFoo) = $(p.body)(f)
+      end
+      @test Mocking.convert(Expr, p) == strip_lineno!(expected)
+      Mocking.apply(p) do
+         @test baz(ModB.Foo("X")) == "mock"
+      end
+   end
 
     @testset "array default" begin
         p = @patch f(a=[]) = a
