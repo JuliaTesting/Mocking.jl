@@ -1,8 +1,8 @@
 #| Test the basic concept behind call overloading
+multiply(x::Number) = 2x
+multiply(x::Int) = 2x - 1
+
 @testset "concept" begin
-    multiply(x::Number) = 2x
-    multiply(x::Int) = 2x - 1
-    
     @test multiply(2) == 3
     @test multiply(0x2) == 0x4
     @test multiply(2//1) == 4//1

@@ -1,44 +1,84 @@
-# Test that Mocking works at various scopes
+# Test that Mocking works 
+# with patches referencing functions at various scopes
 
-# Global scope
 global_scope() = "foo"
+@testset "Global scope" begin
 
-# The @mock macro is essentially a no-op
-@test (@mock global_scope()) == global_scope()
+    # Check normaolly not mocked
+    @test global_scope() == "foo"
 
-# Create a patched version of func() and return the alternative
-# version at call sites using the @mock macro
-global_patch = (@patch global_scope() = "bar")
-apply(global_patch) do
-    @test (@mock global_scope()) != global_scope()
-end
-
-# The @mock macro should return to the original behaviour
-@test (@mock global_scope()) == global_scope()
-
-# Local scope within a function
-function scope_test()
-    function_scope() = "foo"
-    @test (@mock function_scope()) == function_scope()
-
-    patch = @patch function_scope() = "bar"
-    apply(patch) do
-        @test (@mock function_scope()) != function_scope()
+    # Create a patched version of func() and return the alternative version
+    global_patch = (@patch global_scope() = "bar")
+    apply(global_patch) do
+        @test global_scope() == "bar" 
     end
 
-    @test (@mock function_scope()) == function_scope()
+    # Outside the `apply` should return to the original behaviour
+    @test global_scope() == "foo"
 end
-scope_test()
 
-# Local scope within a let-block
-let let_scope
-    let_scope() = "foo"
-    @test (@mock let_scope()) == let_scope()
 
-    patch = @patch let_scope() = "bar"
-    apply(patch) do
-        @test (@mock let_scope()) != let_scope()
+function_scope() = "foo"
+@testset "Local scope within a function" begin 
+    function scope_test()
+        @test function_scope() == "foo"
+        inner() = "bar"
+
+        patch = @patch function_scope() = inner()
+        apply(patch) do
+            @test function_scope() == "bar"
+        end
+
+        @test function_scope() == "foo"
+    end
+    scope_test()
+end
+
+
+let_scope() = "foo"
+@testset "Local scope within a let block" begin 
+    let 
+        @test let_scope() == "foo"
+        inner() = "bar"
+
+        patch = @patch let_scope() = inner()
+        apply(patch) do
+            @test let_scope() == "bar"
+        end
+
+        @test let_scope() == "foo"
+    end
+end
+
+###################### Test modules
+module FooBar
+    first() = "bar"
+    second() = "bling"
+    export second
+end
+
+using .FooBar
+
+module_scope() = "foo"
+@testset "Module scope" begin
+    @testset "Not imported" begin 
+        @test module_scope() == "foo"
+        inner() = "bar"
+
+        patch = @patch module_scope() = FooBar.first()
+        apply(patch) do
+            @test module_scope() == "bar"
+        end
+
+        @test module_scope() == "foo"
     end
 
-    @test (@mock let_scope()) == let_scope()
+    @testset "Imported" begin
+        patch = @patch module_scope() = second()
+        apply(patch) do
+            @test module_scope() == "bling"
+        end
+
+        @test module_scope() == "foo"
+    end
 end
