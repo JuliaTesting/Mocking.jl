@@ -2,7 +2,7 @@ import Base: @deprecate_binding, @deprecate
 
 macro mock(expr)
     @warn "@mock is deprecated to nothing. It is no longer required" max_log=1
-    return expr
+    return esc(expr)
 end
 
 function enable(;force::Bool=false)
