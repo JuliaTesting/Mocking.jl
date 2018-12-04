@@ -16,21 +16,29 @@ function next_gensym(str::AbstractString, offset::Integer=1)
     return Symbol(string(m.captures[1], parse(Int, m.captures[2]) + offset))
 end
 
-@testset "Mocking" begin
-#    include("expr.jl")
- #   include("bindings/bindings.jl")
-  #  include("patch.jl")
 
-    include("concept.jl")
-    include("closure.jl")
-    include("scope.jl")
-    #include("import.jl")
-    include("real-open.jl")
-    include("real-isfile.jl")
-    include("real-nested.jl")
-    include("mock-methods.jl")
-    include("readme.jl")
-    #include("optional.jl")
-   # include("patch-gen.jl")
-    # include("anonymous-param.jl")
+testfiles = [
+#      "expr.jl",
+ #   "bindings/bindings.jl",
+  #  "patch.jl",
+
+    "concept.jl",
+    "closure.jl",
+    "scope.jl",
+    #"import.jl",
+    "real-open.jl",
+    "real-isfile.jl",
+    "real-nested.jl",
+    "mock-methods.jl",
+    "readme.jl",
+    #"optional.jl",
+   # "patch-gen.jl",
+    # "anonymous-param.jl",
+]
+
+
+@testset "Mocking" begin
+    @testset "$file" for file in testfiles
+        include(file)
+    end
 end
