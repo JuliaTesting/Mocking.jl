@@ -18,7 +18,6 @@ multiply(x::Int) = 2x - 1
 
     pe = Mocking.PatchEnv()
     for p in patches
-        @show p
         Mocking.apply!(pe, p)
     end
 
