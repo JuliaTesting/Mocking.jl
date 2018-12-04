@@ -28,7 +28,7 @@ end
     include("real-open.jl")
     include("real-isfile.jl")
     include("real-nested.jl")
-   # include("mock-in-patch.jl")
+    include("mock-methods.jl")
     include("readme.jl")
     #include("optional.jl")
    # include("patch-gen.jl")
