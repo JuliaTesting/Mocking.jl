@@ -1,5 +1,4 @@
-import Compat: Dates
-import Compat: read
+
 
 # Patches should allow using imported bindings in the body of the patch
 @testset "imported binding in body" begin
@@ -7,13 +6,13 @@ import Compat: read
     @test isdefined(Dates, :Minute)
     import Dates: Minute, Hour
 
-    myminute(x::Integer) = Minute(x)
+    global myminute(x::Integer) = Minute(x)
 
     # Patches should work when referencing bindings imported in the file where the patch
     # is created.
     patch = @patch myminute(x::Integer) = Minute(Hour(x))
     apply(patch) do
-        @test (@mock myminute(5)) == Minute(300)
+        @test (myminute(5)) == Minute(300)
     end
 end
 
@@ -24,7 +23,7 @@ end
 
     patch = @patch read(cmd::Base.AbstractCmd, ::Type{String}) = "bar"
     apply(patch) do
-        @test (@mock read(`foo`, String)) == "bar"
+        @test read(`foo`, String) == "bar"
     end
 end
 
@@ -34,6 +33,6 @@ end
 
     patch = @patch read(cmd::AbstractCmd, ::Type{String}) = "bar"
     apply(patch) do
-        @test (@mock read(`foo`, String)) == "bar"
+        @test read(`foo`, String) == "bar"
     end
 end

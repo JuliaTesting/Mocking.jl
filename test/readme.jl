@@ -1,4 +1,4 @@
-import Compat: Sys, read, unsafe_string
+using Base: Sys, read, unsafe_string
 
 # Testcase from example given in Mocking.jl's README
 @testset "readme" begin

@@ -1,10 +1,8 @@
 using Mocking
-Mocking.enable(force=true)
 
-using Compat: @__MODULE__
-using Compat.Test
-import Compat: Dates
-import Mocking: apply
+using Test
+import Dates
+using Mocking: apply
 
 const INT_EXPR = Int === Int32 ? :(Core.Int32) : :(Core.Int64)
 const HOUR_EXPR = VERSION < v"0.7.0-DEV.2575" ? :(Base.Dates.Hour) : :(Dates.Hour)
@@ -25,7 +23,7 @@ testfiles = [
     "concept.jl",
     "closure.jl",
     "scope.jl",
-    #"import.jl",
+    "import.jl",
     "real-open.jl",
     "real-isfile.jl",
     "real-nested.jl",

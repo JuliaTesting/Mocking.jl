@@ -24,7 +24,6 @@ using .DemoOuter: outer
             @test demo_outer() == "patched2"
         end
     end
-
 end
 
 demo_inner() = identity(DemoOuter.DemoInner.inner())
@@ -42,8 +41,3 @@ using .DemoOuter.DemoInner: inner
         end
     end
 end
-
-
-
-
-
