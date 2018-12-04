@@ -1,10 +1,9 @@
-
 foo(arr::AbstractArray{Float64}) = map(foo, arr)  # Typically foo should use @mock here
 foo(x::Float64) = floor(x)
 
 @testset "mock some methods but not others" begin
     @test foo(1.6) == 1.0
-    @test foo([1.6]) == 1.0
+    @test foo([1.6]) == [1.0]
 
 
     # Patching only the function that takes a scalar
@@ -25,3 +24,5 @@ foo(x::Float64) = floor(x)
         @test foo([1.6]) == [-1.6]
     end
 end
+
+
