@@ -30,7 +30,7 @@ testfiles = [
     "mock-methods.jl",
     "readme.jl",
     #"optional.jl",
-   # "patch-gen.jl",
+    "patch-gen.jl",
     # "anonymous-param.jl",
 ]
 

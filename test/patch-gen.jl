@@ -1,9 +1,11 @@
 # https://github.com/invenia/Mocking.jl/issues/14
+
+statuscode(url::AbstractString) = 500
+
 @testset "patch generation" begin
-    statuscode(url::AbstractString) = 500
 
     function foo(status::Int)
-        @mock statuscode("http://httpbin.org/status/$status")
+        statuscode("http://httpbin.org/status/$status")
     end
 
     # Previously Mocking would modify the function expression in place. Reusing this
