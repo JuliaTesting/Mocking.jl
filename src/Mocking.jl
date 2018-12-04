@@ -5,7 +5,8 @@ using MacroTools
 using Cassette
 using Cassette: @context
 #TODO: strip out Compat
-using Compat: @__MODULE__, hasmethod, invokelatest, undef, @info, @warn
+using InteractiveUtils: hasmethod
+using Base: invokelatest
 
 include("expr.jl")
 include("bindings.jl")
