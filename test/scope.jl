@@ -1,4 +1,4 @@
-# Test that Mocking works 
+# Test that Mocking works
 # with patches referencing functions at various scopes
 
 global_scope() = "foo"
@@ -10,7 +10,7 @@ global_scope() = "foo"
     # Create a patched version of func() and return the alternative version
     global_patch = (@patch global_scope() = "bar")
     apply(global_patch) do
-        @test global_scope() == "bar" 
+        @test global_scope() == "bar"
     end
 
     # Outside the `apply` should return to the original behaviour
@@ -19,7 +19,7 @@ end
 
 
 function_scope() = "foo"
-@testset "Local scope within a function" begin 
+@testset "Local scope within a function" begin
     function scope_test()
         @test function_scope() == "foo"
         inner() = "bar"
@@ -36,8 +36,8 @@ end
 
 
 let_scope() = "foo"
-@testset "Local scope within a let block" begin 
-    let 
+@testset "Local scope within a let block" begin
+    let
         @test let_scope() == "foo"
         inner() = "bar"
 
@@ -51,6 +51,7 @@ let_scope() = "foo"
 end
 
 ###################### Test modules
+
 module FooBar
     first() = "bar"
     second() = "bling"
@@ -61,9 +62,8 @@ using .FooBar
 
 module_scope() = "foo"
 @testset "Module scope" begin
-    @testset "Not imported" begin 
+    @testset "Not imported" begin
         @test module_scope() == "foo"
-        inner() = "bar"
 
         patch = @patch module_scope() = FooBar.first()
         apply(patch) do
