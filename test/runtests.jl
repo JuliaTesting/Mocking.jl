@@ -31,7 +31,7 @@ testfiles = [
     "readme.jl",
     #"optional.jl",
     "patch-gen.jl",
-    # "anonymous-param.jl",
+    "anonymous-param.jl",
 ]
 
 
