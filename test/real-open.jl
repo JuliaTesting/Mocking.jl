@@ -9,19 +9,19 @@ import Compat: read
     # will be preferred over the original `open(::AbstractString)` for `open("foo")`
     patch = @patch open(name) = IOBuffer("bar")
     apply(patch) do
-        @test read((@mock open("foo")), String) == "bar"
+        @test read(open("foo"), String) == "bar"
 
         # The `open(::Any)` patch could result in unintended (or intended) consequences
-        @test read((@mock open(`echo helloworld`)), String) == "bar"
+        @test read(open(`echo helloworld`), String) == "bar"
     end
 
     # Better to be specific with your patches
     patch = @patch open(name::AbstractString) = IOBuffer("bar")
     apply(patch) do
-        @test read((@mock open("foo")), String) == "bar"
+        @test read(open("foo"), String) == "bar"
 
         # The more specific `open(::AbstractString)` patches only a single method
-        result = @mock open(`echo helloworld`)
+        result = open(`echo helloworld`)
         if VERSION >= v"0.7.0-DEV.3"
             io = result
         else

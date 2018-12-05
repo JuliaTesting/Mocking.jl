@@ -4,7 +4,7 @@ using Base: Sys, read, unsafe_string
 @testset "readme" begin
     # Note: Function only works in UNIX environments.
     function randdev(n::Integer)
-        @mock open("/dev/urandom") do fp
+        open("/dev/urandom") do fp
             reverse(read(fp, n))
         end
     end

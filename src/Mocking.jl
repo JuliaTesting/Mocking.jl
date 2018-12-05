@@ -4,7 +4,8 @@ module Mocking
 using MacroTools
 using Cassette
 using Cassette: @context
-#TODO: strip out Compat
+
+# TODO: are either of these used?
 using InteractiveUtils: hasmethod
 using Base: invokelatest
 

@@ -26,7 +26,7 @@ magic(x) = false
     # Getting closers to work means having a function created in the current scope
     patch = @patch magic(x) = x == sentinel
     apply(patch) do
-        @test (@mock magic(sentinel)) == true
+        @test magic(sentinel) == true
     end
 end
 

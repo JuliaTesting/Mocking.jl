@@ -8,6 +8,6 @@
     # Note: @__FILE__ is resolved in the context of this file.
     patch = @patch isfile(p...) = first(p) == string(@__FILE__, ".null")
     apply(patch) do
-        @test (@mock isfile(null_file)) == true
+        @test isfile(null_file) == true
     end
 end
