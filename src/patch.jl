@@ -65,26 +65,72 @@ to the context of the name that was passed in.
 Should be unique per `apply` block
 """
 function code_for_apply_patch(ctx_name, patch)
-    #TODO move all this setup into the patch constructor/macro
     @capture(patch.signature,
-        (name_(args__; kwargs__)) |
-        (name_(args__))
+        (fname_(args__; kwargs__)) |
+        (fname_(args__))
     ) || error("Invalid patch signature: `$(patch.signature)`")
 
 
-    params = call_parameters(patch.signature)
-    invoke_body = Expr(:call, patch.body, params...)
 
-    return Expr(
-        :(=),
-        Expr(
+    # This is the basic parts of any cassette execture defenition  AST
+
+    if kwargs === nothing
+        method_head = Expr(
             :call,
             :(Cassette.execute),
             :(::$ctx_name), # Context
-            :(::typeof($name)), # function
-            #kwargs::Any, #Keyword arguments see https://github.com/jrevels/Cassette.jl/issues/48#issuecomment-440605481
-            args..., #sig
-        ),
-        invoke_body
-    )
+            :(::typeof($fname)), # Function
+            args...)
+    else
+        sig_params = patch.signature.args[2:end] # Important: this is a copy
+        #@show sig_params
+        @assert sig_params[1].head == :parameters
+        # sig_params[1] is the kwargs stuff
+        # sig_params[2:end] are the normal/optional arguments
+        # We need to splice in the Cassette suff before there
+        insert!(sig_params, 2, :(::$ctx_name)) # Context
+        insert!(sig_params, 3, :(::typeof($fname))) # Function
+
+        method_head = Expr(
+            :call,
+            :(Cassette.execute),
+            sig_params...
+        )
+    end
+
+    # This boils down to
+    # Cassette.execute(::$ContextName, ::typeof($functionname), args...) = body(args...)
+    # but we have to get the types and numbers and names of arguments all in there right
+    return quote
+        $(method_head) = $(code_for_invoke_body(patch))
+
+        $(code_for_kwarg_execute_overload(fname))
+    end
+end
+
+"""
+    code_for_invoke_body(patch)
+
+Generates the AST to call the patches body with the correctly named arguments.
+"""
+function code_for_invoke_body(patch)
+    call_params = call_parameters(patch.signature)
+    return Expr(:call, patch.body, call_params...)
+end
+
+
+function code_for_kwarg_execute_overload(fname)
+    # Keyword arguments see https://github.com/jrevels/Cassette.jl/issues/48#issuecomment-440605481
+
+    quote
+        function Cassette.execute(
+            ctx::Cassette.Context,
+            ::Core.kwftype(typeof($fname)),
+            kwargs::Any,
+            ::typeof($fname),
+            args...
+        )
+            Cassette.execute(ctx, $fname, args...; kwargs...)
+        end
+    end
 end
