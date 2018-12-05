@@ -1,12 +1,12 @@
-import Base: @deprecate_binding, @deprecate
 
 macro mock(expr)
-    quote
-        @warn "@mock is deprecated to nothing. It is no longer required." maxlog=1
-        $expr
-    end |> esc
+    w = Expr(:macrocall, Symbol("@warn"), __source__, "@mock is no longer required.")
+   quote
+       $w
+       $(esc(expr))
+   end
 end
 
 function enable(;force::Bool=false)
-    esc(:(@warn "enable is deprecated to nothing. It is no longer required." maxlog=1))
+    esc(:(@warn "Mocking.enable is no longer required." maxlog=1))
 end
