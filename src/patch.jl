@@ -1,3 +1,7 @@
+struct KwArgs{T}
+    values::T
+end
+
 struct Patch
     signature::Expr
     body::Function
@@ -17,30 +21,9 @@ function Patch(
     Patch(sig, body)
 end
 
-# TODO: Find non-eval way to determine module locations of Types
-# evaling in the @patch scope seems to be problematic for pre-compliation
-# first(methods(x)).sig.types[2:end]
-
-# We can use the @patch macro to create a list of bindings used then pass that
-# in as an array into Patch. At runtime the types and function names will be fully
-# qualified
-
-# We can support optional parameters and keywords by using generic functions on
-# 0.4
-
-function convert(::Type{Expr}, p::Patch)
-    exprs = Expr[]
-
-    # Generate the new method which will call the user's patch function. We need to perform
-    # this call instead of injecting the body expression to support closures.
-    sig, body = p.signature, p.body
-    params = call_parameters(sig)
-    push!(exprs, Expr(:(=), sig, Expr(:block, Expr(:call, body, params...))))
-
-    return Expr(:block, exprs...)
-end
 
 macro patch(expr::Expr)
+    #TODO Make sure all varients of `where` work
     @capture(expr,
         function name_(params__) body_ end |
         (name_(params__) = body_)
@@ -48,17 +31,19 @@ macro patch(expr::Expr)
 
     signature = Expr(:call, name, params...)
 
-    # Determine the bindings used in the signature
+
+
+    # Generate a translation between the external bindings and the runtime types and
+    # functions. The translation will be used to revise all bindings to be absolute.
     bindings = Bindings(signature)
+    translations = [Expr(:call, :(=>), QuoteNode(b), b) for b in bindings.external]
+
 
     # Need to evaluate the body of the function in the context of the `@patch` macro in
     # order to support closures.
     # func = Expr(:(->), Expr(:tuple, params...), body)
-    func = Expr(:(=), Expr(:call, gensym(), params...), body)
+    func = Expr(:(=), Expr(:call, gensym(Symbol(name, :_patch)), params...), body)
 
-    # Generate a translation between the external bindings and the runtime types and
-    # functions. The translation will be used to revise all bindings to be absolute.
-    translations = [Expr(:call, :(=>), QuoteNode(b), b) for b in bindings.external]
 
     return esc(:(Mocking.Patch(
         $(QuoteNode(signature)),
@@ -80,25 +65,25 @@ to the context of the name that was passed in.
 Should be unique per `apply` block
 """
 function code_for_apply_patch(ctx_name, patch)
-
-    # Todo move all this setup into the patch constructor/macro
+    #TODO move all this setup into the patch constructor/macro
     @capture(patch.signature,
-        (opname_(args__; kwargs__)) |
-        (opname_(args__))
+        (name_(args__; kwargs__)) |
+        (name_(args__))
     ) || error("Invalid patch signature: `$(patch.signature)`")
 
-    patch_expr = Mocking.convert(Expr, patch)
-    invoke_body = patch_expr.args[end].args[end].args[end]
+
+    params = call_parameters(patch.signature)
+    invoke_body = Expr(:call, patch.body, params...)
 
     return Expr(
         :(=),
         Expr(
             :call,
             :(Cassette.execute),
-            :(:: $ctx_name), # Context
-            :(::typeof($(opname))), # function
+            :(::$ctx_name), # Context
+            :(::typeof($name)), # function
+            #kwargs::Any, #Keyword arguments see https://github.com/jrevels/Cassette.jl/issues/48#issuecomment-440605481
             args..., #sig
-            #$(esc(patch)).kwargs..., #TODO kwargs https://github.com/jrevels/Cassette.jl/issues/48
         ),
         invoke_body
     )
