@@ -26,8 +26,8 @@ hourvalue(h::Hour=Hour(0)) = Dates.value(h)
     end
 end
 
-
 #=
+
 # Creating a patch with an keyword parameter
 hourvalue_kw(; hour::Hour=Hour(0)) = Dates.value(hour)
 @testset "patch with keyword parameter" begin
@@ -41,5 +41,4 @@ hourvalue_kw(; hour::Hour=Hour(0)) = Dates.value(hour)
         @test hourvalue_kw(; hour=Hour(4)) == 8    #:parameters
     end
 end
-
 =#

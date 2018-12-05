@@ -1,30 +1,20 @@
-
 struct Patch
     signature::Expr
     body::Function
-    modules::Set #TODO remove modules, we don't (and can't) use them anymore
 
-    function Patch(
-        signature::Expr,
-        body::Function,
-        source_module::Module,
-        translation::Dict)
+end
+
+function Patch(
+    signature::Expr,
+    body::Function,
+    source_module::Module,
+    translation::Dict)
+
+    trans = adjust_bindings(source_module, translation)
+    sig = name_parameters(absolute_signature(signature, trans))
 
 
-        trans = adjust_bindings(source_module, translation)
-        sig = name_parameters(absolute_signature(signature, trans))
-
-        # On VERSION >= v"0.5"
-        # modules = Set(b.args[1] for b in values(trans) if isa(b, Expr))
-        modules = Set()
-        for b in values(trans)
-            if isa(b, Expr)
-                push!(modules, b.args[1])
-            end
-        end
-
-        new(sig, body, modules)
-    end
+    Patch(sig, body)
 end
 
 # TODO: Find non-eval way to determine module locations of Types
@@ -40,15 +30,6 @@ end
 
 function convert(::Type{Expr}, p::Patch)
     exprs = Expr[]
-
-    # Generate imports for all required modules
-    for m in p.modules
-        bindings = splitbinding(m)
-
-        for i in 1:length(bindings)
-            push!(exprs, Expr(:import, Expr(:., bindings[1:i]...)))
-        end
-    end
 
     # Generate the new method which will call the user's patch function. We need to perform
     # this call instead of injecting the body expression to support closures.
