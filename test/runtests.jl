@@ -5,10 +5,6 @@ import Dates
 using Dates: Hour
 using Mocking: apply
 
-const INT_EXPR = Int === Int32 ? :(Core.Int32) : :(Core.Int64)
-const HOUR_EXPR = VERSION < v"0.7.0-DEV.2575" ? :(Base.Dates.Hour) : :(Dates.Hour)
-const RAND_EXPR = VERSION < v"0.7.0-DEV.3406" ? :(Base.Random.rand) : :(Random.rand)
-const RAND_MOD_EXPR = VERSION < v"0.7.0-DEV.3406" ? :(Base.Random) : :Random
 
 function next_gensym(str::AbstractString, offset::Integer=1)
     m = match(r"^(.*?)(\d+)$", string(gensym(str)))
@@ -17,7 +13,7 @@ end
 
 
 testfiles = [
-#      "expr.jl",
+      "expr.jl",
  #   "bindings/bindings.jl",
   #  "patch.jl",
 

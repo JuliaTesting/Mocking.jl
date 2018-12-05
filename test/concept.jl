@@ -26,7 +26,7 @@ multiply(x::Int) = 2x - 1
         @test multiply(0x2) == 0x6    # calls mocked `multiply(::Integer)`
         @test multiply(2//1) == 4//1  # calls original `multiply(::Number)`
     end
-        
+
     # Clean env
 
     # Ensure that original behaviour is restored
