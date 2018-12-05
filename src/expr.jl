@@ -25,35 +25,51 @@ julia> binding_expr(Dates.Hour)
 """
 function binding_expr end
 
-function binding_expr(m::Module)
-    joinbinding(fullname(m)...)
+function binding_expr(source_module, m::Module)
+    localised_binding(source_module, m)
 end
-function binding_expr(t::Type)
+function binding_expr(source_module, t::Type)
     type_name = unwrap_unionall(t).name
-    joinbinding(fullname(type_name.module)..., type_name.name)
+    localised_binding(source_module, type_name.module, type_name.name)
 end
-function binding_expr(u::Union)
-    a = binding_expr(u.a)
-    b = binding_expr(u.b)
+function binding_expr(source_module, u::Union)
+    a = binding_expr(source_module, u.a)
+    b = binding_expr(source_module, u.b)
     if b.head == :curly && b.args[1] == :Union
         Expr(:curly, :Union, a, b.args[2:end]...)
     else
         Expr(:curly, :Union, a, b)
     end
 end
-function binding_expr(f::Function)
+function binding_expr(source_module, f::Function)
     if isa(f, Core.Builtin)
         return nameof(f)
     end
     m = parentmodule(f, Tuple)
-    joinbinding(fullname(m)..., nameof(f))
+    localised_binding(source_module, m, nameof(f))
+end
+
+"""
+    localised_binding(abs_module, rel_module, [leaf])
+
+Returns a fully qualified module name for `leaf` in `rel_module`,
+where `abs_module` is one that imports `rel_module`.
+If `leaf` is not passed in, t
+"""
+function localised_binding(abs_module, rel_module, leaf=Tuple())
+    return joinbinding(
+        fullname(abs_module)...,
+        fullname(rel_module)...,
+        leaf
+    )
 end
 
 
-function adjust_bindings(translations::Dict)
+
+function adjust_bindings(source_module, translations::Dict)
     new_trans = Dict()
     for (k, v) in translations
-        new_trans[k] = binding_expr(v)
+        new_trans[k] = binding_expr(source_module, v)
     end
     return new_trans
 end

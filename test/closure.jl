@@ -65,9 +65,9 @@ end
 ###################### Test modules
 
 module FooBar
-    first() = "bar"
-    second() = "bling"
-    export second
+    nonexported() = "bar"
+    exported() = "bling"
+    export exported
 end
 
 using .FooBar
@@ -77,7 +77,7 @@ module_scope() = "foo"
     @testset "Not imported" begin
         @test module_scope() == "foo"
 
-        patch = @patch module_scope() = FooBar.first()
+        patch = @patch module_scope() = FooBar.nonexported()
         apply(patch) do
             @test module_scope() == "bar"
         end
@@ -86,7 +86,7 @@ module_scope() = "foo"
     end
 
     @testset "Imported" begin
-        patch = @patch module_scope() = second()
+        patch = @patch module_scope() = exported()
         apply(patch) do
             @test module_scope() == "bling"
         end
@@ -94,5 +94,3 @@ module_scope() = "foo"
         @test module_scope() == "foo"
     end
 end
-
-

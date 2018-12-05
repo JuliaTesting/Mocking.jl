@@ -2,6 +2,7 @@ using Mocking
 
 using Test
 import Dates
+using Dates: Hour
 using Mocking: apply
 
 const INT_EXPR = Int === Int32 ? :(Core.Int32) : :(Core.Int64)
@@ -29,9 +30,10 @@ testfiles = [
     "real-nested.jl",
     "mock-methods.jl",
     "readme.jl",
-    #"optional.jl",
     "patch-gen.jl",
     "anonymous-param.jl",
+
+    "optional.jl",
 ]
 
 
