@@ -1,96 +1,47 @@
-import Compat: Dates
-import .Dates: Hour
+import Dates: Hour
 
-function strip_lineno!(expr::Expr)
-   #TODO: remove this and use the helper from MacroTools.jl
-   filter!(expr.args) do ex
-       isa(ex, LineNumberNode) && return false
-       if isa(ex, Expr)
-           ex.head === :line && return false
-           strip_lineno!(ex::Expr)
-       end
-       return true
-   end
-   return expr
-end
 
-# Test for nested modules
-module ModA
-   using Mocking
-   
-   module ModB
-      abstract type AbstractFoo end
-      struct Foo <: AbstractFoo
-          x::String
-      end
-   end # ModB
 
-   bar(f::ModB.AbstractFoo) = "default"
-   baz(f::ModB.AbstractFoo) = @mock bar(f)
-end # ModA
 
-import .ModA
-import .ModA: bar, baz, ModB
-
-function f end # Must declare function before mocking it
+f(args...)= NaN # Must declare function before mocking it
 
 @testset "patch" begin
     @testset "basic" begin
-        
+        p = @patch f(a, b::Int64, c=3, d::Integer=4; e=5, g::Int32=6) = nothing
+        @test p.signature == :(Main.Main.f(a, b::Main.Core.Int64, c=3, d::Main.Core.Integer=4; e=5, g::Main.Core.Int32=6))
+    end
 
-        p = @patch f(a, b::Int64, c=3, d::Integer=4; e=5, f::Int=6) = nothing
-        @test p.signature == :(f(a, b::Core.Int64, c=3, d::Core.Integer=4; e=5, f::$INT_EXPR=6))
-        @test p.modules == Set([:Core])
-        expected = quote
-            import Core
-            f(a, b::Core.Int64, c=3, d::Core.Integer=4; e=5, f::$INT_EXPR=6) = $(p.body)(a, b, c, d; e=e, f=f)
-        end
-        @test Mocking.convert(Expr, p) == strip_lineno!(expected)
+    @testset "f as arg and function name" begin
+        p = @patch f(f) = nothing
+        @test_broken p.signature == :(Main.Main.f(f))
     end
 
     @testset "variable argument parameters" begin
         p = @patch f(a::Integer...) = nothing
-        @test p.signature == :(f(a::Core.Integer...))
-        @test p.modules == Set([:Core])
-        expected = quote
-            import Core
-            f(a::Core.Integer...) = $(p.body)(a...)
-        end
-        @test Mocking.convert(Expr, p) == strip_lineno!(expected)
+        @test p.signature == :(Main.Main.f(a::Main.Core.Integer...))
     end
 
     @testset "variable keyword parameters" begin
         p = @patch f(; a...) = nothing
-        @test p.signature == :(f(; a...))
-        @test p.modules == Set()
-        expected = quote
-            f(; a...) = $(p.body)(; a...)
-        end
-        @test Mocking.convert(Expr, p) == strip_lineno!(expected)
+        @test p.signature == :(Main.Main.f(; a...))
     end
 
     # Issue #15
     @testset "anonymous parameter" begin
+        function next_gensym(str::AbstractString, offset::Integer=1)
+            m = match(r"^(.*?)(\d+)$", string(gensym(str)))
+            return Symbol(string(m.captures[1], parse(Int, m.captures[2]) + offset))
+        end
+
+
         anon = next_gensym("anon", 1)
         p = @patch f(::Type{UInt8}, b::Int64) = nothing
-        @test p.signature == :(f($anon::Core.Type{Core.UInt8}, b::Core.Int64))
-        @test p.modules == Set([:Core])
-        expected = quote
-            import Core
-            f($anon::Core.Type{Core.UInt8}, b::Core.Int64) = $(p.body)($anon, b)
-        end
-        @test Mocking.convert(Expr, p) == strip_lineno!(expected)
+        @test p.signature == :(Main.Main.f($anon::Main.Core.Type{Main.Core.UInt8}, b::Main.Core.Int64))
     end
 
     @testset "assertion expression" begin
         p = @patch f(t::typeof(+)) = nothing
-        @test p.signature == :(f(t::typeof(Base.:+)))
-        @test p.modules == Set([:Base])
-        expected = quote
-            import Base
-            f(t::typeof(Base.:+)) = $(p.body)(t)
-        end
-        @test Mocking.convert(Expr, p) == strip_lineno!(expected)
+        @test p.signature == :(Main.Main.f(t::typeof(Main.Base.:+)))
     end
 
     @testset "assertion qualification" begin
@@ -100,33 +51,19 @@ function f end # Must declare function before mocking it
             @patch f(h::Int64=rand(Int64)) = nothing
         ]
         for p in patches
-            @test p.signature == :(f(h::Core.Int64=$RAND_EXPR(Core.Int64)))
-            @test p.modules == Set([:Core, RAND_MOD_EXPR])
+            @test p.signature == :(Main.Main.f(h::Main.Core.Int64=Main.Random.rand(Main.Core.Int64)))
         end
     end
 
-   @testset "nested modules" begin
-      p = @patch bar(f::ModB.AbstractFoo) = "mock"
-      expected = quote
-         import ModA
-         import ModA.ModB
-         bar(f::ModA.ModB.AbstractFoo) = $(p.body)(f)
-      end
-      @test Mocking.convert(Expr, p) == strip_lineno!(expected)
-      Mocking.apply(p) do
-         @test baz(ModB.Foo("X")) == "mock"
-      end
-   end
+
 
     @testset "array default" begin
         p = @patch f(a=[]) = a
-        @test p.signature == :(f(a=[]))
-        @test p.modules == Set()
+        @test p.signature == :(Main.Main.f(a=[]))
     end
 
     @testset "tuple default" begin
         p = @patch f(a=()) = a
-        @test p.signature == :(f(a=()))
-        @test p.modules == Set()
+        @test p.signature == :(Main.Main.f(a=()))
     end
 end

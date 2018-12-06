@@ -102,7 +102,7 @@ function code_for_apply_patch(ctx_name, patch)
     # Cassette.execute(::$ContextName, ::typeof($functionname), args...) = body(args...)
     # but we have to get the types and numbers and names of arguments all in there right
     return quote
-        $(method_head) = Cassette.@overdub(ctx, $(code_for_invoke_body(patch)))
+        $(method_head) = Cassette.overdub(ctx, ()->$(code_for_invoke_body(patch)))
         # Note: we are called overdub from execute (which is itself triggered by an overdub)
         # This lets our mocks depend on other mocks,
         # see https://github.com/jrevels/Cassette.jl/issues/87
