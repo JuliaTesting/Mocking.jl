@@ -13,8 +13,8 @@ end
 
 
 testfiles = [
-      "expr.jl",
- #   "bindings/bindings.jl",
+    "expr.jl",
+    "bindings/bindings.jl",
   #  "patch.jl",
 
     "concept.jl",
@@ -38,7 +38,3 @@ testfiles = [
         include(file)
     end
 end
-
-
-
-using C
