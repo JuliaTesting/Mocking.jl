@@ -83,7 +83,6 @@ function code_for_apply_patch(ctx_name, patch)
             args...)
     else
         sig_params = patch.signature.args[2:end] # Important: this is a copy
-        #@show sig_params
         @assert sig_params[1].head == :parameters
         # sig_params[1] is the kwargs stuff
         # sig_params[2:end] are the normal/optional arguments

@@ -116,6 +116,5 @@ import .NM_ModA: NM_bar, NM_baz, NM_ModB
    p = @patch NM_bar(f::NM_ModB.NM_AbstractFoo) = "mock"
    Mocking.apply(p) do
       @test NM_baz(NM_ModB.NM_Foo("X")) == "mock"
-      #@show @code_typed baz(ModB.Foo("X"))
    end
 end
