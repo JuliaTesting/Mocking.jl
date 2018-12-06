@@ -47,9 +47,12 @@ specific calls in their package. In this example we will mock the `open` call
 in `randdev`.
 No changes are required at the call site.
 
-But a
+
 We just need to write a testcase which allows
-us to demonstrate the reversing behaviour within the `randdev` function:
+us to demonstrate the reversing behaviour within the `randdev` function.
+This is done using the `@patch` macro, to define a patch,
+which is applied to a block of code using the `apply` function.
+As shown in the example below:
 
 ```julia
 using Mocking
@@ -70,7 +73,8 @@ apply(patch) do
     @test randdev(n) == convert(Array{UInt8}, n:-1:1)
 end
 
-# Outside of the scope of the patched environment `@mock` is essentially a no-op
+# Outside of the scope of the patched environment behavour is
+# as it was before
 @test randdev(n) != convert(Array{UInt8}, n:-1:1)
 ```
 
