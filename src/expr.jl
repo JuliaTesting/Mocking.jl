@@ -54,14 +54,14 @@ end
 
 Returns a fully qualified module name for `leaf` in `rel_module`,
 where `abs_module` is one that imports `rel_module`.
-If `leaf` is not passed in, t
+If `leaf` is not passed in,
 """
 function localised_binding(abs_module, rel_module, leaf=Tuple())
-    return joinbinding(
-        fullname(abs_module)...,
-        fullname(rel_module)...,
-        leaf
-    )
+    if abs_module == rel_module # FooMod.FooMod==FooMod
+        return joinbinding(fullname(rel_module)..., leaf)
+    else
+        return joinbinding(fullname(abs_module)..., fullname(rel_module)..., leaf)
+    end
 end
 
 

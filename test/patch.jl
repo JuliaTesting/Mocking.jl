@@ -8,22 +8,22 @@ f(args...)= NaN # Must declare function before mocking it
 @testset "patch" begin
     @testset "basic" begin
         p = @patch f(a, b::Int64, c=3, d::Integer=4; e=5, g::Int32=6) = nothing
-        @test p.signature == :(Main.Main.f(a, b::Main.Core.Int64, c=3, d::Main.Core.Integer=4; e=5, g::Main.Core.Int32=6))
+        @test p.signature == :(Main.f(a, b::Main.Core.Int64, c=3, d::Main.Core.Integer=4; e=5, g::Main.Core.Int32=6))
     end
 
     @testset "f as arg and function name" begin
         p = @patch f(f) = nothing
-        @test_broken p.signature == :(Main.Main.f(f))
+        @test_broken p.signature == :(Main.f(f))
     end
 
     @testset "variable argument parameters" begin
         p = @patch f(a::Integer...) = nothing
-        @test p.signature == :(Main.Main.f(a::Main.Core.Integer...))
+        @test p.signature == :(Main.f(a::Main.Core.Integer...))
     end
 
     @testset "variable keyword parameters" begin
         p = @patch f(; a...) = nothing
-        @test p.signature == :(Main.Main.f(; a...))
+        @test p.signature == :(Main.f(; a...))
     end
 
     # Issue #15
@@ -36,12 +36,12 @@ f(args...)= NaN # Must declare function before mocking it
 
         anon = next_gensym("anon", 1)
         p = @patch f(::Type{UInt8}, b::Int64) = nothing
-        @test p.signature == :(Main.Main.f($anon::Main.Core.Type{Main.Core.UInt8}, b::Main.Core.Int64))
+        @test p.signature == :(Main.f($anon::Main.Core.Type{Main.Core.UInt8}, b::Main.Core.Int64))
     end
 
     @testset "assertion expression" begin
         p = @patch f(t::typeof(+)) = nothing
-        @test p.signature == :(Main.Main.f(t::typeof(Main.Base.:+)))
+        @test p.signature == :(Main.f(t::typeof(Main.Base.:+)))
     end
 
     @testset "assertion qualification" begin
@@ -51,7 +51,7 @@ f(args...)= NaN # Must declare function before mocking it
             @patch f(h::Int64=rand(Int64)) = nothing
         ]
         for p in patches
-            @test p.signature == :(Main.Main.f(h::Main.Core.Int64=Main.Random.rand(Main.Core.Int64)))
+            @test p.signature == :(Main.f(h::Main.Core.Int64=Main.Random.rand(Main.Core.Int64)))
         end
     end
 
@@ -59,11 +59,11 @@ f(args...)= NaN # Must declare function before mocking it
 
     @testset "array default" begin
         p = @patch f(a=[]) = a
-        @test p.signature == :(Main.Main.f(a=[]))
+        @test p.signature == :(Main.f(a=[]))
     end
 
     @testset "tuple default" begin
         p = @patch f(a=()) = a
-        @test p.signature == :(Main.Main.f(a=()))
+        @test p.signature == :(Main.f(a=()))
     end
 end
