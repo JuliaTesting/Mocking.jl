@@ -17,19 +17,19 @@ end
 @testset "binding_expr" begin
     @test ==(
         Mocking.binding_expr(Main, Int),
-        Int === Int32 ? :(Main.Core.Int32) : :(Main.Core.Int64)
+        Int === Int32 ? :(Core.Int32) : :(Core.Int64)
     )
 
-    @test Mocking.binding_expr(Main, Int64) == :(Main.Core.Int64)  # concrete type
-    @test Mocking.binding_expr(Main, Integer) == :(Main.Core.Integer)  # abstract type
+    @test Mocking.binding_expr(Main, Int64) == :(Core.Int64)  # concrete type
+    @test Mocking.binding_expr(Main, Integer) == :(Core.Integer)  # abstract type
 
     @test Mocking.binding_expr(Main, Hour) == :(Main.Dates.Hour)  # unexported type
     @test Mocking.binding_expr(Main, Dates.Hour) == :(Main.Dates.Hour)  # submodule
     @test Mocking.binding_expr(Main, rand) == :(Main.Random.rand)  # function
-    @test Mocking.binding_expr(Main, AbstractArray{Int64}) == :(Main.Core.AbstractArray)  # Core.AbstractArray{Int64}?
+    @test Mocking.binding_expr(Main, AbstractArray{Int64}) == :(Core.AbstractArray)  # Core.AbstractArray{Int64}?
     @test ==(
         Mocking.binding_expr(Main, Union{Int16,Int32,Int64}),
-        :(Union{Main.Core.Int16,Main.Core.Int32,Main.Core.Int64})
+        :(Union{Core.Int16,Core.Int32,Core.Int64})
     )
     # @test Mocking.binding_expr(AbstractArray{T}) == :(Core.AbstractArray{T})
 end
@@ -37,9 +37,9 @@ end
 @testset "adjust_bindings" begin
     trans = Dict(:Int => Int, :Int64 => Int64, :Integer => Integer)
     @test Mocking.adjust_bindings(Main, trans) == Dict(
-        :Int => Int === Int32 ? :(Main.Core.Int32) : :(Main.Core.Int64),
-        :Int64 => :(Main.Core.Int64),
-        :Integer => :(Main.Core.Integer),
+        :Int => Int === Int32 ? :(Core.Int32) : :(Core.Int64),
+        :Int64 => :(Core.Int64),
+        :Integer => :(Core.Integer),
     )
 end
 

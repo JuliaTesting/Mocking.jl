@@ -8,7 +8,7 @@ f(args...)= NaN # Must declare function before mocking it
 @testset "patch" begin
     @testset "basic" begin
         p = @patch f(a, b::Int64, c=3, d::Integer=4; e=5, g::Int32=6) = nothing
-        @test p.signature == :(Main.f(a, b::Main.Core.Int64, c=3, d::Main.Core.Integer=4; e=5, g::Main.Core.Int32=6))
+        @test p.signature == :(Main.f(a, b::Core.Int64, c=3, d::Core.Integer=4; e=5, g::Core.Int32=6))
     end
 
     @testset "f as arg and function name" begin
@@ -18,7 +18,7 @@ f(args...)= NaN # Must declare function before mocking it
 
     @testset "variable argument parameters" begin
         p = @patch f(a::Integer...) = nothing
-        @test p.signature == :(Main.f(a::Main.Core.Integer...))
+        @test p.signature == :(Main.f(a::Core.Integer...))
     end
 
     @testset "variable keyword parameters" begin
@@ -36,7 +36,7 @@ f(args...)= NaN # Must declare function before mocking it
 
         anon = next_gensym("anon", 1)
         p = @patch f(::Type{UInt8}, b::Int64) = nothing
-        @test p.signature == :(Main.f($anon::Main.Core.Type{Main.Core.UInt8}, b::Main.Core.Int64))
+        @test p.signature == :(Main.f($anon::Core.Type{Core.UInt8}, b::Core.Int64))
     end
 
     @testset "assertion expression" begin
@@ -51,7 +51,7 @@ f(args...)= NaN # Must declare function before mocking it
             @patch f(h::Int64=rand(Int64)) = nothing
         ]
         for p in patches
-            @test p.signature == :(Main.f(h::Main.Core.Int64=Main.Random.rand(Main.Core.Int64)))
+            @test p.signature == :(Main.f(h::Core.Int64=Main.Random.rand(Core.Int64)))
         end
     end
 

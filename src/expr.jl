@@ -57,7 +57,8 @@ where `abs_module` is one that imports `rel_module`.
 If `leaf` is not passed in,
 """
 function localised_binding(abs_module, rel_module, leaf=Tuple())
-    if abs_module == rel_module # FooMod.FooMod==FooMod
+    if abs_module == rel_module || # FooMod.FooMod==FooMod
+        rel_module == Core # Core is always Bound so no need for relative path
         return joinbinding(fullname(rel_module)..., leaf)
     else
         return joinbinding(fullname(abs_module)..., fullname(rel_module)..., leaf)
