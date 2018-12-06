@@ -94,3 +94,28 @@ module_scope() = "foo"
         @test module_scope() == "foo"
     end
 end
+
+############################
+# Test for nested modules
+module NM_ModA
+   module NM_ModB
+      abstract type NM_AbstractFoo end
+      struct NM_Foo <: NM_AbstractFoo
+          x::String
+      end
+   end # ModB
+
+   NM_bar(f::NM_ModB.NM_AbstractFoo) = "default"
+   NM_baz(f::NM_ModB.NM_AbstractFoo) = NM_bar(f)
+end # ModA
+
+import .NM_ModA
+import .NM_ModA: NM_bar, NM_baz, NM_ModB
+
+@testset "nested modules" begin
+   p = @patch NM_bar(f::NM_ModB.NM_AbstractFoo) = "mock"
+   Mocking.apply(p) do
+      @test NM_baz(NM_ModB.NM_Foo("X")) == "mock"
+      #@show @code_typed baz(ModB.Foo("X"))
+   end
+end
