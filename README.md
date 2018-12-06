@@ -41,27 +41,18 @@ result = randdev(n)
 @test length(result) == n
 ```
 
-How could we create a test that shows the output of the function is reversed? Mocking.jl
-provides the `@mock` macro which allows package developers to temporarily overload a
-specific calls in their package. In this example we will apply `@mock` to the `open` call
-in `randdev`:
+How could we create a test that shows the output of the function is reversed?
+ Mocking.jl provides a mechanism which allows package developers to temporarily overload a
+specific calls in their package. In this example we will mock the `open` call
+in `randdev`.
+No changes are required at the call site.
 
-```julia
-using Mocking
-
-function randdev(n::Integer)
-    @mock open("/dev/urandom") do fp
-        reverse(read(fp, n))
-    end
-end
-```
-
-With the call site being marked as "mockable" we can now write a testcase which allows
+But a
+We just need to write a testcase which allows
 us to demonstrate the reversing behaviour within the `randdev` function:
 
 ```julia
 using Mocking
-Mocking.enable()  # Need to enable before we import any code using the `@mock` macro
 
 using Base.Test
 import ...: randdev
@@ -88,26 +79,10 @@ Gotchas
 
 Remember to:
 
-- use `@mock` at desired call sites
-- start julia with `--compiled-modules=no` (`--compilecache=no` for ≤0.6) or pass `force=true` to `Mocking.enable`
-- run `Mocking.enable` before importing the module(s) being tested
+ - `using`/`import` functions before you `@patch` them.
+ - You can not mock a method that does not exist.
 
-Notes
------
-
-Mocking.jl is intended to be used for testing only and will not affect the performance of
-your code when using `@mock`. In fact the `@mock` is actually a no-op when `Mocking.enable`
-is not called. One side effect of this behaviour is that pre-compiled packages won't test
-correctly with Mocking unless you start Julia with `--compiled-modules=no` (≥0.7) or
-`--compilecache=no` (≤0.6).
-
-```
-$ julia --compilecache=no -e Pkg.test("...")
-```
-
-Alternatively you can use `Mocking.enable(force=true)` to automatically disable using
-package precompilation for you (experimental). Make sure to call `enable` before the you
-importing the module you are testing.
+Mocking.jl relies heavily on [Cassette.jl](https://github.com/jrevels/Cassette.jl).
 
 
 License
