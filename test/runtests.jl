@@ -38,3 +38,7 @@ testfiles = [
         include(file)
     end
 end
+
+
+
+using C

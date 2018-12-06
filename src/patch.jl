@@ -78,7 +78,7 @@ function code_for_apply_patch(ctx_name, patch)
         method_head = Expr(
             :call,
             :(Cassette.execute),
-            :(::$ctx_name), # Context
+            :(ctx::$ctx_name), # Context
             :(::typeof($fname)), # Function
             args...)
     else
@@ -88,7 +88,7 @@ function code_for_apply_patch(ctx_name, patch)
         # sig_params[1] is the kwargs stuff
         # sig_params[2:end] are the normal/optional arguments
         # We need to splice in the Cassette suff before there
-        insert!(sig_params, 2, :(::$ctx_name)) # Context
+        insert!(sig_params, 2, :(ctx::$ctx_name)) # Context
         insert!(sig_params, 3, :(::typeof($fname))) # Function
 
         method_head = Expr(
@@ -102,7 +102,10 @@ function code_for_apply_patch(ctx_name, patch)
     # Cassette.execute(::$ContextName, ::typeof($functionname), args...) = body(args...)
     # but we have to get the types and numbers and names of arguments all in there right
     return quote
-        $(method_head) = $(code_for_invoke_body(patch))
+        $(method_head) = Cassette.@overdub(ctx, $(code_for_invoke_body(patch)))
+        # Note: we are called overdub from execute (which is itself triggered by an overdub)
+        # This lets our mocks depend on other mocks,
+        # see https://github.com/jrevels/Cassette.jl/issues/87
 
         $(code_for_kwarg_execute_overload(fname))
     end

@@ -13,8 +13,8 @@ foo(x::Float64) = floor(x)
     end
 
     # Patching both methods, so inner method is not called by outer
-    
-    
+
+
     apply([
         @patch(foo(x::Float64) = ceil(x)),
         @patch(foo(arr::AbstractArray{Float64}) = -1 .* arr),
@@ -26,3 +26,14 @@ foo(x::Float64) = floor(x)
 end
 
 
+# https://github.com/invenia/Mocking.jl/issues/59
+foobar(args...)=0
+@testset "Mocks that depend on mocks" begin
+    @test foobar(1)==0
+    apply([
+        (@patch foobar(a::Function, b) = b),
+        (@patch foobar(b) = foobar(() -> nothing, b))
+    ]) do
+        @test foobar(1) == 1
+    end
+end
