@@ -52,9 +52,11 @@ end
 """
     localised_binding(abs_module, rel_module, [leaf])
 
-Returns a fully qualified module name for `leaf` in `rel_module`,
+Returns a fully qualified module name for `rel_module`,
 where `abs_module` is one that imports `rel_module`.
-If `leaf` is not passed in,
+
+If `leaf` is passed in, then a fully qualified path to
+`leaf` within `rel_module` is returned.
 """
 function localised_binding(abs_module, rel_module, leaf=Tuple())
     if abs_module == rel_module || # FooMod.FooMod==FooMod
