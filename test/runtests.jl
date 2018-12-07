@@ -13,9 +13,11 @@ end
 
 
 testfiles = [
+    "deprecations.jl",
+
     "expr.jl",
     "bindings/bindings.jl",
-  #  "patch.jl",
+    "patch.jl",
 
     "concept.jl",
     "closure.jl",

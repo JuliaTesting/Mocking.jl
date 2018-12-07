@@ -8,5 +8,5 @@ macro mock(expr)
 end
 
 function enable(;force::Bool=false)
-    esc(:(@warn "Mocking.enable is no longer required." maxlog=1))
+   Base.depwarn("Mocking.enable is no longer required.", :enable)
 end
