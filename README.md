@@ -81,9 +81,7 @@ end
 Gotchas
 -------
 
-Remember to:
-
- - `using`/`import` functions before you `@patch` them.
+ - Remember to `using`/`import` functions before you `@patch` them.
  - You can not mock a method that does not exist.
 
 Mocking.jl relies heavily on [Cassette.jl](https://github.com/jrevels/Cassette.jl).
