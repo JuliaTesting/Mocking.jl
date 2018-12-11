@@ -1,11 +1,6 @@
-struct KwArgs{T}
-    values::T
-end
-
 struct Patch
     signature::Expr
     body::Function
-
 end
 
 function Patch(
