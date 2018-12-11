@@ -1,6 +1,11 @@
 
 macro mock(expr)
-    w = Expr(:macrocall, Symbol("@warn"), __source__, "@mock is no longer required.")
+    w = Expr(
+        :macrocall,
+        Symbol("@warn"),
+        __source__,
+        "`@mock` is no longer used and can be removed.",
+    )
    quote
        $w
        $(esc(expr))
@@ -8,5 +13,5 @@ macro mock(expr)
 end
 
 function enable(;force::Bool=false)
-   Base.depwarn("Mocking.enable is no longer required.", :enable)
+    Base.depwarn("`Mocking.enable` is no longer used and can be removed.", :enable)
 end
