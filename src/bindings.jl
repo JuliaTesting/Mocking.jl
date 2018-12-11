@@ -169,14 +169,14 @@ function ingest_signature!(b::Bindings, expr::Expr)
     if expr.head == :call
         @capture(expr,
             (func_){typeparams__}(args__) |
-            (func_)(args__) 
+            (func_)(args__)
         ) || error("Not a valid function call.")
 
         # f(...)
         push!(b.external, func)
 
         # f{T}(...)
-        if typeparams != nothing 
+        if typeparams !== nothing 
             for parametric in typeparams
                 ingest_parametric!(b, parametric)
             end
