@@ -5,9 +5,6 @@ using MacroTools
 using Cassette
 using Cassette: @context
 
-# TODO: are either of these used?
-using InteractiveUtils: hasmethod
-using Base: invokelatest
 
 include("expr.jl")
 include("bindings.jl")
