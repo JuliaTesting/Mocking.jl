@@ -85,6 +85,7 @@ Gotchas
  - You can not mock a method that does not exist.
 
 Mocking.jl relies heavily on [Cassette.jl](https://github.com/jrevels/Cassette.jl).
+Many issues that affect Cassette.jl will also affect Mocking.jl.
 
 
 License
