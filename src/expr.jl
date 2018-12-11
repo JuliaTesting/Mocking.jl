@@ -26,11 +26,11 @@ julia> binding_expr(Dates.Hour)
 function binding_expr end
 
 function binding_expr(source_module, m::Module)
-    localised_binding(source_module, m)
+    localized_binding(source_module, m)
 end
 function binding_expr(source_module, t::Type)
     type_name = unwrap_unionall(t).name
-    localised_binding(source_module, type_name.module, type_name.name)
+    localized_binding(source_module, type_name.module, type_name.name)
 end
 function binding_expr(source_module, u::Union)
     a = binding_expr(source_module, u.a)
@@ -46,11 +46,11 @@ function binding_expr(source_module, f::Function)
         return nameof(f)
     end
     m = parentmodule(f, Tuple)
-    localised_binding(source_module, m, nameof(f))
+    localized_binding(source_module, m, nameof(f))
 end
 
 """
-    localised_binding(abs_module, rel_module, [leaf])
+    localized_binding(abs_module, rel_module, [leaf])
 
 Returns a fully qualified module name for `rel_module`,
 where `abs_module` is one that imports `rel_module`.
@@ -58,7 +58,7 @@ where `abs_module` is one that imports `rel_module`.
 If `leaf` is passed in, then a fully qualified path to
 `leaf` within `rel_module` is returned.
 """
-function localised_binding(abs_module, rel_module, leaf=Tuple())
+function localized_binding(abs_module, rel_module, leaf=Tuple())
     if abs_module == rel_module || # FooMod.FooMod==FooMod
         rel_module == Core # Core is always Bound so no need for relative path
         return joinbinding(fullname(rel_module)..., leaf)
