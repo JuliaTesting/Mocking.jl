@@ -1,3 +1,5 @@
+struct PatchEnvName{id} <: Cassette.AbstractContextName end
+
 
 struct PatchEnv{CTX <: Cassette.Context}
     ctx::CTX
@@ -5,10 +7,8 @@ struct PatchEnv{CTX <: Cassette.Context}
 end
 
 function PatchEnv(debug::Bool=false)
-    ctx_name = gensym(:MockEnv)
-    CTX = @eval @context $(ctx_name) # declare the context
-    ctx = @eval $CTX() # Get an intance of it
-    PatchEnv{CTX}(ctx, debug)
+    ctx = Cassette.Context(PatchEnvName{gensym(:Mocking)}())
+    PatchEnv{typeof(ctx)}(ctx, debug)
 end
 
 function PatchEnv(patch, debug::Bool=false)
@@ -35,7 +35,28 @@ function apply!(pe::PatchEnv, patches::Array{Patch})
     end
 end
 
+"""
+    apply(body::Function, patchenv|patch|patches)
+
+Apply the patches for the duration of the body.
+This essentially activates the patch enviroment
+(which will be created if required).
+
+Write this as
+
+```
+apply(patches) do
+    @test foo(1) == "bar"
+    @test foo(2) == "barbar"
+end
+```
+
+Any method that is has a patch defined in `patches`
+will be replaced with it's mock during the invocation of `foo`
+(and the other code in the body).
+"""
 function apply(body::Function, pe::PatchEnv)
+
     return @eval Cassette.overdub($(pe.ctx), $body)
 end
 
