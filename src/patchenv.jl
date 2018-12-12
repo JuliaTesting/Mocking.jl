@@ -3,16 +3,15 @@ struct PatchEnvName{id} <: Cassette.AbstractContextName end
 
 struct PatchEnv{CTX <: Cassette.Context}
     ctx::CTX
-    debug::Bool
 end
 
-function PatchEnv(debug::Bool=false)
+function PatchEnv()
     ctx = Cassette.Context(PatchEnvName{gensym(:Mocking)}())
-    PatchEnv{typeof(ctx)}(ctx, debug)
+    return PatchEnv{typeof(ctx)}(ctx)
 end
 
-function PatchEnv(patch, debug::Bool=false)
-    pe = PatchEnv(debug)
+function PatchEnv(patch)
+    pe = PatchEnv()
     apply!(pe, patch)
     return pe
 end
@@ -56,10 +55,10 @@ will be replaced with it's mock during the invocation of `foo`
 (and the other code in the body).
 """
 function apply(body::Function, pe::PatchEnv)
-
-    return @eval Cassette.overdub($(pe.ctx), $body)
+    # Some kind of world-age issue means we can't just use overdub directly.
+    return Base.invokelatest(Cassette.overdub, pe.ctx, body)
 end
 
-function apply(body::Function, patch; debug::Bool=false)
-    return apply(body, PatchEnv(patch, debug))
+function apply(body::Function, patch)
+    return apply(body, PatchEnv(patch))
 end
