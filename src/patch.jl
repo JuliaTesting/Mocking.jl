@@ -96,12 +96,12 @@ function code_for_apply_patch(ctx_name, patch)
     # Cassette.execute(::$ContextName, ::typeof($functionname), args...) = body(args...)
     # but we have to get the types and numbers and names of arguments all in there right
     return quote
-        $(method_head) = Cassette.overdub(ctx, ()->$(code_for_invoke_body(patch)))
         # Note: we are called overdub from execute (which is itself triggered by an overdub)
         # This lets our mocks depend on other mocks,
         # see explaination at https://github.com/jrevels/Cassette.jl/issues/87
+        $(method_head) = Cassette.overdub(ctx, ()->$(code_for_invoke_body(patch)))
 
-        $(code_for_kwarg_execute_overload(fname))
+        $(code_for_kwarg_execute_overload(ctx_name, fname))
     end
 end
 
@@ -116,12 +116,12 @@ function code_for_invoke_body(patch)
 end
 
 
-function code_for_kwarg_execute_overload(fname)
+function code_for_kwarg_execute_overload(ctx_name, fname)
     # Keyword arguments see https://github.com/jrevels/Cassette.jl/issues/48#issuecomment-440605481
 
-    return :(
+    return quote
         function Cassette.execute(
-            ctx::Cassette.Context,
+            ctx::$(ctx_name),
             ::Core.kwftype(typeof($fname)),
             kwargs::Any,
             ::typeof($fname),
@@ -129,5 +129,5 @@ function code_for_kwarg_execute_overload(fname)
         )
             Cassette.execute(ctx, $fname, args...; kwargs...)
         end
-    )
+    end
 end
