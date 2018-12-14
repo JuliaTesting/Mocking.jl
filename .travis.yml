@@ -15,7 +15,7 @@ notifications:
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - |
-    julia --depwarn=error -e '
+    julia -e '
       using Pkg
       if isfile("Project.toml") || isfile("JuliaProject.toml")
           Pkg.build(); Pkg.test(coverage=true)
