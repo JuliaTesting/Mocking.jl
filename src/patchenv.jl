@@ -1,12 +1,19 @@
-struct PatchEnvName{id} <: Cassette.AbstractContextName end
 
+# The context used for all patch enviroments
+# Parameterized by its metadata which is a `PatchEnvMetadata{ID}``,
+# Where ID is a unique symbol for each enviroment
+# which thus allows different patch enviroments to dispatch uniquely.
+@context MockingContext
+struct PatchEnvMetadata{ID} end
 
 struct PatchEnv{CTX <: Cassette.Context}
     ctx::CTX
 end
 
 function PatchEnv()
-    ctx = Cassette.Context(PatchEnvName{gensym(:Mocking)}())
+    patchenv_id = gensym()
+    patchenv_meta = PatchEnvMetadata{patchenv_id}()
+    ctx = MockingContext(metadata = patchenv_meta)
     return PatchEnv{typeof(ctx)}(ctx)
 end
 
