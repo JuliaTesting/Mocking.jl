@@ -22,7 +22,7 @@ export
 
 
 function ismocked(pe::PatchEnv, func_name::Symbol, args::Tuple)
-    # TODO: redefine this in terms of `methodswith(pe.ctx, Cassette.execute...)`
+    # TODO: redefine this in terms of `methodswith(pe.ctx, Cassette.overdub...)`
     # If required
     error("`ismocked` is not implemented")
 end

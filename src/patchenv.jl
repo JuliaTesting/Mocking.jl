@@ -26,10 +26,10 @@ end
 """
     apply!(pe::PatchEnv, patch[es])
 
-Applies the patches to the PatchEnv.
+Applies the patches to the `PatchEnv`.
 
 ### Implememtation note:
-This adds new methods to the `Cassette.execute` for the context of the PatchEnv.
+This adds new methods to the `Cassette.overdub` for the context of the `PatchEnv`.
 """
 function apply!(pe::PatchEnv{CTX}, p::Patch) where CTX
     return eval(code_for_apply_patch(CTX, p))
@@ -62,8 +62,8 @@ will be replaced with it's mock during the invocation of `foo`
 (and the other code in the body).
 """
 function apply(body::Function, pe::PatchEnv)
-    # Some kind of world-age issue means we can't just use overdub directly.
-    return Base.invokelatest(Cassette.overdub, pe.ctx, body)
+    # Some kind of world-age issue means we can't just use recurse directly.
+    return Base.invokelatest(Cassette.recurse, pe.ctx, body)
 end
 
 function apply(body::Function, patch)

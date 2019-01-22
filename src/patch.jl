@@ -72,7 +72,7 @@ function code_for_apply_patch(ctx_name, patch)
     if kwargs === nothing
         method_head = Expr(
             :call,
-            :(Cassette.execute),
+            :(Cassette.overdub),
             :(ctx::$ctx_name), # Context
             :(::typeof($fname)), # Function
             args...)
@@ -87,21 +87,21 @@ function code_for_apply_patch(ctx_name, patch)
 
         method_head = Expr(
             :call,
-            :(Cassette.execute),
+            :(Cassette.overdub),
             sig_params...
         )
     end
 
     # This boils down to
-    # Cassette.execute(::$ContextName, ::typeof($functionname), args...) = body(args...)
+    # Cassette.overdub(::$ContextName, ::typeof($functionname), args...) = body(args...)
     # but we have to get the types and numbers and names of arguments all in there right
     return quote
-        # Note: we are called overdub from execute (which is itself triggered by an overdub)
+        # Note: we are called recurse from overdub (which is itself triggered by a recurse)
         # This lets our mocks depend on other mocks,
         # see explaination at https://github.com/jrevels/Cassette.jl/issues/87
-        $(method_head) = Cassette.overdub(ctx, ()->$(code_for_invoke_body(patch)))
+        $(method_head) = Cassette.recurse(ctx, ()->$(code_for_invoke_body(patch)))
 
-        $(code_for_kwarg_execute_overload(ctx_name, fname))
+        $(code_for_kwarg_overdub_overload(ctx_name, fname))
     end
 end
 
@@ -116,18 +116,18 @@ function code_for_invoke_body(patch)
 end
 
 
-function code_for_kwarg_execute_overload(ctx_name, fname)
+function code_for_kwarg_overdub_overload(ctx_name, fname)
     # Keyword arguments see https://github.com/jrevels/Cassette.jl/issues/48#issuecomment-440605481
 
     return quote
-        function Cassette.execute(
+        function Cassette.overdub(
             ctx::$(ctx_name),
             ::Core.kwftype(typeof($fname)),
             kwargs::Any,
             ::typeof($fname),
             args...
         )
-            Cassette.execute(ctx, $fname, args...; kwargs...)
+            Cassette.overdub(ctx, $fname, args...; kwargs...)
         end
     end
 end
