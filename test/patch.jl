@@ -1,6 +1,3 @@
-import Compat: Dates
-import .Dates: Hour
-
 function strip_lineno!(expr::Expr)
    filter!(expr.args) do ex
        isa(ex, LineNumberNode) && return false

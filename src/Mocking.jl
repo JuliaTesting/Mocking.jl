@@ -1,13 +1,8 @@
-__precompile__(true)
-
 module Mocking
-
-using Compat: @__MODULE__, hasmethod, invokelatest, undef, @info, @warn
 
 include("expr.jl")
 include("bindings.jl")
 include("options.jl")
-include("deprecated.jl")
 
 export
     # Mocking.jl
@@ -235,7 +230,7 @@ macro mock(expr)
         local $env_var = Mocking.get_active_env()
         local $args_var = tuple($(args...))
         if Mocking.ismocked($env_var, $func_name, $args_var)
-            Mocking.invokelatest($env_var.mod.$func, $args_var...; $(kwargs...))
+            Base.invokelatest($env_var.mod.$func, $args_var...; $(kwargs...))
         else
             $func($args_var...; $(kwargs...))
         end

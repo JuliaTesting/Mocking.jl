@@ -1,5 +1,3 @@
-import Compat: fieldcount
-
 # Name of the `julia` command-line option
 const COMPILED_MODULES_FLAG = if VERSION >= v"0.7.0-DEV.1698"
     Symbol("compiled-modules")

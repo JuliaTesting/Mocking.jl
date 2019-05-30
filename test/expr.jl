@@ -1,6 +1,3 @@
-import Compat: Dates
-import Dates: Hour
-
 @testset "joinbinding" begin
     @test Mocking.joinbinding(:Foo) == :(Foo)
     @test Mocking.joinbinding(:Foo, :Bar) == :(Foo.Bar)

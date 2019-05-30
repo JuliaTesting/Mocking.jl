@@ -1,5 +1,3 @@
-import Compat: read
-
 @testset "open" begin
     # Ensure that open cannot find the file "foo"
     @test !isfile("foo")
