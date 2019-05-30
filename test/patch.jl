@@ -114,19 +114,7 @@ import .ModA: bar, baz, ModB
         NOTE: Dropping 0.6 should allow us to use Cassette.jl and avoid this issue.
         =#
         p = @patch bar(f::ModB.AbstractFoo) = "mock"
-        if VERSION >= v"0.7.0-DEV.1877"
-            @test_throws ErrorException Mocking.convert(Expr, p)
-        else
-            expected = quote
-                import ModA
-                import ModA.ModB
-                bar(f::ModA.ModB.AbstractFoo) = $(p.body)(f)
-            end
-            @test Mocking.convert(Expr, p) == strip_lineno!(expected)
-            Mocking.apply(p) do
-                @test baz(ModB.Foo("X")) == "mock"
-            end
-        end
+        @test_throws ErrorException Mocking.convert(Expr, p)
     end
 
     @testset "array default" begin

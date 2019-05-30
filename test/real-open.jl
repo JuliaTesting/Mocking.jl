@@ -20,11 +20,7 @@
 
         # The more specific `open(::AbstractString)` patches only a single method
         result = @mock open(`echo helloworld`)
-        if VERSION >= v"0.7.0-DEV.3"
-            io = result
-        else
-            io, pobj = result
-        end
+        io = result
         @test read(io, String) == "helloworld\n"
     end
 end

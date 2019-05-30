@@ -1,14 +1,5 @@
 using Base: unwrap_unionall
 
-if VERSION < v"0.7.0-DEV.3539"
-    nameof(f::Function) = Base.function_name(f)
-end
-
-if VERSION < v"0.7.0-DEV.3460"
-    parentmodule(f, t) = Base.function_module(f, t)
-end
-
-
 """
     binding_expr(x) -> Expr
 
