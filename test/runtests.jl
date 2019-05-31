@@ -7,9 +7,6 @@ using Test
 import Mocking: apply
 
 const INT_EXPR = Int === Int32 ? :(Core.Int32) : :(Core.Int64)
-const HOUR_EXPR = :(Dates.Hour)
-const RAND_EXPR = :(Random.rand)
-const RAND_MOD_EXPR = :Random
 
 function next_gensym(str::AbstractString, offset::Integer=1)
     m = match(r"^(.*?)(\d+)$", string(gensym(str)))
