@@ -1,18 +1,8 @@
-import Compat: fieldcount
-
 # Name of the `julia` command-line option
-const COMPILED_MODULES_FLAG = if VERSION >= v"0.7.0-DEV.1698"
-    Symbol("compiled-modules")
-else
-    :compilecache
-end
+const COMPILED_MODULES_FLAG = Symbol("compiled-modules")
 
 # Name of the field in the JLOptions structure which corresponds to the command-line option
-const COMPILED_MODULES_FIELD = if VERSION >= v"0.7.0-DEV.1698"
-    :use_compiled_modules
-else
-    :use_compilecache
-end
+const COMPILED_MODULES_FIELD = :use_compiled_modules
 
 const DISABLE_COMPILED_MODULES_STR = "--$COMPILED_MODULES_FLAG=no"
 const DISABLE_COMPILED_MODULES_CMD = `$DISABLE_COMPILED_MODULES_STR`

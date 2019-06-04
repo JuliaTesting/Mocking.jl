@@ -7,9 +7,6 @@ import Mocking: Bindings, ingest_signature!
     @test b.internal == Set([:f, :x])
     @test b.external == Set()
 
-    if v"0.6" <= VERSION < v"0.7-"
-        @test @valid_method f{T}(::Type{T}) = T  # Syntax deprecated in 0.7
-    end
     b = Bindings()
     ingest_signature!(b, :(f{T}(::Type{T}) = T).args[1])
     @test b.internal == Set([:f, :T])
@@ -21,9 +18,6 @@ import Mocking: Bindings, ingest_signature!
     @test b.internal == Set([:f, :T])
     @test b.external == Set([:Type])
 
-    if v"0.6" <= VERSION < v"0.7-"
-        @test @valid_method f{T,S<:T}(x::T, y::S) = (x, y)
-    end
     b = Bindings()
     ingest_signature!(b, :(f{T,S<:T}(x::T, y::S) = (x, y)).args[1])
     @test b.internal == Set([:f, :T, :S, :x, :y])

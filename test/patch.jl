@@ -1,6 +1,3 @@
-import Compat: Dates
-import .Dates: Hour
-
 function strip_lineno!(expr::Expr)
    filter!(expr.args) do ex
        isa(ex, LineNumberNode) && return false
@@ -100,8 +97,8 @@ import .ModA: bar, baz, ModB
             @patch f(h::Int64=rand(Int64)) = nothing
         ]
         for p in patches
-            @test p.signature == :(f(h::Core.Int64=$RAND_EXPR(Core.Int64)))
-            @test p.modules == Set([:Core, RAND_MOD_EXPR])
+            @test p.signature == :(f(h::Core.Int64=$:(Random.rand)(Core.Int64)))
+            @test p.modules == Set([:Core, :Random])
         end
     end
 
@@ -117,19 +114,7 @@ import .ModA: bar, baz, ModB
         NOTE: Dropping 0.6 should allow us to use Cassette.jl and avoid this issue.
         =#
         p = @patch bar(f::ModB.AbstractFoo) = "mock"
-        if VERSION >= v"0.7.0-DEV.1877"
-            @test_throws ErrorException Mocking.convert(Expr, p)
-        else
-            expected = quote
-                import ModA
-                import ModA.ModB
-                bar(f::ModA.ModB.AbstractFoo) = $(p.body)(f)
-            end
-            @test Mocking.convert(Expr, p) == strip_lineno!(expected)
-            Mocking.apply(p) do
-                @test baz(ModB.Foo("X")) == "mock"
-            end
-        end
+        @test_throws ErrorException Mocking.convert(Expr, p)
     end
 
     @testset "array default" begin

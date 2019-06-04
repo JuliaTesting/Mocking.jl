@@ -1,5 +1,3 @@
-import Compat: Sys, read, unsafe_string
-
 # Testcase from example given in Mocking.jl's README
 @testset "readme" begin
     # Note: Function only works in UNIX environments.

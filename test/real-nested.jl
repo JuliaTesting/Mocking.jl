@@ -1,5 +1,3 @@
-import Compat: read
-
 @testset "nested mock call" begin
     readfile(filename) = (@mock isfile(filename)) ? read((@mock open(filename)), String) : ""
 
