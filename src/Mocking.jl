@@ -4,7 +4,6 @@ using Base: Callable
 
 include("expr.jl")
 include("dispatch.jl")
-include("bindings.jl")
 include("options.jl")
 
 export

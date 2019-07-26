@@ -18,7 +18,6 @@ end
     include("compiled-modules.jl")
     include("expr.jl")
     include("dispatch.jl")
-    include("bindings/bindings.jl")
     include("patch.jl")
 
     include("concept.jl")
