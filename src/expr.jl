@@ -180,7 +180,7 @@ we don't evaluate any expressions for values yet though.
 function extract_kwargs(expr::Expr)
     kwargs = Expr[]
     for x in expr.args[2:end]
-        if Mocking.iskwarg(x)
+        if iskwarg(x)
             if x.head === :parameters
                 for kw in x.args
                     push!(kwargs, kw)
