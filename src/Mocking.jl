@@ -51,10 +51,12 @@ macro patch(expr::Expr)
         throw(ArgumentError("expression is not a function definition"))
     end
 
+    patch_name = target_name isa Expr ? target_name.args[2].value : target_name
+
     # Need to evaluate the body of the function in the context of the `@patch` macro in
     # order to support closures.
     # func = Expr(:(->), Expr(:tuple, params...), body)
-    func = Expr(:(=), Expr(:call, gensym(target_name), params...), body)
+    func = Expr(:(=), Expr(:call, gensym(patch_name), params...), body)
 
     return esc(:(Mocking.Patch($target_name, $func)))
 end

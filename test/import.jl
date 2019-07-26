@@ -34,3 +34,21 @@ end
         @test (@mock read(`foo`, String)) == "bar"
     end
 end
+
+@testset "qualified" begin
+    # Define a new generic function named zero
+    zero() = 0
+
+    patch = @patch Base.zero(T::Type{<:Integer}) = one(T)
+    apply(patch) do
+        # Call alternative
+        @test (@mock Base.zero(Int)) == 1
+
+        # Call original function
+        @test (@mock Base.zero(1)) == 0
+
+        # Call new function named zero
+        @test (@mock zero()) == 0
+        @test_throws MethodError (@mock zero(1))
+    end
+end
