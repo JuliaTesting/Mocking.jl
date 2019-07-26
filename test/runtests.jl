@@ -33,4 +33,5 @@ end
     include("optional.jl")
     include("patch-gen.jl")
     include("anonymous-param.jl")
+    include("reuse.jl")
 end
