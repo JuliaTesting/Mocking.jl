@@ -40,16 +40,16 @@ struct Patch{T}
 end
 
 macro patch(expr::Expr)
+    def = splitdef(expr, throw=false)
+
     # Expect a named function in long-form or short-form
-    if expr.head === :function || (expr.head === :(=) && expr.args[1].head == :call)
-        target_name = expr.args[1].args[1]
-        params = expr.args[1].args[2:end]
-        body = expr.args[2]
-    elseif expr.head == :(->)
-        throw(ArgumentError("expression needs to be a named function"))
-    else
+    if def === nothing
         throw(ArgumentError("expression is not a function definition"))
+    elseif def[:type] == :(->)
+        throw(ArgumentError("expression needs to be a named function"))
     end
+
+    target_name = def[:name]
 
     patch_name = if target_name isa Symbol  # f(...)
         target_name
@@ -59,10 +59,13 @@ macro patch(expr::Expr)
         string(target_name)
     end
 
+    args_kwargs = combineargs(get(def, :args, []), get(def, :kwargs, []))
+    body = def[:body]
+
     # Need to evaluate the body of the function in the context of the `@patch` macro in
     # order to support closures.
     # func = Expr(:(->), Expr(:tuple, params...), body)
-    func = Expr(:(=), Expr(:call, gensym(patch_name), params...), body)
+    func = Expr(:(=), Expr(:call, gensym(patch_name), args_kwargs...), body)
 
     return esc(:(Mocking.Patch($target_name, $func)))
 end
