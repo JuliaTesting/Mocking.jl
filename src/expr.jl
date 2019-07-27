@@ -194,10 +194,3 @@ function combinedef(def::Dict{Symbol,Any})
 
     return func
 end
-
-function combineargs(args::AbstractVector, kwargs::AbstractVector)
-    result = Any[]
-    !isempty(kwargs) && push!(result, Expr(:parameters, kwargs...))
-    !isempty(args) && append!(result, args)
-    return result
-end

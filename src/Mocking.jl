@@ -59,15 +59,12 @@ macro patch(expr::Expr)
         string(target_name)
     end
 
-    args_kwargs = combineargs(get(def, :args, []), get(def, :kwargs, []))
-    body = def[:body]
+    def[:name] = gensym(patch_name)
+    alternate_func = combinedef(def)
 
-    # Need to evaluate the body of the function in the context of the `@patch` macro in
+    # Need to evaluate the patch function in the context of the `@patch` macro in
     # order to support closures.
-    # func = Expr(:(->), Expr(:tuple, params...), body)
-    func = Expr(:(=), Expr(:call, gensym(patch_name), args_kwargs...), body)
-
-    return esc(:(Mocking.Patch($target_name, $func)))
+    return esc(:(Mocking.Patch($target_name, $alternate_func)))
 end
 
 struct PatchEnv
