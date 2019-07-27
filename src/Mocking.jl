@@ -59,7 +59,7 @@ macro patch(expr::Expr)
         string(target_name)
     end
 
-    def[:name] = gensym(patch_name)
+    def[:name] = gensym(string(patch_name, "_patch"))
     alternate_func = combinedef(def)
 
     # Need to evaluate the patch function in the context of the `@patch` macro in
