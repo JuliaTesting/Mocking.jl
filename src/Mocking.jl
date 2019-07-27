@@ -1,5 +1,7 @@
 module Mocking
 
+using Base: Callable
+
 include("expr.jl")
 include("dispatch.jl")
 include("bindings.jl")
@@ -35,7 +37,7 @@ function enable(; force::Bool=false)
 end
 
 struct Patch
-    target::Function
+    target::Callable
     alternate::Function
 end
 
@@ -62,7 +64,7 @@ macro patch(expr::Expr)
 end
 
 struct PatchEnv
-    mapping::Dict{Function,Vector{Function}}
+    mapping::Dict{Callable,Vector{Function}}
     debug::Bool
 end
 
@@ -72,12 +74,10 @@ function PatchEnv(patches, debug::Bool=false)
     return pe
 end
 
-PatchEnv(debug::Bool=false) = PatchEnv(Dict{Function,Vector{Function}}(), debug)
+PatchEnv(debug::Bool=false) = PatchEnv(Dict{Callable,Vector{Function}}(), debug)
 
 function apply!(pe::PatchEnv, p::Patch)
-    alternate_funcs = get!(pe.mapping, p.target) do
-        Vector{Function}()
-    end
+    alternate_funcs = get!(Vector{Function}, pe.mapping, p.target)
     push!(alternate_funcs, p.alternate)
     return pe
 end
@@ -102,7 +102,7 @@ function apply(body::Function, patches; debug::Bool=false)
     return apply(body, PatchEnv(patches, debug))
 end
 
-function get_alternate(pe::PatchEnv, target::Function, args...)
+function get_alternate(pe::PatchEnv, target::Callable, args...)
     if haskey(pe.mapping, target)
         m, f = dispatch(pe.mapping[target], args...)
 
@@ -121,7 +121,7 @@ function get_alternate(pe::PatchEnv, target::Function, args...)
     end
 end
 
-get_alternate(target::Function, args...) = get_alternate(get_active_env(), target, args...)
+get_alternate(target::Callable, args...) = get_alternate(get_active_env(), target, args...)
 
 set_active_env(pe::PatchEnv) = (global PATCH_ENV = pe)
 get_active_env() = PATCH_ENV::PatchEnv
