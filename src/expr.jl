@@ -48,6 +48,8 @@ All components listed may not be present in the returned dictionary with the exc
 
 If the provided expression is not a function then an exception will be raised when
 `throw=true`. Use `throw=false` avoid raising an exception and return `nothing` instead.
+
+See also: [`combinedef`](@ref)
 """
 function splitdef(ex::Expr; throw::Bool=true)
     def = Dict{Symbol,Any}()
@@ -131,6 +133,66 @@ function splitdef(ex::Expr; throw::Bool=true)
     end
 
     return def
+end
+
+"""
+    combinedef(def::Dict{Symbol,Any}) -> Expr
+
+Create a function definition expression from various components. Typically used to construct
+a function using the result of [`splitdef`](@ref).
+
+For more details see the documentation on [`splitdef`](@ref).
+"""
+function combinedef(def::Dict{Symbol,Any})
+    # Determine the name of the function including parameterization
+    name = if haskey(def, :params)
+        Expr(:curly, def[:name], def[:params]...)
+    elseif haskey(def, :name)
+        def[:name]
+    else
+        nothing
+    end
+
+    # Empty generic function definitions must not contain additional keys
+    if !haskey(def, :body) && any(k -> haskey(def, k), [:args, :kwargs, :rtype, :whereparams])
+        extra = [:args, :kwargs, :rtype, :whereparams]
+        throw(ArgumentError(string(
+            "Function definitions without a body must not contain keys: ",
+            join(string.('`', repr.(setdiff(extra, keys(def))), '`'), ", ", ", or "),
+        )))
+    end
+
+    # Combine args and kwargs
+    args = Any[]
+    !isempty(get(def, :kwargs, [])) && push!(args, Expr(:parameters, def[:kwargs]...))
+    !isempty(get(def, :args, [])) && append!(args, def[:args])
+
+    # Create a partial function signature including the name and arguments
+    sig = if name !== nothing
+        Expr(:call, name, args...)
+    elseif length(args) != 1 || args[1] isa Expr && args[1].head in (:kw, :parameters)
+        Expr(:tuple, args...)
+    else
+        args[1]
+    end
+
+    # Add the return type
+    if haskey(def, :rtype)
+        sig = Expr(:(::), sig, def[:rtype])
+    end
+
+    # Add any where parameters. Note: Always uses the curly where syntax
+    if haskey(def, :whereparams)
+        sig = Expr(:where, sig, def[:whereparams]...)
+    end
+
+    func = if haskey(def, :body)
+        Expr(def[:type], sig, def[:body])
+    else
+        Expr(def[:type], name)
+    end
+
+    return func
 end
 
 function combineargs(args::AbstractVector, kwargs::AbstractVector)

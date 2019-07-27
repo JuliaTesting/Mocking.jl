@@ -4,7 +4,7 @@ Mocking.enable(force=true)
 using Dates: Dates, Hour
 using Test
 
-using Mocking: apply, splitdef
+using Mocking: apply, splitdef, combinedef
 using Mocking: anon_morespecific, anonymous_signature, dispatch, type_morespecific
 
 const INT_EXPR = Int === Int32 ? :(Core.Int32) : :(Core.Int64)

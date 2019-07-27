@@ -14,6 +14,10 @@ macro audit(expr::Expr)
     return esc(result)
 end
 
+macro expr(expr::Expr)
+    esc(QuoteNode(expr))
+end
+
 function strip_lineno!(expr::Expr)
     filter!(expr.args) do ex
         isa(ex, LineNumberNode) && return false
@@ -34,7 +38,7 @@ macro test_splitdef_invalid(expr)
     return esc(result)
 end
 
-@testset "splitdef" begin
+@testset "splitdef / combinedef" begin
     @testset "long-form function" begin
         f, expr = @audit function f() end
         @test length(methods(f)) == 1
@@ -45,6 +49,9 @@ end
         @test d[:type] == :function
         @test d[:name] == :f
         @test strip_lineno!(d[:body]) == Expr(:block)
+
+        c_expr = combinedef(d)
+        @test c_expr == expr
     end
 
     @testset "short-form function" begin
@@ -57,6 +64,9 @@ end
         @test d[:type] == :(=)
         @test d[:name] == :f
         @test strip_lineno!(d[:body]) == Expr(:block, :nothing)
+
+        c_expr = combinedef(d)
+        @test c_expr == expr
     end
 
     @testset "anonymous function" begin
@@ -68,6 +78,9 @@ end
         @test keys(d) == Set([:type, :body])
         @test d[:type] == :(->)
         @test strip_lineno!(d[:body]) == Expr(:block, :nothing)
+
+        c_expr = combinedef(d)
+        @test c_expr == expr
     end
 
     @testset "empty function" begin
@@ -78,6 +91,9 @@ end
         @test keys(d) == Set([:type, :name])
         @test d[:type] == :function
         @test d[:name] == :f
+
+        c_expr = combinedef(d)
+        @test c_expr == expr
     end
 
     @testset "args (short-form function)" begin
@@ -89,6 +105,9 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :name, :args, :body])
             @test d[:args] == [:x]
+
+            c_expr = combinedef(d)
+            @test c_expr == expr
         end
 
         @testset "f(x::Integer)" begin
@@ -99,6 +118,9 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :name, :args, :body])
             @test d[:args] == [:(x::Integer)]
+
+            c_expr = combinedef(d)
+            @test c_expr == expr
         end
 
         @testset "f(x=1)" begin
@@ -110,6 +132,9 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :name, :args, :body])
             @test d[:args] == [Expr(:kw, :x, 1)]
+
+            c_expr = combinedef(d)
+            @test c_expr == expr
         end
 
         @testset "f(x::Integer=1)" begin
@@ -121,6 +146,9 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :name, :args, :body])
             @test d[:args] == [Expr(:kw, :(x::Integer), 1)]
+
+            c_expr = combinedef(d)
+            @test c_expr == expr
         end
     end
 
@@ -133,6 +161,9 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :args, :body])
             @test d[:args] == [:x]
+
+            c_expr = combinedef(d)
+            @test c_expr == expr
         end
 
         @testset "x::Integer" begin
@@ -143,6 +174,9 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :args, :body])
             @test d[:args] == [:(x::Integer)]
+
+            c_expr = combinedef(d)
+            @test c_expr == expr
         end
 
         @testset "(x=1)" begin
@@ -154,6 +188,9 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :args, :body])
             @test d[:args] == [:(x=1)]
+
+            c_expr = combinedef(d)
+            @test c_expr == expr
         end
 
         @testset "(x::Integer=1)" begin
@@ -165,6 +202,9 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :args, :body])
             @test d[:args] == [:(x::Integer=1)]
+
+            c_expr = combinedef(d)
+            @test c_expr == expr
         end
 
         @testset "(x,)" begin
@@ -175,6 +215,10 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :args, :body])
             @test d[:args] == [:x]
+
+            c_expr = combinedef(d)
+            expr = @expr x -> x
+            @test strip_lineno!(c_expr) == strip_lineno!(expr)
         end
 
         @testset "(x::Integer,)" begin
@@ -185,6 +229,10 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :args, :body])
             @test d[:args] == [:(x::Integer)]
+
+            c_expr = combinedef(d)
+            expr = @expr x::Integer -> x
+            @test strip_lineno!(c_expr) == strip_lineno!(expr)
         end
 
         @testset "(x=1,)" begin
@@ -196,6 +244,10 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :args, :body])
             @test d[:args] == [:(x=1)]
+
+            c_expr = combinedef(d)
+            expr = @expr (x=1) -> x
+            @test strip_lineno!(c_expr) == strip_lineno!(expr)
         end
 
         @testset "(x::Integer=1,)" begin
@@ -207,6 +259,10 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :args, :body])
             @test d[:args] == [:(x::Integer=1)]
+
+            c_expr = combinedef(d)
+            expr = @expr (x::Integer=1) -> x
+            @test strip_lineno!(c_expr) == strip_lineno!(expr)
         end
     end
 
@@ -219,6 +275,9 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :name, :kwargs, :body])
             @test d[:kwargs] == [:x]
+
+            c_expr = combinedef(d)
+            @test c_expr == expr
         end
 
         @testset "f(; x::Integer)" begin
@@ -229,6 +288,9 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :name, :kwargs, :body])
             @test d[:kwargs] == [:(x::Integer)]
+
+            c_expr = combinedef(d)
+            @test c_expr == expr
         end
 
         @testset "f(; x=1)" begin
@@ -239,6 +301,9 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :name, :kwargs, :body])
             @test d[:kwargs] == [Expr(:kw, :x, 1)]
+
+            c_expr = combinedef(d)
+            @test c_expr == expr
         end
 
         @testset "f(; x::Integer=1)" begin
@@ -249,6 +314,9 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :name, :kwargs, :body])
             @test d[:kwargs] == [Expr(:kw, :(x::Integer), 1)]
+
+            c_expr = combinedef(d)
+            @test c_expr == expr
         end
     end
 
@@ -261,6 +329,9 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :kwargs, :body])
             @test d[:kwargs] == [:x]
+
+            c_expr = combinedef(d)
+            @test c_expr == expr
         end
 
         @testset "(; x::Integer)" begin
@@ -271,6 +342,9 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :kwargs, :body])
             @test d[:kwargs] == [:(x::Integer)]
+
+            c_expr = combinedef(d)
+            @test c_expr == expr
         end
 
         @testset "(; x=1)" begin
@@ -281,6 +355,9 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :kwargs, :body])
             @test d[:kwargs] == [Expr(:kw, :x, 1)]
+
+            c_expr = combinedef(d)
+            @test c_expr == expr
         end
 
         @testset "(; x::Integer=1)" begin
@@ -291,6 +368,9 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :kwargs, :body])
             @test d[:kwargs] == [Expr(:kw, :(x::Integer), 1)]
+
+            c_expr = combinedef(d)
+            @test c_expr == expr
         end
     end
 
@@ -302,6 +382,9 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :name, :args, :whereparams, :body])
             @test d[:whereparams] == [:A]
+
+            c_expr = combinedef(d)
+            @test c_expr == expr
         end
 
         @testset "curly where" begin
@@ -311,6 +394,9 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :name, :args, :whereparams, :body])
             @test d[:whereparams] == [:A, :(B <: A)]
+
+            c_expr = combinedef(d)
+            @test c_expr == expr
         end
 
         @testset "multiple where" begin
@@ -320,6 +406,10 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :name, :args, :whereparams, :body])
             @test d[:whereparams] == [:A, :(B <: A)]
+
+            c_expr = combinedef(d)
+            expr = @expr f(::A, ::B) where {A, B <: A} = nothing
+            @test strip_lineno!(c_expr) == strip_lineno!(expr)
         end
     end
 
@@ -331,6 +421,9 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :args, :whereparams, :body])
             @test d[:whereparams] == [:A]
+
+            c_expr = combinedef(d)
+            @test c_expr == expr
         end
 
         @testset "curly where" begin
@@ -340,6 +433,9 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :args, :whereparams, :body])
             @test d[:whereparams] == [:A, :(B <: A)]
+
+            c_expr = combinedef(d)
+            @test c_expr == expr
         end
 
         @testset "multiple where" begin
@@ -349,6 +445,10 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :args, :whereparams, :body])
             @test d[:whereparams] == [:A, :(B <: A)]
+
+            c_expr = combinedef(d)
+            expr = @expr ((::A, ::B) where {A, B <: A}) -> nothing
+            @test strip_lineno!(c_expr) == strip_lineno!(expr)
         end
     end
 
@@ -362,6 +462,8 @@ end
             @test keys(d) == Set([:type, :name, :args, :rtype, :body])
             @test d[:rtype] == :Integer
 
+            c_expr = combinedef(d)
+            @test c_expr == expr
         end
 
         @testset "(f(x::T)::Integer) where T" begin
@@ -372,6 +474,9 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :name, :args, :rtype, :whereparams, :body])
             @test d[:rtype] == :Integer
+
+            c_expr = combinedef(d)
+            @test c_expr == expr
         end
     end
 
@@ -385,6 +490,9 @@ end
             d = splitdef(expr)
             @test keys(d) == Set([:type, :args, :body])
             @test d[:args] == [:((x,)::Integer)]
+
+            c_expr = combinedef(d)
+            @test c_expr == expr
         end
 
         @testset "(((x::T,)::Integer) where T)" begin
@@ -392,6 +500,19 @@ end
             @test f isa ErrorException
 
             @test_broken splitdef(expr, throw=false) === nothing
+
+            d = Dict(
+                :type => :(->),
+                :args => [:(x::T)],
+                :rtype => :Integer,
+                :whereparams => [:T],
+                :body => quote
+                    x
+                end
+            )
+            c_expr = combinedef(d)
+            expr = @expr (((x::T)::Integer) where T) -> x
+            @test strip_lineno!(c_expr) == strip_lineno!(expr)
         end
     end
 
@@ -410,5 +531,8 @@ end
         # Invalid or missing arguments
         @test_splitdef_invalid :(f{S} = 0)
         @test_splitdef_invalid Expr(:function, Expr(:tuple, :f), :(nothing))
+
+        # Empty function contains extras
+        @test_throws ArgumentError combinedef(Dict(:type => :function, :name => :f, :args => []))
     end
 end
