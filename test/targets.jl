@@ -74,3 +74,9 @@ end
         @test (@mock Base.Vector{Any}()) == Any[]
     end
 end
+
+@testset "missing target" begin
+    # The function `f` is not defined so we cannot target it.
+    @test !isdefined(@__MODULE__, :f)
+    @test_throws UndefVarError (@patch f() = 1)
+end

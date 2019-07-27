@@ -30,3 +30,18 @@
         @test (@mock foo([1.6])) == [2.0]
     end
 end
+
+# https://github.com/invenia/Mocking.jl/issues/59
+@testset "patch calls patch" begin
+    f(args...) = 0
+
+    patches = [
+       @patch f(a::Function, b) = b
+       @patch f(b) = @mock f(() -> nothing, b)
+    ]
+
+    apply(patches) do
+        @test (@mock f(identity, 1)) == 1
+        @test (@mock f(1)) == 1
+    end
+end

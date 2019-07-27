@@ -23,7 +23,7 @@ end
 
     include("concept.jl")
     include("targets.jl")
-    include("closure.jl")
+    include("functions.jl")
     include("import.jl")
     include("real-open.jl")
     include("real-isfile.jl")
