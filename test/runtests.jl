@@ -19,7 +19,7 @@ end
     include("expr.jl")
     include("dispatch.jl")
     include("bindings/bindings.jl")
-    # include("patch.jl")
+    include("patch.jl")
 
     include("concept.jl")
     include("targets.jl")
