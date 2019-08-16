@@ -4,7 +4,7 @@ author = ["Curtis Vogt"]
 license = "MIT"
 name = "Mocking"
 uuid = "78c3b35d-d492-501b-9361-3d52fe80e533"
-version = "1.0.0"
+version = "0.6.0"
 
 [compat]
 julia = "1"
