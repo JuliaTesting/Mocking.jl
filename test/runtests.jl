@@ -4,7 +4,8 @@ Mocking.enable(force=true)
 using Dates: Dates, Hour
 using Test
 
-import Mocking: apply
+using Mocking: apply
+using Mocking: anon_morespecific, anonymous_signature, dispatch, type_morespecific
 
 const INT_EXPR = Int === Int32 ? :(Core.Int32) : :(Core.Int64)
 
@@ -16,12 +17,12 @@ end
 @testset "Mocking" begin
     include("compiled-modules.jl")
     include("expr.jl")
-    include("bindings/bindings.jl")
+    include("dispatch.jl")
     include("patch.jl")
 
     include("concept.jl")
-    include("scope.jl")
-    include("closure.jl")
+    include("targets.jl")
+    include("functions.jl")
     include("import.jl")
     include("real-open.jl")
     include("real-isfile.jl")
@@ -31,4 +32,5 @@ end
     include("optional.jl")
     include("patch-gen.jl")
     include("anonymous-param.jl")
+    include("reuse.jl")
 end
