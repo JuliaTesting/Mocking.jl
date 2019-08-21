@@ -83,30 +83,28 @@ end
 
         m, f = dispatch(funcs, zero(Int))
         @test f == funcs[1]
-        @test m == first(methods(funcs[1]))
+        @test m.sig == Tuple{typeof(funcs[1]), Int}
 
 
         m, f = dispatch(funcs, zero(UInt))
         @test f == funcs[2]
-        @test m == first(methods(funcs[2]))
+        @test m.sig == Tuple{typeof(funcs[2]), Integer}
     end
 
     @testset "more specific method" begin
-        # Note: `methods` returns methods in order of most specific to least.
         f1(::Number) = 1
         f1(::Int) = 2
         f2(::Any) = 3
         f2(::Integer) = 4
-
         funcs = [f1, f2]
 
         m, f = dispatch(funcs, zero(Int))
         @test f == funcs[1]
-        @test m == first(methods(funcs[1]))
+        @test m.sig == Tuple{typeof(funcs[1]), Int}
 
         m, f = dispatch(funcs, zero(UInt))
         @test f == funcs[2]
-        @test m == first(methods(funcs[2]))
+        @test m.sig == Tuple{typeof(funcs[2]), Integer}
     end
 
     @testset "ambiguous" begin
@@ -118,11 +116,11 @@ end
         # In ambiguous cases the last function is preferred
         m, f = dispatch(funcs, 0)
         @test f == funcs[2]
-        @test m == first(methods(funcs[2]))
+        @test m.sig == Tuple{typeof(funcs[2]), Integer}
 
         m, f = dispatch(reverse(funcs), 0)
         @test f == funcs[1]
-        @test m == first(methods(funcs[1]))
+        @test m.sig == Tuple{typeof(funcs[1]), Integer}
     end
 
     @testset "optional" begin
@@ -133,15 +131,15 @@ end
 
         m, f = dispatch(funcs, 0)
         @test f == funcs[2]
-        @test m == first(methods(funcs[2]))
+        @test m.sig == Tuple{typeof(funcs[2]), Any}
 
         m, f = dispatch(funcs, 0, 0)
         @test f == funcs[1]
-        @test m == first(methods(funcs[1], (Any, Any)))
+        @test m.sig == Tuple{typeof(funcs[1]), Any, Any}
 
         m, f = dispatch(reverse(funcs), 0)
         @test f == funcs[1]
-        @test m == first(methods(funcs[1], (Any,)))
+        @test m.sig == Tuple{typeof(funcs[1]), Any}
     end
 
     @testset "Type{T}" begin
@@ -156,7 +154,7 @@ end
 
         m, f = dispatch(funcs, Integer)
         @test f == funcs[1]
-        @test m == first(methods(funcs[1]))
+        @test m.sig == Tuple{typeof(funcs[1]), Type{Integer}}
 
         m, f = dispatch(reverse(funcs), Type{Integer})
         @test f === nothing
@@ -171,10 +169,10 @@ end
 
         m, f = dispatch(funcs, Int)
         @test f == funcs[1]
-        @test m == first(methods(funcs[1]))
+        @test m.sig == Tuple{typeof(funcs[1]), Type{Int}}
 
         m, f = dispatch(reverse(funcs), Integer)
         @test f == funcs[2]
-        @test m == first(methods(funcs[2]))
+        @test m.sig == Tuple{typeof(funcs[2]), Type{<:Integer}}
     end
 end
