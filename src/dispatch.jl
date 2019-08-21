@@ -44,15 +44,16 @@ end
 
 
 """
-    dispatch(funcs::Vector{<:Callable}, args...) -> Tuple{Method, <:Callable}
+    dispatch(funcs::AbstractVector, args...) -> Tuple{Method, Any}
 
 Choose which method to execute based upon the provided arguments. Emulates Julia's multiple
 dispatch system but allows for dispatching between methods of multiple generic functions
-instead of just methods of a single generic function.
+instead of just methods of a single generic function. Returns a tuple of the selected method
+and the generic function of the method.
 
 When the function to dispatch to is ambiguous last ambiguous function in the vector is used.
 """
-function dispatch(funcs::Vector{<:Callable}, args...)
+function dispatch(funcs::AbstractVector, args...)
     arg_types = map(args) do arg
         arg isa DataType ? Type{arg} : typeof(arg)
     end

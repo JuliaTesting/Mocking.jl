@@ -1,7 +1,5 @@
 module Mocking
 
-using Base: Callable
-
 include("expr.jl")
 include("dispatch.jl")
 include("options.jl")
@@ -35,8 +33,9 @@ function enable(; force::Bool=false)
     end
 end
 
-struct Patch
-    target::Callable
+# `target` will typically a `Function` or `Type` but could also be a function-like object
+struct Patch{T}
+    target::T
     alternate::Function
 end
 
@@ -52,7 +51,13 @@ macro patch(expr::Expr)
         throw(ArgumentError("expression is not a function definition"))
     end
 
-    patch_name = target_name isa Expr ? target_name.args[2].value : target_name
+    patch_name = if target_name isa Symbol  # f(...)
+        target_name
+    elseif target_name.head === :.  # Base.f(...)
+        target_name.args[2].value
+    else
+        string(target_name)
+    end
 
     # Need to evaluate the body of the function in the context of the `@patch` macro in
     # order to support closures.
@@ -63,7 +68,7 @@ macro patch(expr::Expr)
 end
 
 struct PatchEnv
-    mapping::Dict{Callable,Vector{Function}}
+    mapping::Dict{Any,Vector{Function}}
     debug::Bool
 end
 
@@ -73,7 +78,7 @@ function PatchEnv(patches, debug::Bool=false)
     return pe
 end
 
-PatchEnv(debug::Bool=false) = PatchEnv(Dict{Callable,Vector{Function}}(), debug)
+PatchEnv(debug::Bool=false) = PatchEnv(Dict{Any,Vector{Function}}(), debug)
 
 function apply!(pe::PatchEnv, p::Patch)
     alternate_funcs = get!(Vector{Function}, pe.mapping, p.target)
@@ -101,7 +106,7 @@ function apply(body::Function, patches; debug::Bool=false)
     return apply(body, PatchEnv(patches, debug))
 end
 
-function get_alternate(pe::PatchEnv, target::Callable, args...)
+function get_alternate(pe::PatchEnv, target, args...)
     if haskey(pe.mapping, target)
         m, f = dispatch(pe.mapping[target], args...)
 
@@ -120,7 +125,7 @@ function get_alternate(pe::PatchEnv, target::Callable, args...)
     end
 end
 
-get_alternate(target::Callable, args...) = get_alternate(get_active_env(), target, args...)
+get_alternate(target, args...) = get_alternate(get_active_env(), target, args...)
 
 set_active_env(pe::PatchEnv) = (global PATCH_ENV = pe)
 get_active_env() = PATCH_ENV::PatchEnv

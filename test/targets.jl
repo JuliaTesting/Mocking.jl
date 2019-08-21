@@ -75,6 +75,26 @@ end
     end
 end
 
+struct Coefficient
+    x
+end
+
+(c::Coefficient)(y) = c.x * y
+
+# https://docs.julialang.org/en/v1/manual/methods/#Function-like-objects-1
+@testset "function-like objects" begin
+    c = Coefficient(2)
+
+    p = @patch (c::Coefficient)(y::Integer) = c.x + y
+    apply(p) do
+        # Call alternative
+        @test (@mock c(3)) == 5
+
+        # Call original function
+        @test (@mock c(3.0)) == 6.0
+    end
+end
+
 @testset "missing target" begin
     # The function `f` is not defined so we cannot target it.
     @test !isdefined(@__MODULE__, :f)
