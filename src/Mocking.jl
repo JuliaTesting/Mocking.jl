@@ -10,7 +10,6 @@ include("deprecated.jl")
 
 const NULLIFIED = Ref{Bool}(false)
 const ACTIVATED = Ref{Bool}(false)
-global PATCH_ENV = PatchEnv()
 
 """
     Mocking.nullify()
@@ -36,9 +35,5 @@ function activate()
     global ACTIVATED[] = true
     return nothing
 end
-
-
-set_active_env(pe::PatchEnv) = (global PATCH_ENV = pe)
-get_active_env() = PATCH_ENV::PatchEnv
 
 end # module
