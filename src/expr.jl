@@ -34,7 +34,7 @@ end
 
 Split a function definition expression into its various components including:
 
-- `:type`: Type of the function (long-form `:function`, short-form `:(=)`, anonymous `:(->)`)
+- `:type`: Type of the function (`:function`, `:(=)`, `:(->)`)
 - `:name`: Name of the function (not present for anonymous functions)
 - `:params`: Parametric types defined on constructors
 - `:args`: Positional arguments of the function
@@ -64,13 +64,11 @@ function splitdef(ex::Expr; throw::Bool=true)
         end
     end
 
-    # long-form `:function`, short-form `:(=)`, anonymous `:(->)`
     if !(ex.head === :function || ex.head === :(=) || ex.head === :(->))
         return invalid_def("invalid function type `$(repr(ex.head))`")
     end
 
     def[:type] = ex.head
-    anon = ex.head == :(->)
 
     if ex.head === :function && length(ex.args) == 1  # empty function definition
         def[:name] = ex.args[1]
@@ -94,10 +92,16 @@ function splitdef(ex::Expr; throw::Bool=true)
     end
 
     # Return type
-    if !anon && ex isa Expr && ex.head === :(::)
+    if def[:type] !== :(->) && ex isa Expr && ex.head === :(::)
         def[:rtype] = ex.args[2]
         ex = ex.args[1]
     end
+
+    # Determine if the function is anonymous
+    anon = (
+        def[:type] === :(->) ||
+        def[:type] === :function && !(ex isa Expr && ex.head === :call)
+    )
 
     # Arguments and keywords
     if ex isa Expr && (anon && ex.head === :tuple || !anon && ex.head === :call)
@@ -137,7 +141,7 @@ function splitdef(ex::Expr; throw::Bool=true)
 
         !haskey(def, :kwargs) && (def[:kwargs] = [])
 
-    elseif anon
+    elseif def[:type] === :(->)
         def[:args] = [ex]
     else
         return invalid_def("invalid or missing arguments")
@@ -193,10 +197,10 @@ function combinedef(def::Dict{Symbol,Any})
     # Create a partial function signature including the name and arguments
     sig = if name !== nothing
         Expr(:call, name, args...)
-    elseif length(args) != 1 || args[1] isa Expr && args[1].head in (:kw, :parameters)
-        Expr(:tuple, args...)
-    else
+    elseif def[:type] === :(->) && length(args) == 1 && !haskey(def, :kwargs)
         args[1]
+    else
+        Expr(:tuple, args...)
     end
 
     # Add the return type
