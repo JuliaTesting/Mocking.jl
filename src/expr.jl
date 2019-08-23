@@ -53,11 +53,11 @@ See also: [`combinedef`](@ref)
 """
 function splitdef(ex::Expr; throw::Bool=true)
     def = Dict{Symbol,Any}()
+    full_ex = ex  # Keep a reference to the full expression
 
     function invalid_def(section)
         if throw
-            # Using a closure ensures that `ex` contains the original full expression
-            msg = "Function definition contains $section\n$(sprint(Meta.dump, ex))"
+            msg = "Function definition contains $section\n$(sprint(Meta.dump, full_ex))"
             Base.throw(ArgumentError(msg))
         else
             nothing
