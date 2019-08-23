@@ -57,7 +57,7 @@ function apply!(pe::PatchEnv, patches)
     end
 end
 
-function apply(body::Function, pe::PatchEnv)
+function apply(::Injector{:MockMacro}, body::Function, pe::PatchEnv)
     prev_pe = get_active_env()
     set_active_env(pe)
     try

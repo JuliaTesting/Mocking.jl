@@ -12,7 +12,7 @@ end
 
 # https://github.com/invenia/Mocking.jl/issues/56
 @testset "kwarg default uses arg" begin
-    function f end
+    f(; kwargs...) = nothing
 
     p = @patch function f(x; y=x)
         (x, x, y, y)
@@ -26,7 +26,7 @@ end
 
 # https://github.com/invenia/Mocking.jl/issues/57
 @testset "kwarg default uses symbol" begin
-    function f end
+    f(; kwargs...) = nothing
 
     p = @patch function f(x; y=:foo)
         (x, x, y, y)

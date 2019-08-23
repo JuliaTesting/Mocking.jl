@@ -4,28 +4,29 @@
 global_scope() = "org"
 
 # The @mock macro is essentially a no-op
-@test (@mock global_scope()) == global_scope()
+@test (@mock global_scope()) == "org"
 
 # Create a patched version of function
 global_patch = (@patch global_scope() = "alt")
 apply(global_patch) do
-    @test (@mock global_scope()) != global_scope()
+    @test (@mock global_scope()) == "alt"
 end
 
-# The @mock macro should return to the original behaviour
-@test (@mock global_scope()) == global_scope()
+# Should return to the original behaviour
+@test (@mock global_scope()) == "org"
+
 
 # Local scope within a function
 function test_function_scope()
     function_scope() = "org"
-    @test (@mock function_scope()) == function_scope()
+    @test (@mock function_scope()) == "org"
 
     patch = @patch function_scope() = "alt"
     apply(patch) do
-        @test (@mock function_scope()) != function_scope()
+        @test (@mock function_scope()) == "alt"
     end
 
-    @test (@mock function_scope()) == function_scope()
+    @test (@mock function_scope()) == "org"
 end
 
 test_function_scope()
@@ -33,14 +34,14 @@ test_function_scope()
 # Local scope within a let-block
 let let_scope
     let_scope() = "org"
-    @test (@mock let_scope()) == let_scope()
+    @test (@mock let_scope()) == "org"
 
     patch = @patch let_scope() = "alt"
     apply(patch) do
-        @test (@mock let_scope()) != let_scope()
+        @test (@mock let_scope()) == "alt"
     end
 
-    @test (@mock let_scope()) == let_scope()
+    @test (@mock let_scope()) == "org"
 end
 
 @testset "qualified function" begin
