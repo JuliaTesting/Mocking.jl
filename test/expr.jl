@@ -39,6 +39,19 @@ macro test_splitdef_invalid(expr)
 end
 
 @testset "splitdef / combinedef" begin
+    @testset "empty function" begin
+        f, expr = @audit function f end
+        @test length(methods(f)) == 0
+
+        d = splitdef(expr)
+        @test keys(d) == Set([:type, :name])
+        @test d[:type] == :function
+        @test d[:name] == :f
+
+        c_expr = combinedef(d)
+        @test c_expr == expr
+    end
+
     @testset "long-form function" begin
         f, expr = @audit function f() end
         @test length(methods(f)) == 1
@@ -78,19 +91,6 @@ end
         @test keys(d) == Set([:type, :body])
         @test d[:type] == :(->)
         @test strip_lineno!(d[:body]) == Expr(:block, :nothing)
-
-        c_expr = combinedef(d)
-        @test c_expr == expr
-    end
-
-    @testset "empty function" begin
-        f, expr = @audit function f end
-        @test length(methods(f)) == 0
-
-        d = splitdef(expr)
-        @test keys(d) == Set([:type, :name])
-        @test d[:type] == :function
-        @test d[:name] == :f
 
         c_expr = combinedef(d)
         @test c_expr == expr
@@ -374,6 +374,75 @@ end
         end
     end
 
+    # When using :-> there are a few definitions that use a block expression instead of the
+    # typical tuple.
+    @testset "block expression (anonymous function)" begin
+        @testset "(;)" begin
+            f, expr = @audit (;) -> nothing
+            @test length(methods(f)) == 1
+            @test f() === nothing
+
+            # Note: the semi-colon is missing from the expression
+            d = splitdef(expr)
+            @test keys(d) == Set([:type, :kwargs, :body])
+            @test d[:type] == :(->)
+            @test strip_lineno!(d[:body]) == Expr(:block, :nothing)
+
+            c_expr = combinedef(d)
+            expr = Expr(:->, Expr(:tuple, Expr(:parameters)), Expr(:block, :nothing))
+            @test strip_lineno!(c_expr) == strip_lineno!(expr)
+        end
+
+        @testset "(x;)" begin
+            f, expr = @audit (x;) -> x
+            @test length(methods(f)) == 1
+            @test f(0) == 0
+
+            # Note: the semi-colon is missing from the expression
+            d = splitdef(expr)
+            @test keys(d) == Set([:type, :args, :kwargs, :body])
+            @test d[:args] == [:x]
+            @test d[:kwargs] == []
+
+            c_expr = combinedef(d)
+            expr = Expr(:->, Expr(:tuple, Expr(:parameters), :x), Expr(:block, :x))
+            @test strip_lineno!(c_expr) == strip_lineno!(expr)
+        end
+
+        @testset "(x; y)" begin
+            f, expr = @audit (x; y) -> (x, y)
+            @test length(methods(f)) == 1
+            @test f(0, y=1) == (0, 1)
+
+            # Note: the semi-colon is missing from the expression
+            d = splitdef(expr)
+            @test keys(d) == Set([:type, :args, :kwargs, :body])
+            @test d[:args] == [:x]
+            @test d[:kwargs] == [:y]
+
+            c_expr = combinedef(d)
+            expr = Expr(:->, Expr(:tuple, Expr(:parameters, :y), :x), Expr(:block, :((x, y))))
+            @test strip_lineno!(c_expr) == strip_lineno!(expr)
+        end
+
+        @testset "Expr(:block, :x, :y)" begin
+            expr = Expr(:->, Expr(:block, :x, :y), Expr(:block, :((x, y))))
+            f = @eval $expr
+            @test length(methods(f)) == 1
+            @test f(0, y=1) == (0, 1)
+
+            # Note: the semi-colon is missing from the expression
+            d = splitdef(expr)
+            @test keys(d) == Set([:type, :args, :kwargs, :body])
+            @test d[:args] == [:x]
+            @test d[:kwargs] == [:y]
+
+            c_expr = combinedef(d)
+            expr = Expr(:->, Expr(:tuple, Expr(:parameters, :y), :x), Expr(:block, :((x, y))))
+            @test strip_lineno!(c_expr) == strip_lineno!(expr)
+        end
+    end
+
     @testset "where (short-form function)" begin
         @testset "single where" begin
             f, expr = @audit f(::A) where A = nothing
@@ -531,6 +600,12 @@ end
         # Invalid or missing arguments
         @test_splitdef_invalid :(f{S} = 0)
         @test_splitdef_invalid Expr(:function, Expr(:tuple, :f), :(nothing))
+
+        # Invalid argument block expression
+        ex = :((x; y; z) -> 0)  # Note: inlining this strips LineNumberNodes from the block
+        @test any(arg -> arg isa LineNumberNode, ex.args[1].args)
+        @test_splitdef_invalid ex
+        @test_splitdef_invalid Expr(:->, Expr(:block, :x, :y, :z), Expr(:block, 0))
 
         # Empty function contains extras
         @test_throws ArgumentError combinedef(Dict(:type => :function, :name => :f, :args => []))

@@ -114,6 +114,29 @@ function splitdef(ex::Expr; throw::Bool=true)
                 def[:args] = ex.args[i:end]
             end
         end
+    elseif ex isa Expr && anon && ex.head === :block
+        # Note: Short-form anonymous functions (:->) will use a block expression when the
+        # arguments are divided by semi-colons but do not use commas:
+        #
+        # (;) -> ...
+        # (x;) -> ...
+        # (x;y) -> ...
+        # (;x) -> ...  # Note: this is an exception to this rule
+
+        for arg in ex.args
+            arg isa LineNumberNode && continue
+
+            if !haskey(def, :args)
+                def[:args] = [arg]
+            elseif !haskey(def, :kwargs)
+                def[:kwargs] = [arg]
+            else
+                return invalid_def("an invalid block expression as arguments")
+            end
+        end
+
+        !haskey(def, :kwargs) && (def[:kwargs] = [])
+
     elseif anon
         def[:args] = [ex]
     else
@@ -164,8 +187,8 @@ function combinedef(def::Dict{Symbol,Any})
 
     # Combine args and kwargs
     args = Any[]
-    !isempty(get(def, :kwargs, [])) && push!(args, Expr(:parameters, def[:kwargs]...))
-    !isempty(get(def, :args, [])) && append!(args, def[:args])
+    haskey(def, :kwargs) && push!(args, Expr(:parameters, def[:kwargs]...))
+    haskey(def, :args) && append!(args, def[:args])
 
     # Create a partial function signature including the name and arguments
     sig = if name !== nothing
