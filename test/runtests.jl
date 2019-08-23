@@ -1,5 +1,5 @@
 using Mocking
-Mocking.enable(force=true)
+Mocking.activate()
 
 using Dates: Dates, Hour
 using Test
@@ -8,7 +8,6 @@ using Mocking: apply, splitdef, combinedef
 using Mocking: anon_morespecific, anonymous_signature, dispatch, type_morespecific
 
 @testset "Mocking" begin
-    include("compiled-modules.jl")
     include("expr.jl")
     include("dispatch.jl")
     include("patch.jl")

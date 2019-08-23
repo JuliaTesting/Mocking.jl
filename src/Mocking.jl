@@ -1,37 +1,42 @@
 module Mocking
 
-export @patch, @mock, Patch, apply,
-    DISABLE_COMPILED_MODULES_STR, DISABLE_COMPILED_MODULES_CMD
+export @patch, @mock, Patch, apply
 
 include("expr.jl")
 include("dispatch.jl")
-include("options.jl")
 include("patch.jl")
 include("mock.jl")
 include("deprecated.jl")
 
-# When ENABLED is false the @mock macro is a noop.
-global ENABLED = false
-global PATCH_ENV = nothing
+const NULLIFIED = Ref{Bool}(false)
+const ACTIVATED = Ref{Bool}(false)
+global PATCH_ENV = PatchEnv()
 
-function enable(; force::Bool=false)
-    ENABLED::Bool && return  # Abend early if enabled has already been set
-    global ENABLED = true
-    global PATCH_ENV = PatchEnv()
+"""
+    Mocking.nullify()
 
-    if compiled_modules_enabled()
-        if force
-            # Disable using compiled modules when Mocking is enabled
-            set_compiled_modules(false)
-        else
-            @warn(
-                "Mocking.jl will probably not work when $COMPILED_MODULES_FLAG is ",
-                "enabled. Please start `julia` with `$DISABLE_COMPILED_MODULES_STR` ",
-                "or alternatively call `Mocking.enable(force=true).`",
-            )
-        end
-    end
+Force any packages loaded after this point to treat the `@mock` macro as a no-op. Doing so
+will maximize performance by eliminating any runtime checks taking place at the `@mock` call
+sites but will break any tests that require patches to be applied.
+
+Note to ensure that all `@mock` macros are inoperative be sure to call this function before
+loading any packages which depend on Mocking.jl.
+"""
+function nullify()
+    global NULLIFIED[] = true
+    return nothing
 end
+
+"""
+    Mocking.activate()
+
+Enable `@mock` call sites to allow for calling patches instead of the original function.
+"""
+function activate()
+    global ACTIVATED[] = true
+    return nothing
+end
+
 
 set_active_env(pe::PatchEnv) = (global PATCH_ENV = pe)
 get_active_env() = PATCH_ENV::PatchEnv
