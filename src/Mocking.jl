@@ -40,31 +40,29 @@ struct Patch{T}
 end
 
 macro patch(expr::Expr)
-    def = splitdef(expr, throw=false)
+    def = splitdef(expr)
 
-    # Expect a named function in long-form or short-form
-    if def === nothing
-        throw(ArgumentError("expression is not a function definition"))
-    elseif def[:head] == :(->)
-        throw(ArgumentError("expression needs to be a named function"))
-    end
-
-    target_name = def[:name]
-
-    patch_name = if target_name isa Symbol  # f(...)
-        target_name
-    elseif target_name.head === :.  # Base.f(...)
-        target_name.args[2].value
+    if haskey(def, :name)
+        target = def[:name]
     else
-        string(target_name)
+        throw(ArgumentError("Function definition must be a named function"))
     end
 
-    def[:name] = gensym(string(patch_name, "_patch"))
-    alternate_func = combinedef(def)
+    # Include the target function name in the patch to make stack traces easier to read.
+    # If the provided target uses a fully-qualified reference we'll just extract the name
+    # of the function (e.g `Base.foo` -> `foo`).
+    target_name = if Meta.isexpr(target, :.)
+        target.args[2].value
+    else
+        target
+    end
 
-    # Need to evaluate the patch function in the context of the `@patch` macro in
+    def[:name] = gensym(string(target_name, "_patch"))
+    alternate = combinedef(def)
+
+    # We need to evaluate the alternate function in the context of the `@patch` macro in
     # order to support closures.
-    return esc(:(Mocking.Patch($target_name, $alternate_func)))
+    return esc(:(Mocking.Patch($target, $alternate)))
 end
 
 struct PatchEnv
