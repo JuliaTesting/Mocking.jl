@@ -45,7 +45,7 @@ macro patch(expr::Expr)
     # Expect a named function in long-form or short-form
     if def === nothing
         throw(ArgumentError("expression is not a function definition"))
-    elseif def[:type] == :(->)
+    elseif def[:head] == :(->)
         throw(ArgumentError("expression needs to be a named function"))
     end
 

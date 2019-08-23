@@ -34,7 +34,7 @@ end
 
 Split a function definition expression into its various components including:
 
-- `:type`: Type of the function (`:function`, `:(=)`, `:(->)`)
+- `:head`: Expression head of the function definition (`:function`, `:(=)`, `:(->)`)
 - `:name`: Name of the function (not present for anonymous functions)
 - `:params`: Parametric types defined on constructors
 - `:args`: Positional arguments of the function
@@ -44,7 +44,7 @@ Split a function definition expression into its various components including:
 - `:body`: Function body (not present for empty functions)
 
 All components listed may not be present in the returned dictionary with the exception of
-`:type` which will always be present.
+`:head` which will always be present.
 
 If the provided expression is not a function then an exception will be raised when
 `throw=true`. Use `throw=false` avoid raising an exception and return `nothing` instead.
@@ -65,10 +65,10 @@ function splitdef(ex::Expr; throw::Bool=true)
     end
 
     if !(ex.head === :function || ex.head === :(=) || ex.head === :(->))
-        return invalid_def("invalid function type `$(repr(ex.head))`")
+        return invalid_def("invalid function head `$(repr(ex.head))`")
     end
 
-    def[:type] = ex.head
+    def[:head] = ex.head
 
     if ex.head === :function && length(ex.args) == 1  # empty function definition
         def[:name] = ex.args[1]
@@ -78,7 +78,7 @@ function splitdef(ex::Expr; throw::Bool=true)
         ex = ex.args[1]  # Focus on the function signature
     else
         quan = length(ex.args) > 2 ? "too many" : "too few"
-        return invalid_def("$quan of expression arguments for `$(repr(def[:type]))`")
+        return invalid_def("$quan of expression arguments for `$(repr(def[:head]))`")
     end
 
     # Where parameters
@@ -92,15 +92,15 @@ function splitdef(ex::Expr; throw::Bool=true)
     end
 
     # Return type
-    if def[:type] !== :(->) && ex isa Expr && ex.head === :(::)
+    if def[:head] !== :(->) && ex isa Expr && ex.head === :(::)
         def[:rtype] = ex.args[2]
         ex = ex.args[1]
     end
 
     # Determine if the function is anonymous
     anon = (
-        def[:type] === :(->) ||
-        def[:type] === :function && !(ex isa Expr && ex.head === :call)
+        def[:head] === :(->) ||
+        def[:head] === :function && !(ex isa Expr && ex.head === :call)
     )
 
     # Arguments and keywords
@@ -141,7 +141,7 @@ function splitdef(ex::Expr; throw::Bool=true)
 
         !haskey(def, :kwargs) && (def[:kwargs] = [])
 
-    elseif def[:type] === :(->)
+    elseif def[:head] === :(->)
         def[:args] = [ex]
     else
         return invalid_def("invalid or missing arguments")
@@ -181,11 +181,11 @@ function combinedef(def::Dict{Symbol,Any})
     end
 
     # Empty generic function definitions must not contain additional keys
-    if !haskey(def, :body) && any(k -> haskey(def, k), [:args, :kwargs, :rtype, :whereparams])
-        extra = [:args, :kwargs, :rtype, :whereparams]
+    empty_extras = (:args, :kwargs, :rtype, :whereparams)
+    if !haskey(def, :body) && any(k -> haskey(def, k), empty_extras)
         throw(ArgumentError(string(
             "Function definitions without a body must not contain keys: ",
-            join(string.('`', repr.(setdiff(extra, keys(def))), '`'), ", ", ", or "),
+            join(string.('`', repr.(setdiff(empty_extras, keys(def))), '`'), ", ", ", or "),
         )))
     end
 
@@ -197,7 +197,7 @@ function combinedef(def::Dict{Symbol,Any})
     # Create a partial function signature including the name and arguments
     sig = if name !== nothing
         Expr(:call, name, args...)
-    elseif def[:type] === :(->) && length(args) == 1 && !haskey(def, :kwargs)
+    elseif def[:head] === :(->) && length(args) == 1 && !haskey(def, :kwargs)
         args[1]
     else
         Expr(:tuple, args...)
@@ -214,9 +214,9 @@ function combinedef(def::Dict{Symbol,Any})
     end
 
     func = if haskey(def, :body)
-        Expr(def[:type], sig, def[:body])
+        Expr(def[:head], sig, def[:body])
     else
-        Expr(def[:type], name)
+        Expr(def[:head], name)
     end
 
     return func

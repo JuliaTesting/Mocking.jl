@@ -1,3 +1,10 @@
+"""
+    @audit expr -> Tuple{Any,Expr}
+
+Evaluate the expression and return both the result and the original expression. Useful for
+ensuring that the provided expression is syntactically valid. If provided expression cannot
+be evaluated the exception will be returned instead of the result.
+"""
 macro audit(expr::Expr)
     result = quote
         tuple(
@@ -38,7 +45,8 @@ macro test_splitdef_invalid(expr)
     return esc(result)
 end
 
-short_name(short::Bool) = short ? "short" : "long"
+function_form(short::Bool) = string(short ? "short" : "long", "-form")
+
 
 @testset "splitdef / combinedef" begin
     @testset "empty function" begin
@@ -46,8 +54,8 @@ short_name(short::Bool) = short ? "short" : "long"
         @test length(methods(f)) == 0
 
         d = splitdef(expr)
-        @test keys(d) == Set([:type, :name])
-        @test d[:type] == :function
+        @test keys(d) == Set([:head, :name])
+        @test d[:head] == :function
         @test d[:name] == :f
 
         c_expr = combinedef(d)
@@ -60,8 +68,8 @@ short_name(short::Bool) = short ? "short" : "long"
         @test f() === nothing
 
         d = splitdef(expr)
-        @test keys(d) == Set([:type, :name, :body])
-        @test d[:type] == :function
+        @test keys(d) == Set([:head, :name, :body])
+        @test d[:head] == :function
         @test d[:name] == :f
         @test strip_lineno!(d[:body]) == Expr(:block)
 
@@ -75,8 +83,8 @@ short_name(short::Bool) = short ? "short" : "long"
         @test f() === nothing
 
         d = splitdef(expr)
-        @test keys(d) == Set([:type, :name, :body])
-        @test d[:type] == :(=)
+        @test keys(d) == Set([:head, :name, :body])
+        @test d[:head] == :(=)
         @test d[:name] == :f
         @test strip_lineno!(d[:body]) == Expr(:block, :nothing)
 
@@ -84,35 +92,35 @@ short_name(short::Bool) = short ? "short" : "long"
         @test c_expr == expr
     end
 
-    @testset "long anonymous function" begin
+    @testset "long-form anonymous function" begin
         f, expr = @audit function () end
         @test length(methods(f)) == 1
         @test f() === nothing
 
         d = splitdef(expr)
-        @test keys(d) == Set([:type, :body])
-        @test d[:type] == :function
+        @test keys(d) == Set([:head, :body])
+        @test d[:head] == :function
         @test strip_lineno!(d[:body]) == Expr(:block)
 
         c_expr = combinedef(d)
         @test c_expr == expr
     end
 
-    @testset "short anonymous function" begin
+    @testset "short-form anonymous function" begin
         f, expr = @audit () -> nothing
         @test length(methods(f)) == 1
         @test f() === nothing
 
         d = splitdef(expr)
-        @test keys(d) == Set([:type, :body])
-        @test d[:type] == :(->)
+        @test keys(d) == Set([:head, :body])
+        @test d[:head] == :(->)
         @test strip_lineno!(d[:body]) == Expr(:block, :nothing)
 
         c_expr = combinedef(d)
         @test c_expr == expr
     end
 
-    @testset "args ($(short_name(short)) function)" for short in (true, false)
+    @testset "args ($(function_form(short)) function)" for short in (true, false)
         @testset "f(x)" begin
             f, expr = if short
                 @audit f(x) = x
@@ -123,7 +131,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test f(0) == 0
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :name, :args, :body])
+            @test keys(d) == Set([:head, :name, :args, :body])
             @test d[:args] == [:x]
 
             c_expr = combinedef(d)
@@ -140,7 +148,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test f(0) == 0
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :name, :args, :body])
+            @test keys(d) == Set([:head, :name, :args, :body])
             @test d[:args] == [:(x::Integer)]
 
             c_expr = combinedef(d)
@@ -158,7 +166,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test f() == 1
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :name, :args, :body])
+            @test keys(d) == Set([:head, :name, :args, :body])
             @test d[:args] == [Expr(:kw, :x, 1)]
 
             c_expr = combinedef(d)
@@ -176,7 +184,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test f() == 1
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :name, :args, :body])
+            @test keys(d) == Set([:head, :name, :args, :body])
             @test d[:args] == [Expr(:kw, :(x::Integer), 1)]
 
             c_expr = combinedef(d)
@@ -184,7 +192,7 @@ short_name(short::Bool) = short ? "short" : "long"
         end
     end
 
-    @testset "args ($(short_name(short)) anonymous function)" for short in (true, false)
+    @testset "args ($(function_form(short)) anonymous function)" for short in (true, false)
         @testset "x" begin
             f, expr = if short
                 @audit x -> x
@@ -195,7 +203,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test f(0) == 0
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :args, :body])
+            @test keys(d) == Set([:head, :args, :body])
             @test d[:args] == [:x]
 
             c_expr = combinedef(d)
@@ -212,7 +220,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test f(0) == 0
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :args, :body])
+            @test keys(d) == Set([:head, :args, :body])
             @test d[:args] == [:(x::Integer)]
 
             c_expr = combinedef(d)
@@ -230,7 +238,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test f() == 1
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :args, :body])
+            @test keys(d) == Set([:head, :args, :body])
             @test d[:args] == [:(x=1)]
 
             c_expr = combinedef(d)
@@ -248,7 +256,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test f() == 1
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :args, :body])
+            @test keys(d) == Set([:head, :args, :body])
             @test d[:args] == [:(x::Integer=1)]
 
             c_expr = combinedef(d)
@@ -265,7 +273,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test f(0) == 0
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :args, :body])
+            @test keys(d) == Set([:head, :args, :body])
             @test d[:args] == [:x]
 
             c_expr = combinedef(d)
@@ -283,7 +291,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test f(0) == 0
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :args, :body])
+            @test keys(d) == Set([:head, :args, :body])
             @test d[:args] == [:(x::Integer)]
 
             c_expr = combinedef(d)
@@ -302,7 +310,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test f() === 1
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :args, :body])
+            @test keys(d) == Set([:head, :args, :body])
             @test d[:args] == [:(x=1)]
 
             c_expr = combinedef(d)
@@ -321,7 +329,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test f() == 1
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :args, :body])
+            @test keys(d) == Set([:head, :args, :body])
             @test d[:args] == [:(x::Integer=1)]
 
             c_expr = combinedef(d)
@@ -330,7 +338,7 @@ short_name(short::Bool) = short ? "short" : "long"
         end
     end
 
-    @testset "kwargs ($(short_name(short)) function)" for short in (true, false)
+    @testset "kwargs ($(function_form(short)) function)" for short in (true, false)
         @testset "f(; x)" begin
             f, expr = if short
                 @audit f(; x) = x
@@ -341,7 +349,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test f(x=0) == 0
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :name, :kwargs, :body])
+            @test keys(d) == Set([:head, :name, :kwargs, :body])
             @test d[:kwargs] == [:x]
 
             c_expr = combinedef(d)
@@ -358,7 +366,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test f(x=0) == 0
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :name, :kwargs, :body])
+            @test keys(d) == Set([:head, :name, :kwargs, :body])
             @test d[:kwargs] == [:(x::Integer)]
 
             c_expr = combinedef(d)
@@ -375,7 +383,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test f(x=0) == 0
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :name, :kwargs, :body])
+            @test keys(d) == Set([:head, :name, :kwargs, :body])
             @test d[:kwargs] == [Expr(:kw, :x, 1)]
 
             c_expr = combinedef(d)
@@ -392,7 +400,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test f(x=0) == 0
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :name, :kwargs, :body])
+            @test keys(d) == Set([:head, :name, :kwargs, :body])
             @test d[:kwargs] == [Expr(:kw, :(x::Integer), 1)]
 
             c_expr = combinedef(d)
@@ -400,7 +408,7 @@ short_name(short::Bool) = short ? "short" : "long"
         end
     end
 
-    @testset "kwargs ($(short_name(short)) function)" for short in (true, false)
+    @testset "kwargs ($(function_form(short)) function)" for short in (true, false)
         @testset "(; x)" begin
             f, expr = if short
                 @audit (; x) -> x
@@ -411,7 +419,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test f(x=0) == 0
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :kwargs, :body])
+            @test keys(d) == Set([:head, :kwargs, :body])
             @test d[:kwargs] == [:x]
 
             c_expr = combinedef(d)
@@ -428,7 +436,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test f(x=0) == 0
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :kwargs, :body])
+            @test keys(d) == Set([:head, :kwargs, :body])
             @test d[:kwargs] == [:(x::Integer)]
 
             c_expr = combinedef(d)
@@ -445,7 +453,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test f(x=0) == 0
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :kwargs, :body])
+            @test keys(d) == Set([:head, :kwargs, :body])
             @test d[:kwargs] == [Expr(:kw, :x, 1)]
 
             c_expr = combinedef(d)
@@ -462,7 +470,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test f(x=0) == 0
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :kwargs, :body])
+            @test keys(d) == Set([:head, :kwargs, :body])
             @test d[:kwargs] == [Expr(:kw, :(x::Integer), 1)]
 
             c_expr = combinedef(d)
@@ -472,7 +480,7 @@ short_name(short::Bool) = short ? "short" : "long"
 
     # When using :-> there are a few definitions that use a block expression instead of the
     # typical tuple.
-    @testset "block expression ($(short_name(short)) anonymous function)" for short in (true, false)
+    @testset "block expression ($(function_form(short)) anonymous function)" for short in (true, false)
         @testset "(;)" begin
             f, expr = if short
                 @audit (;) -> nothing
@@ -484,7 +492,7 @@ short_name(short::Bool) = short ? "short" : "long"
 
             # Note: the semi-colon is missing from the expression
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :kwargs, :body])
+            @test keys(d) == Set([:head, :kwargs, :body])
             @test d[:kwargs] == []
 
             c_expr = combinedef(d)
@@ -504,7 +512,7 @@ short_name(short::Bool) = short ? "short" : "long"
 
             # Note: the semi-colon is missing from the expression
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :args, :kwargs, :body])
+            @test keys(d) == Set([:head, :args, :kwargs, :body])
             @test d[:args] == [:x]
             @test d[:kwargs] == []
 
@@ -525,7 +533,7 @@ short_name(short::Bool) = short ? "short" : "long"
 
             # Note: the semi-colon is missing from the expression
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :args, :kwargs, :body])
+            @test keys(d) == Set([:head, :args, :kwargs, :body])
             @test d[:args] == [:x]
             @test d[:kwargs] == [:y]
 
@@ -544,7 +552,7 @@ short_name(short::Bool) = short ? "short" : "long"
 
             # Note: the semi-colon is missing from the expression
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :args, :kwargs, :body])
+            @test keys(d) == Set([:head, :args, :kwargs, :body])
             @test d[:args] == [:x]
             @test d[:kwargs] == [:y]
 
@@ -555,7 +563,7 @@ short_name(short::Bool) = short ? "short" : "long"
         end
     end
 
-    @testset "where ($(short_name(short)) function)" for short in (true, false)
+    @testset "where ($(function_form(short)) function)" for short in (true, false)
         @testset "single where" begin
             f, expr = if short
                 @audit f(::A) where A = nothing
@@ -565,7 +573,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test length(methods(f)) == 1
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :name, :args, :whereparams, :body])
+            @test keys(d) == Set([:head, :name, :args, :whereparams, :body])
             @test d[:whereparams] == [:A]
 
             c_expr = combinedef(d)
@@ -581,7 +589,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test length(methods(f)) == 1
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :name, :args, :whereparams, :body])
+            @test keys(d) == Set([:head, :name, :args, :whereparams, :body])
             @test d[:whereparams] == [:A, :(B <: A)]
 
             c_expr = combinedef(d)
@@ -597,7 +605,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test length(methods(f)) == 1
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :name, :args, :whereparams, :body])
+            @test keys(d) == Set([:head, :name, :args, :whereparams, :body])
             @test d[:whereparams] == [:A, :(B <: A)]
 
             c_expr = combinedef(d)
@@ -607,7 +615,7 @@ short_name(short::Bool) = short ? "short" : "long"
         end
     end
 
-    @testset "where ($(short_name(short)) anonymous function)" for short in (true, false)
+    @testset "where ($(function_form(short)) anonymous function)" for short in (true, false)
         @testset "where" begin
             f, expr = if short
                 @audit ((::A) where A) -> nothing
@@ -617,7 +625,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test length(methods(f)) == 1
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :args, :whereparams, :body])
+            @test keys(d) == Set([:head, :args, :whereparams, :body])
             @test d[:whereparams] == [:A]
 
             c_expr = combinedef(d)
@@ -633,7 +641,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test length(methods(f)) == 1
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :args, :whereparams, :body])
+            @test keys(d) == Set([:head, :args, :whereparams, :body])
             @test d[:whereparams] == [:A, :(B <: A)]
 
             c_expr = combinedef(d)
@@ -649,7 +657,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test length(methods(f)) == 1
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :args, :whereparams, :body])
+            @test keys(d) == Set([:head, :args, :whereparams, :body])
             @test d[:whereparams] == [:A, :(B <: A)]
 
             c_expr = combinedef(d)
@@ -659,7 +667,7 @@ short_name(short::Bool) = short ? "short" : "long"
         end
     end
 
-    @testset "return-type ($(short_name(short)) function)" for short in (true, false)
+    @testset "return-type ($(function_form(short)) function)" for short in (true, false)
         @testset "f(x)::Integer" begin
             f, expr = if short
                 @audit f(x)::Integer = x
@@ -670,7 +678,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test f(0.0) isa Integer
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :name, :args, :rtype, :body])
+            @test keys(d) == Set([:head, :name, :args, :rtype, :body])
             @test d[:rtype] == :Integer
 
             c_expr = combinedef(d)
@@ -687,7 +695,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test f(0.0) isa Integer
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :name, :args, :rtype, :whereparams, :body])
+            @test keys(d) == Set([:head, :name, :args, :rtype, :whereparams, :body])
             @test d[:rtype] == :Integer
 
             c_expr = combinedef(d)
@@ -695,7 +703,7 @@ short_name(short::Bool) = short ? "short" : "long"
         end
     end
 
-    @testset "return-type (short anonymous function)" begin
+    @testset "return-type (short-form anonymous function)" begin
         @testset "(x,)::Integer" begin
             f, expr = @audit (x,)::Integer -> x  # Interpreted as `(x::Integer,) -> x`
             @test length(methods(f)) == 1
@@ -703,7 +711,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test_throws MethodError f(0.0)
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :args, :body])
+            @test keys(d) == Set([:head, :args, :body])
             @test d[:args] == [:((x,)::Integer)]
 
             c_expr = combinedef(d)
@@ -717,7 +725,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test_broken splitdef(expr, throw=false) === nothing
 
             d = Dict(
-                :type => :(->),
+                :head => :(->),
                 :args => [:(x::T)],
                 :rtype => :Integer,
                 :whereparams => [:T],
@@ -731,7 +739,7 @@ short_name(short::Bool) = short ? "short" : "long"
         end
     end
 
-    @testset "return-type (long anonymous function)" begin
+    @testset "return-type (long-form anonymous function)" begin
         @testset "(x)::Integer" begin
             # Interpreted as `function (x::Integer); x end`
             f, expr = @audit function (x)::Integer; x end
@@ -740,7 +748,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test_throws MethodError f(0.0)
 
             d = splitdef(expr)
-            @test keys(d) == Set([:type, :args, :body])
+            @test keys(d) == Set([:head, :args, :body])
             @test d[:args] == [:(x::Integer)]
 
             c_expr = combinedef(d)
@@ -757,7 +765,7 @@ short_name(short::Bool) = short ? "short" : "long"
             @test_broken splitdef(expr, throw=false) === nothing
 
             d = Dict(
-                :type => :function,
+                :head => :function,
                 :args => [:(x::T)],
                 :rtype => :Integer,
                 :whereparams => [:T],
@@ -792,6 +800,6 @@ short_name(short::Bool) = short ? "short" : "long"
         @test_splitdef_invalid Expr(:->, Expr(:block, :x, :y, :z), Expr(:block, 0))
 
         # Empty function contains extras
-        @test_throws ArgumentError combinedef(Dict(:type => :function, :name => :f, :args => []))
+        @test_throws ArgumentError combinedef(Dict(:head => :function, :name => :f, :args => []))
     end
 end
