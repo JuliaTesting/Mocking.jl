@@ -38,18 +38,27 @@ function get_alternate(pe::PatchEnv, target, args...)
         m, f = dispatch(pe.mapping[target], args...)
 
         if pe.debug
-            @info "calling mocked method: $m"
+            if m !== nothing
+                @info _debug_msg(m, target, args)
+            else
+                target_m, _ = dispatch([target], args...)
+                @info _debug_msg(target_m, target, args)
+            end
         end
 
         return f
     else
-        if pe.debug
-            m, f = dispatch([target], args...)  # just looking up `m` for logging purposes
-            @info "calling original method: $m"
-        end
-
         return nothing
     end
 end
 
 get_alternate(target, args...) = get_alternate(get_active_env(), target, args...)
+
+function _debug_msg(method::Method, target, args)
+    call = "$target($(join(map(arg -> "::$(Core.Typeof(arg))", args), ", ")))"
+    return """
+        Mocking intercepted:
+        call:       $call
+        dispatched: $method
+        """
+end
