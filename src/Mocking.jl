@@ -42,10 +42,12 @@ end
 macro patch(expr::Expr)
     def = splitdef(expr)
 
-    if haskey(def, :name)
+    if haskey(def, :name) && haskey(def, :body)
         target = def[:name]
-    else
+    elseif !haskey(def, :name)
         throw(ArgumentError("Function definition must be a named function"))
+    else
+        throw(ArgumentError("Function definition must not be an empty function"))
     end
 
     # Include the target function name in the patch to make stack traces easier to read.
