@@ -792,6 +792,7 @@ function_form(short::Bool) = string(short ? "short" : "long", "-form")
 
         # Invalid or missing arguments
         @test_splitdef_invalid :(f{S} = 0)
+        @test_broken splitdef(:(a::Number::Int -> a); throws=false) === nothing
 
         # Invalid argument block expression
         ex = :((x; y; z) -> 0)  # Note: inlining this strips LineNumberNodes from the block
