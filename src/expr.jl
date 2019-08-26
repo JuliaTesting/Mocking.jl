@@ -196,11 +196,11 @@ function combinedef(def::Dict{Symbol,Any})
 
     # Create a partial function signature including the name and arguments
     sig = if name !== nothing
-        Expr(:call, name, args...)
+        :($name($(args...)))  # Equivalent to `Expr(:call, name, args...)` but faster
     elseif def[:head] === :(->) && length(args) == 1 && !haskey(def, :kwargs)
         args[1]
     else
-        Expr(:tuple, args...)
+        :(($(args...),))  # Equivalent to `Expr(:tuple, args...)` but faster
     end
 
     # Add the return type
