@@ -40,31 +40,31 @@ struct Patch{T}
 end
 
 macro patch(expr::Expr)
-    # Expect a named function in long-form or short-form
-    if expr.head === :function || (expr.head === :(=) && expr.args[1].head == :call)
-        target_name = expr.args[1].args[1]
-        params = expr.args[1].args[2:end]
-        body = expr.args[2]
-    elseif expr.head == :(->)
-        throw(ArgumentError("expression needs to be a named function"))
+    def = splitdef(expr)
+
+    if haskey(def, :name) && haskey(def, :body)
+        target = def[:name]
+    elseif !haskey(def, :name)
+        throw(ArgumentError("Function definition must be a named function"))
     else
-        throw(ArgumentError("expression is not a function definition"))
+        throw(ArgumentError("Function definition must not be an empty function"))
     end
 
-    patch_name = if target_name isa Symbol  # f(...)
-        target_name
-    elseif target_name.head === :.  # Base.f(...)
-        target_name.args[2].value
+    # Include the target function name in the patch to make stack traces easier to read.
+    # If the provided target uses a fully-qualified reference we'll just extract the name
+    # of the function (e.g `Base.foo` -> `foo`).
+    target_name = if Meta.isexpr(target, :.)
+        target.args[2].value
     else
-        string(target_name)
+        target
     end
 
-    # Need to evaluate the body of the function in the context of the `@patch` macro in
+    def[:name] = gensym(string(target_name, "_patch"))
+    alternate = combinedef(def)
+
+    # We need to evaluate the alternate function in the context of the `@patch` macro in
     # order to support closures.
-    # func = Expr(:(->), Expr(:tuple, params...), body)
-    func = Expr(:(=), Expr(:call, gensym(patch_name), params...), body)
-
-    return esc(:(Mocking.Patch($target_name, $func)))
+    return esc(:(Mocking.Patch($target, $alternate)))
 end
 
 struct PatchEnv

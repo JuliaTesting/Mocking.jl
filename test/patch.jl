@@ -7,6 +7,10 @@
         @test_throws LoadError macroexpand(@__MODULE__, :(@patch f()))
     end
 
+    @testset "empty-function definition" begin
+        @test_throws LoadError macroexpand(@__MODULE__, :(@patch function f end))
+    end
+
     @testset "non-function definition" begin
         f() = 1
         p = @patch f() = 2
