@@ -25,4 +25,5 @@ using Mocking: anon_morespecific, anonymous_signature, dispatch, type_morespecif
     include("patch-gen.jl")
     include("anonymous-param.jl")
     include("reuse.jl")
+    include("args.jl")
 end
