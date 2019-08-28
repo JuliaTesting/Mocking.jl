@@ -1,6 +1,4 @@
 macro mock(expr)
-    NULLIFIED[] && return esc(expr)  # Convert `@mock` into a no-op for maximum performace
-
     isa(expr, Expr) || error("argument is not an expression")
     expr.head == :do && (expr = rewrite_do(expr))
     expr.head == :call || error("expression is not a function call")
@@ -18,7 +16,7 @@ macro mock(expr)
     # "outer" function this means our patch functions will be compiled after the "inner"
     # function.
     result = quote
-        if Mocking.ACTIVATED[]
+        if Mocking.activated()
             local $args_var = tuple($(args...))
             local $alternate_var = Mocking.get_alternate($target, $args_var...)
             if $alternate_var !== nothing
