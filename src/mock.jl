@@ -10,17 +10,16 @@ macro mock(expr)
     args_var = gensym("args")
     alternate_var = gensym("alt")
 
-    # Note: The fix to Julia issue #265 (PR #17057) introduced changes where no compiled
-    # calls could be made to functions compiled afterwards. Since the `Mocking.apply`
-    # do-block syntax compiles the body of the do-block function before evaluating the
-    # "outer" function this means our patch functions will be compiled after the "inner"
-    # function.
+    # Due to how world-age works (see Julia issue #265 and PR #17057) when
+    # `Mocking.activated` is overwritten then all dependent functions will be recompiled.
+    # When `Mocking.activated() == false` then Julia will optimize the
+    # code below to have zero-overhead by only executing the original expression.
     result = quote
         if Mocking.activated()
             local $args_var = tuple($(args...))
             local $alternate_var = Mocking.get_alternate($target, $args_var...)
             if $alternate_var !== nothing
-                Base.invokelatest($alternate_var, $args_var...; $(kwargs...))
+                $alternate_var($args_var...; $(kwargs...))
             else
                 $target($args_var...; $(kwargs...))
             end
