@@ -58,15 +58,19 @@ function apply!(pe::PatchEnv, patches)
 end
 
 function apply(body::Function, pe::PatchEnv)
-    original_pe = get_active_env()
+    prev_pe = get_active_env()
     set_active_env(pe)
     try
         return body()
     finally
-        set_active_env(original_pe)
+        set_active_env(prev_pe)
     end
 end
 
 function apply(body::Function, patches; debug::Bool=false)
     return apply(body, PatchEnv(patches, debug))
 end
+
+const PATCH_ENV = Ref{PatchEnv}(PatchEnv())
+set_active_env(pe::PatchEnv) = (PATCH_ENV[] = pe)
+get_active_env() = PATCH_ENV[]

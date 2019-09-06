@@ -12,7 +12,7 @@ Contents
 
 - [Usage](#usage)
 - [Gotchas](#gotchas)
-- [Notes](#notes)
+- [Overhead](#overhead)
 
 Usage
 -----
@@ -32,8 +32,8 @@ The non-deterministic behaviour of this function makes it hard to test but we ca
 tests dealing with the deterministic properties of the function:
 
 ```julia
-using Base.Test
-import ...: randdev
+using Test
+using ...: randdev
 
 n = 10
 result = randdev(n)
@@ -61,12 +61,15 @@ us to demonstrate the reversing behaviour within the `randdev` function:
 
 ```julia
 using Mocking
-Mocking.enable()  # Need to enable before we import any code using the `@mock` macro
+using Test
+using ...: randdev
 
-using Base.Test
-import ...: randdev
+Mocking.activate()  # Need to call `activate` before executing `apply`
 
-...
+n = 10
+result = randdev(n)
+@test eltype(result) == UInt8
+@test length(result) == n
 
 # Produces a string with sequential UInt8 values from 1:n
 data = unsafe_string(pointer(convert(Array{UInt8}, 1:n)))
@@ -88,27 +91,17 @@ Gotchas
 
 Remember to:
 
-- use `@mock` at desired call sites
-- start julia with `--compiled-modules=no` (`--compilecache=no` for ≤0.6) or pass `force=true` to `Mocking.enable`
-- run `Mocking.enable` before importing the module(s) being tested
+- Use `@mock` at desired call sites
+- Run `Mocking.activate()` before executing any `apply` calls
 
-Notes
------
+Overhead
+--------
 
-Mocking.jl is intended to be used for testing only and will not affect the performance of
-your code when using `@mock`. In fact the `@mock` is actually a no-op when `Mocking.enable`
-is not called. One side effect of this behaviour is that pre-compiled packages won't test
-correctly with Mocking unless you start Julia with `--compiled-modules=no` (≥0.7) or
-`--compilecache=no` (≤0.6).
-
-```
-$ julia --compilecache=no -e Pkg.test("...")
-```
-
-Alternatively you can use `Mocking.enable(force=true)` to automatically disable using
-package precompilation for you (experimental). Make sure to call `enable` before the you
-importing the module you are testing.
-
+The `@mock` macro uses a conditional check of `Mocking.activated()` which only allows
+patches to be utilized only when Mocking has been activated. By default, Mocking starts as
+disabled which should result conditional being optimized away allowing for zero-overhead.
+Once activated via `Mocking.activate()` the `Mocking.activated` function will be
+re-defined, causing all methods dependent on `@mock` to be recompiled.
 
 License
 -------
