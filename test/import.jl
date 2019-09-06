@@ -2,7 +2,7 @@
 @testset "imported binding in body" begin
     @test_throws UndefVarError Minute
     @test isdefined(Dates, :Minute)
-    import Dates: Minute, Hour
+    using Dates: Minute, Hour
 
     myminute(x::Integer) = Minute(x)
 
@@ -27,7 +27,7 @@ end
 
 # Patches should allow using imported bindings syntax in the signature
 @testset "imported binding in signature" begin
-    import Base: AbstractCmd
+    using Base: AbstractCmd
 
     patch = @patch read(cmd::AbstractCmd, ::Type{String}) = "bar"
     apply(patch) do

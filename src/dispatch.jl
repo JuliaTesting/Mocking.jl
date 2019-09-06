@@ -54,9 +54,7 @@ and the generic function of the method.
 When the function to dispatch to is ambiguous last ambiguous function in the vector is used.
 """
 function dispatch(funcs::AbstractVector, args...)
-    arg_types = map(args) do arg
-        arg isa DataType ? Type{arg} : typeof(arg)
-    end
+    arg_types = map(Core.Typeof, args)
 
     best_method = nothing
     best_function = nothing
