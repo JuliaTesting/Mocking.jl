@@ -33,4 +33,22 @@ function deactivate()
     return nothing
 end
 
+
+const NULLIFIED = Ref{Bool}(false)
+
+"""
+    Mocking.nullify()
+
+Force any packages loaded after this point to treat the `@mock` macro as a no-op. Doing so
+will maximize performance by eliminating any runtime checks taking place at the `@mock` call
+sites but will break any tests that require patches to be applied.
+
+Note to ensure that all `@mock` macros are inoperative be sure to call this function before
+loading any packages which depend on Mocking.jl.
+"""
+function nullify()
+    global NULLIFIED[] = true
+    return nothing
+end
+
 end # module

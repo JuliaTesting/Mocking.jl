@@ -1,4 +1,6 @@
 macro mock(expr)
+    NULLIFIED[] && return esc(expr)  # Convert `@mock` into a no-op for maximum performace
+
     isa(expr, Expr) || error("argument is not an expression")
     expr.head == :do && (expr = rewrite_do(expr))
     expr.head == :call || error("expression is not a function call")
