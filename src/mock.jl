@@ -54,11 +54,11 @@ end
 
 get_alternate(target, args...) = get_alternate(get_active_env(), target, args...)
 
-function _debug_msg(method::Method, target, args)
+function _debug_msg(method::Union{Method,Nothing}, target, args)
     call = "$target($(join(map(arg -> "::$(Core.Typeof(arg))", args), ", ")))"
     return """
         Mocking intercepted:
         call:       $call
-        dispatched: $method
+        dispatched: $(method === nothing ? "(no matching method)" : method)
         """
 end

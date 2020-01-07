@@ -46,10 +46,10 @@ end
 """
     dispatch(funcs::AbstractVector, args...) -> Tuple{Method, Any}
 
-Choose which method to execute based upon the provided arguments. Emulates Julia's multiple
-dispatch system but allows for dispatching between methods of multiple generic functions
-instead of just methods of a single generic function. Returns a tuple of the selected method
-and the generic function of the method.
+Choose which method to execute based upon the provided arguments (values not types).
+Emulates Julia's multiple dispatch system but allows for dispatching between methods of
+multiple generic functions instead of just methods of a single generic function. Returns a
+tuple of the selected method and the generic function of the method.
 
 When the function to dispatch to is ambiguous last ambiguous function in the vector is used.
 """
