@@ -11,6 +11,8 @@ julia:
 arch:
   - x64
   - x86
+matrix:
+  fast_finish: true
 jobs:
   # Test unmaintained releases only on Linux 64-bit
   include:
