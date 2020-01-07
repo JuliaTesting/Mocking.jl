@@ -3,11 +3,23 @@ language: julia
 os:
   - linux
   - osx
+  - windows
 julia:
   - 1.0
   - 1.1
   - 1.2
+  - 1.3
   - nightly
+arch:
+  - x64
+  - x86
+jobs:
+  # Test 32-bit only on Linux
+  exclude:
+    - arch: x86
+      os: osx
+    - arch: x86
+      os: windows
 env:
   - JULIA_PROJECT="@."
 git:
