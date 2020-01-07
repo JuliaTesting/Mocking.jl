@@ -5,15 +5,19 @@ os:
   - osx
   - windows
 julia:
-  - 1.0
-  - 1.1
-  - 1.2
-  - 1.3
+  - 1.0  # LTS
+  - 1.3  # Latest release
   - nightly
 arch:
   - x64
   - x86
 jobs:
+  # Test unmaintained releases only on Linux 64-bit
+  include:
+    - julia: 1.1
+      os: linux
+    - julia: 1.2
+      os: linux
   # Test 32-bit only on Linux
   exclude:
     - arch: x86
