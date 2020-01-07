@@ -75,6 +75,21 @@ end
         @test m === nothing
     end
 
+    @testset "no methods" begin
+        m, f = dispatch([function f0 end])
+        @test f === nothing
+        @test m === nothing
+    end
+
+    @testset "no arguments" begin
+        funcs = [
+            () -> 1
+        ]
+        m, f = dispatch(funcs)
+        @test f == funcs[1]
+        @test m.sig == Tuple{typeof(funcs[1])}
+    end
+
     @testset "more specific function" begin
         funcs = [
             (::Int) -> 1
