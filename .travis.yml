@@ -36,4 +36,8 @@ script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia -e 'using Pkg; Pkg.build(); Pkg.test(coverage=true)'
 after_success:
-  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+  # Since we don't have any Windows, macOS, or 32-bit specific code in this repo we'll
+  # avoid installing Coverage which slows down the jobs.
+  - julia -e 'if Sys.islinux() && Int == Int64
+        using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())
+    end'
