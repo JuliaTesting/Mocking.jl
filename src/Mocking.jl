@@ -1,5 +1,7 @@
 module Mocking
 
+using ExprTools: splitdef, combinedef
+
 export @patch, @mock, Patch, apply
 
 include("expr.jl")
