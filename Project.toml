@@ -1,12 +1,16 @@
-desc = "Allows Julia function calls to be temporarily overloaded for purpose of testing"
-keywords = ["testing", "mocking"]
-author = ["Curtis Vogt"]
-license = "MIT"
 name = "Mocking"
 uuid = "78c3b35d-d492-501b-9361-3d52fe80e533"
-version = "0.7.0"
+keywords = ["testing", "mocking"]
+license = "MIT"
+desc = "Allows Julia function calls to be temporarily overloaded for purpose of testing"
+author = ["Curtis Vogt"]
+version = "0.7.1"
+
+[deps]
+ExprTools = "e2ba6199-217a-4e67-a87a-7c52f15ade04"
 
 [compat]
+ExprTools = "0.1"
 julia = "1"
 
 [extras]
