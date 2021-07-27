@@ -9,6 +9,7 @@ using Mocking: anon_morespecific, anonymous_signature, dispatch, type_morespecif
 
 @testset "Mocking" begin
     include("dispatch.jl")
+    include("mock.jl")
     include("patch.jl")
 
     include("concept.jl")
