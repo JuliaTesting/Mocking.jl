@@ -8,13 +8,13 @@ end
 iskwarg(x::Any) = isa(x, Expr) && (x.head === :parameters || x.head === :kw)
 
 """
-    extract_kwargs(expr::Expr) -> Vector{Expr}
+    extract_kwargs(expr::Expr) -> Vector{Union{Expr,Symbol}}
 
 Extract the :parameters and :kw value into an array of :kw expressions
 we don't evaluate any expressions for values yet though.
 """
 function extract_kwargs(expr::Expr)
-    kwargs = Expr[]
+    kwargs = Union{Expr,Symbol}[]
     for x in expr.args[2:end]
         if iskwarg(x)
             if x.head === :parameters

@@ -9,7 +9,7 @@
     end
 end
 
-# Creating a patch with an keyword parameter
+# Creating a patch with a keyword parameter
 @testset "patch with keyword parameter" begin
     hourvalue(; hour::Hour=Hour(0)) = Dates.value(hour)
 
