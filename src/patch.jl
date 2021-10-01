@@ -115,8 +115,10 @@ end
 
 ## Nesting
 
-Note that calls to apply will nest the patches that are applied. So the following two
-examples are equivalent:
+Note that calls to apply will nest the patches that are applied. If multiple patches
+are made to the same method, the innermost patch takes precedence.
+
+The following two examples are equivalent:
 
 ```
 patch_2 = @patch ...
