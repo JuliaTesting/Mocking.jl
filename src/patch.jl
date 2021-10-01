@@ -45,6 +45,44 @@ end
 
 PatchEnv(debug::Bool=false) = PatchEnv(Dict{Any,Vector{Function}}(), debug)
 
+function patches(pe::PatchEnv)
+    return [
+        Patch(target, func)
+        for (target, alternate_funcs) in pe.mapping
+        for func in alternate_funcs
+    ]
+end
+
+function Base.:(==)(pe1::PatchEnv, pe2::PatchEnv)
+    return pe1.mapping == pe2.mapping && pe1.debug == pe2.debug
+end
+
+"""
+    merge(pe1::PatchEnv, pe2::PatchEnv)
+
+Merge the two `PatchEnv` instances.
+
+This is done in such a way that the following always holds:
+
+```
+patches_1 = Patch[...]
+patches_2 = Patch[...]
+patches = vcat(patches_1, patches_2)
+
+pe1 = PatchEnv(patches_1)
+pe2 = PatchEnv(patches_2)
+pe = PatchEnv(patches)
+
+@assert pe == merge(pe1, pe2)
+```
+
+The `debug` flag will be set to true if either `pe1` or `pe2` have it set to true.
+"""
+function Base.merge(pe1::PatchEnv, pe2::PatchEnv)
+    new_patches = vcat(patches(pe1), patches(pe2))
+    return PatchEnv(new_patches, pe1.debug || pe2.debug)
+end
+
 function apply!(pe::PatchEnv, p::Patch)
     alternate_funcs = get!(Vector{Function}, pe.mapping, p.target)
     push!(alternate_funcs, p.alternate)
@@ -55,11 +93,12 @@ function apply!(pe::PatchEnv, patches)
     for p in patches
         apply!(pe, p)
     end
+    return pe
 end
 
 function apply(body::Function, pe::PatchEnv)
     prev_pe = get_active_env()
-    set_active_env(pe)
+    set_active_env(merge(prev_pe, pe))
     try
         return body()
     finally
