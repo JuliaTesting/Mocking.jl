@@ -45,22 +45,12 @@ end
 
 PatchEnv(debug::Bool=false) = PatchEnv(Dict{Any,Vector{Function}}(), debug)
 
-function patches(pe::PatchEnv)
-    #! format: off
-    return [
-        Patch(target, func)
-        for (target, alternate_funcs) in pe.mapping
-        for func in alternate_funcs
-    ]
-    #! format: on
-end
-
 function Base.:(==)(pe1::PatchEnv, pe2::PatchEnv)
     return pe1.mapping == pe2.mapping && pe1.debug == pe2.debug
 end
 
 """
-    merge(pe1::PatchEnv, pe2::PatchEnv)
+    merge(pe1::PatchEnv, pe2::PatchEnv) -> PatchEnv
 
 Merge the two `PatchEnv` instances.
 
@@ -81,8 +71,8 @@ pe = PatchEnv(patches)
 The `debug` flag will be set to true if either `pe1` or `pe2` have it set to true.
 """
 function Base.merge(pe1::PatchEnv, pe2::PatchEnv)
-    new_patches = vcat(patches(pe1), patches(pe2))
-    return PatchEnv(new_patches, pe1.debug || pe2.debug)
+    mapping = mergewith(vcat, pe1.mapping, pe2.mapping)
+    return PatchEnv(mapping, pe1.debug || pe2.debug)
 end
 
 function apply!(pe::PatchEnv, p::Patch)
