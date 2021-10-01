@@ -1,5 +1,4 @@
 @testset "merge PatchEnv instances" begin
-
     multiply(x::Number) = 2x
     multiply(x::Int) = 2x - 1
     add(x::Number) = x + 2

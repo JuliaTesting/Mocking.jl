@@ -46,11 +46,13 @@ end
 PatchEnv(debug::Bool=false) = PatchEnv(Dict{Any,Vector{Function}}(), debug)
 
 function patches(pe::PatchEnv)
+    #! format: off
     return [
         Patch(target, func)
         for (target, alternate_funcs) in pe.mapping
         for func in alternate_funcs
     ]
+    #! format: on
 end
 
 function Base.:(==)(pe1::PatchEnv, pe2::PatchEnv)
