@@ -1,6 +1,6 @@
 module Mocking
 
-using Compat
+using Compat: mergewith
 using ExprTools: splitdef, combinedef
 
 export @patch, @mock, Patch, apply
