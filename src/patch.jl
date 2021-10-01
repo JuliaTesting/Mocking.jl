@@ -96,6 +96,41 @@ function apply!(pe::PatchEnv, patches)
     return pe
 end
 
+"""
+    apply(body::Function, patches; debug::Bool=false)
+    apply(body::Function, pe::PatchEnv)
+
+Convenience function to run `body` in the context of the given `patches`.
+
+This is intended to be used with do-block notation, e.g.:
+
+```
+patch = @patch ...
+apply(patch) do
+    ...
+end
+```
+
+## Nesting
+
+Note that calls to apply will nest the patches that are applied. So the following two
+examples are equivalent:
+
+```
+patch_2 = @patch ...
+apply([patch, patch_2]) do
+    ...
+end
+```
+
+```
+apply(patch) do
+    apply(patch_2) do
+        ...
+    end
+end
+```
+"""
 function apply(body::Function, pe::PatchEnv)
     prev_pe = get_active_env()
     set_active_env(merge(prev_pe, pe))
