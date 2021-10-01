@@ -49,18 +49,6 @@ function Base.:(==)(pe1::PatchEnv, pe2::PatchEnv)
     return pe1.mapping == pe2.mapping && pe1.debug == pe2.debug
 end
 
-if VERSION < v"1.5"
-    # A version of `mergewith` suitable for use in `merge` below.
-    function mergewith(combine, d1::AbstractDict, d2::AbstractDict)
-        println("moo")
-        d = copy(d1)
-        for (k, v) in d2
-            d[k] = haskey(d, k) ? combine(d[k], v) : v
-        end
-        return d
-    end
-end
-
 """
     merge(pe1::PatchEnv, pe2::PatchEnv) -> PatchEnv
 
