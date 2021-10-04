@@ -45,6 +45,36 @@ end
 
 PatchEnv(debug::Bool=false) = PatchEnv(Dict{Any,Vector{Function}}(), debug)
 
+function Base.:(==)(pe1::PatchEnv, pe2::PatchEnv)
+    return pe1.mapping == pe2.mapping && pe1.debug == pe2.debug
+end
+
+"""
+    merge(pe1::PatchEnv, pe2::PatchEnv) -> PatchEnv
+
+Merge the two `PatchEnv` instances.
+
+This is done in such a way that the following always holds:
+
+```
+patches_1 = Patch[...]
+patches_2 = Patch[...]
+patches = vcat(patches_1, patches_2)
+
+pe1 = PatchEnv(patches_1)
+pe2 = PatchEnv(patches_2)
+pe = PatchEnv(patches)
+
+@assert pe == merge(pe1, pe2)
+```
+
+The `debug` flag will be set to true if either `pe1` or `pe2` have it set to true.
+"""
+function Base.merge(pe1::PatchEnv, pe2::PatchEnv)
+    mapping = mergewith(vcat, pe1.mapping, pe2.mapping)
+    return PatchEnv(mapping, pe1.debug || pe2.debug)
+end
+
 function apply!(pe::PatchEnv, p::Patch)
     alternate_funcs = get!(Vector{Function}, pe.mapping, p.target)
     push!(alternate_funcs, p.alternate)
@@ -55,11 +85,49 @@ function apply!(pe::PatchEnv, patches)
     for p in patches
         apply!(pe, p)
     end
+    return pe
 end
 
+"""
+    apply(body::Function, patches; debug::Bool=false)
+    apply(body::Function, pe::PatchEnv)
+
+Convenience function to run `body` in the context of the given `patches`.
+
+This is intended to be used with do-block notation, e.g.:
+
+```
+patch = @patch ...
+apply(patch) do
+    ...
+end
+```
+
+## Nesting
+
+Note that calls to apply will nest the patches that are applied. If multiple patches
+are made to the same method, the innermost patch takes precedence.
+
+The following two examples are equivalent:
+
+```
+patch_2 = @patch ...
+apply([patch, patch_2]) do
+    ...
+end
+```
+
+```
+apply(patch) do
+    apply(patch_2) do
+        ...
+    end
+end
+```
+"""
 function apply(body::Function, pe::PatchEnv)
     prev_pe = get_active_env()
-    set_active_env(pe)
+    set_active_env(merge(prev_pe, pe))
     try
         return body()
     finally

@@ -26,4 +26,6 @@ using Mocking: anon_morespecific, anonymous_signature, dispatch, type_morespecif
     include("anonymous-param.jl")
     include("reuse.jl")
     include("args.jl")
+    include("merge.jl")
+    include("nested_apply.jl")
 end
