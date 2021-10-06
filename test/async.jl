@@ -20,7 +20,7 @@
             @test (@mock f()) == "mocked"
 
             notify(c)
-            @test_broken take!(ch) == "original"
+            @test take!(ch) == "original"
 
             # Task started inside patched context should call patched functions.
             @async background()
@@ -35,6 +35,6 @@
         end
 
         notify(c)
-        @test_broken take!(ch) == "mocked"
+        @test take!(ch) == "mocked"
     end
 end
