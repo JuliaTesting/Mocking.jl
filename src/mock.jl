@@ -52,7 +52,7 @@ function get_alternate(pe::PatchEnv, target, args...)
     end
 end
 
-get_alternate(target, args...) = get_alternate(get_active_env(), target, args...)
+get_alternate(target, args...) = get_alternate(patch_env[], target, args...)
 
 function _debug_msg(method::Union{Method,Nothing}, target, args)
     call = "$target($(join(map(arg -> "::$(Core.Typeof(arg))", args), ", ")))"
