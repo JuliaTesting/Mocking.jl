@@ -20,19 +20,19 @@
     for p in patches
         Mocking.apply!(pe, p)
     end
+    Mocking.set_active_env(pe)
 
-    Mocking.set_active_env(pe) do
-        @test (@mock multiply(2)) == 8        # calls mocked `multiply(::Int)`
-        @test (@mock multiply(0x2)) == 0x6    # calls mocked `multiply(::Integer)`
-        @test (@mock multiply(2//1)) == 4//1  # calls original `multiply(::Number)`
+    @test (@mock multiply(2)) == 8        # calls mocked `multiply(::Int)`
+    @test (@mock multiply(0x2)) == 0x6    # calls mocked `multiply(::Integer)`
+    @test (@mock multiply(2//1)) == 4//1  # calls original `multiply(::Number)`
 
-        @test (@mock multiply(2)) != multiply(2)
-        @test (@mock multiply(0x2)) != multiply(0x2)
-        @test (@mock multiply(2//1)) == multiply(2//1)
-    end
+    @test (@mock multiply(2)) != multiply(2)
+    @test (@mock multiply(0x2)) != multiply(0x2)
+    @test (@mock multiply(2//1)) == multiply(2//1)
 
     # Clean env
-    @test Mocking.get_active_env() == Mocking.PatchEnv()
+    pe = Mocking.PatchEnv()
+    Mocking.set_active_env(pe)
 
     # Ensure that original behaviour is restored
     @test (@mock multiply(2)) == 3

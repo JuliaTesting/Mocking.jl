@@ -1,7 +1,6 @@
 module Mocking
 
 using Compat: mergewith
-using ContextVariablesX: @contextvar, with_context
 using ExprTools: splitdef, combinedef
 
 export @patch, @mock, Patch, apply
