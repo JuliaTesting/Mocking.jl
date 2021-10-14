@@ -28,5 +28,4 @@ using Mocking: anon_morespecific, anonymous_signature, dispatch, type_morespecif
     include("args.jl")
     include("merge.jl")
     include("nested_apply.jl")
-    include("async.jl")
 end
