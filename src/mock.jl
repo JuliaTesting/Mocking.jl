@@ -18,6 +18,7 @@ macro mock(expr)
     # code below to have zero-overhead by only executing the original expression.
     result = quote
         if Mocking.activated()
+            trace(LOGGER, "Mocking activated, @mock macro expanding to `get_alternate` for target: $($target)")
             local $args_var = tuple($(args...))
             local $alternate_var = Mocking.get_alternate($target, $args_var...)
             if $alternate_var !== nothing
@@ -26,6 +27,7 @@ macro mock(expr)
                 $target($args_var...; $(kwargs...))
             end
         else
+            trace(LOGGER, "Mocking not activated, @mock macro expanding to the original target: $($target)")
             $target($(args...); $(kwargs...))
         end
     end

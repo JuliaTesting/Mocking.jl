@@ -2,8 +2,16 @@ module Mocking
 
 using Compat: mergewith
 using ExprTools: splitdef, combinedef
+using Memento
 
 export @patch, @mock, Patch, apply
+
+const LOGGER = getlogger(@__MODULE__)
+
+function __init__()
+    # https://invenia.github.io/Memento.jl/latest/faq/pkg-usage/
+    Memento.register(LOGGER)
+end
 
 include("expr.jl")
 include("dispatch.jl")
