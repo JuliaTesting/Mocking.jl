@@ -17,9 +17,9 @@ macro mock(expr)
     # When `Mocking.activated() == false` then Julia will optimize the
     # code below to have zero-overhead by only executing the original expression.
     result = quote
-        Mocking.get_active_env().debug && @info "Calling @mock on" $target
+        @info "Expanding @mock macro on" $target
         if Mocking.activated()
-            Mocking.get_active_env().debug && @info "Mocking is activated, looking for alternate"
+            @info "Mocking is activated, inserting mocking code"
             local $args_var = tuple($(args...))
             local $alternate_var = Mocking.get_alternate($target, $args_var...)
             if $alternate_var !== nothing
@@ -28,7 +28,7 @@ macro mock(expr)
                 $target($args_var...; $(kwargs...))
             end
         else
-            Mocking.get_active_env().debug && @info "Mocking is NOT activated, running original target"
+            @warn "Mocking is NOT activated, running original target"
             $target($(args...); $(kwargs...))
         end
     end
@@ -40,12 +40,15 @@ function get_alternate(pe::PatchEnv, target, args...)
     pe.debug && @info "Looking for target $target in PatchEnv.mapping" keys(pe.mapping)
 
     if haskey(pe.mapping, target)
+        pe.debug && @info "Found target in PatchEnv.mapping. Trying to dispatch for given args:" args "### Available methods:" methods.(pe.mapping[target])
         m, f = dispatch(pe.mapping[target], args...)
 
         if pe.debug
             if m !== nothing
+                @info "Dispatch success"
                 @info _debug_msg(m, target, args)
             else
+                @info "Dispatch failed for given args, using original target"
                 target_m, _ = dispatch([target], args...)
                 @info _debug_msg(target_m, target, args)
             end
