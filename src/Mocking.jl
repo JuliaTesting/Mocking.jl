@@ -28,6 +28,7 @@ activated() = false
 Enable `@mock` call sites to allow for calling patches instead of the original function.
 """
 function activate()
+    trace(LOGGER, "Mocking.activate()")
     # Avoid redefining `activated` when it's already set appropriately
     !activated() && @eval activated() = true
     return nothing
@@ -39,6 +40,7 @@ end
 Disable `@mock` call sites to only call the original function.
 """
 function deactivate()
+    trace(LOGGER, "Mocking.deactivate()")
     # Avoid redefining `activated` when it's already set appropriately
     activated() && @eval activated() = false
     return nothing
@@ -58,6 +60,7 @@ Note to ensure that all `@mock` macros are inoperative be sure to call this func
 loading any packages which depend on Mocking.jl.
 """
 function nullify()
+    trace(LOGGER, "Mocking.nullify()")
     global NULLIFIED[] = true
     return nothing
 end
