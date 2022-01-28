@@ -76,6 +76,7 @@ function Base.merge(pe1::PatchEnv, pe2::PatchEnv)
 end
 
 function apply!(pe::PatchEnv, p::Patch)
+    @debug "Applying patch" p
     alternate_funcs = get!(Vector{Function}, pe.mapping, p.target)
     push!(alternate_funcs, p.alternate)
     return pe

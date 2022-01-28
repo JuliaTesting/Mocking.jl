@@ -18,6 +18,7 @@ macro mock(expr)
     # code below to have zero-overhead by only executing the original expression.
     result = quote
         if Mocking.activated()
+            @debug "Mocking activated, @mock macro expanding to `get_alternate` for target" $target
             local $args_var = tuple($(args...))
             local $alternate_var = Mocking.get_alternate($target, $args_var...)
             if $alternate_var !== nothing
@@ -26,6 +27,7 @@ macro mock(expr)
                 $target($args_var...; $(kwargs...))
             end
         else
+            @debug "Mocking not activated, @mock macro expanding to the original target" $target
             $target($(args...); $(kwargs...))
         end
     end
@@ -46,8 +48,15 @@ function get_alternate(pe::PatchEnv, target, args...)
             end
         end
 
+        if m !== nothing
+            @debug "Triggering patch" target args m
+        else
+            @debug "Not triggering any patch" target args methods.(pe.mapping[target])
+        end
+
         return f
     else
+        @debug "Not triggering any patch because target not found in PatchEnv mapping" target keys(pe.mapping)
         return nothing
     end
 end
