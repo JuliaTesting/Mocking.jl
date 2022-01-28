@@ -17,7 +17,9 @@ macro mock(expr)
     # When `Mocking.activated() == false` then Julia will optimize the
     # code below to have zero-overhead by only executing the original expression.
     result = quote
+        Mocking.get_active_env().debug && @info "Calling @mock on" $target
         if Mocking.activated()
+            Mocking.get_active_env().debug && @info "Mocking is activated, looking for alternate"
             local $args_var = tuple($(args...))
             local $alternate_var = Mocking.get_alternate($target, $args_var...)
             if $alternate_var !== nothing
@@ -26,6 +28,7 @@ macro mock(expr)
                 $target($args_var...; $(kwargs...))
             end
         else
+            Mocking.get_active_env().debug && @info "Mocking is NOT activated, running original target"
             $target($(args...); $(kwargs...))
         end
     end
@@ -34,6 +37,8 @@ macro mock(expr)
 end
 
 function get_alternate(pe::PatchEnv, target, args...)
+    pe.debug && @info "Looking for target $target in PatchEnv.mapping" keys(pe.mapping)
+
     if haskey(pe.mapping, target)
         m, f = dispatch(pe.mapping[target], args...)
 
@@ -48,6 +53,7 @@ function get_alternate(pe::PatchEnv, target, args...)
 
         return f
     else
+        pe.debug && @info "Target not found in PatchEnv.mapping"
         return nothing
     end
 end
