@@ -96,6 +96,8 @@ Remember to:
 
 - Use `@mock` at desired call sites
 - Run `Mocking.activate()` before executing any `apply` calls
+    - Also note `Mocking.activate()` needs to be called at top-level because it uses `@eval`
+      under the hood, so can run into world age issues if called within a function
 
 Overhead
 --------
