@@ -99,6 +99,18 @@ Remember to:
     - Also note `Mocking.activate()` needs to be called at top-level because it uses `@eval`
       under the hood, so can run into world age issues if called within a function
 
+For debugging (e.g. if patches are not being applied as expected), use
+stdlib [`Logging`](https://docs.julialang.org/en/v1/stdlib/Logging) with level set to `Debug`,
+for example:
+```
+using Logging
+global_logger(ConsoleLogger(stderr, Logging.Debug))
+
+Mocking.activate()
+...
+```
+Calls to Mocking functions will then print some debugging info when called.
+
 Overhead
 --------
 
