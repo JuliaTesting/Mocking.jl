@@ -30,4 +30,6 @@ using Mocking: anon_morespecific, anonymous_signature, dispatch, type_morespecif
     include("nested_apply.jl")
     include("async.jl")
     include("issues.jl")
+
+    include("logging.jl")
 end
