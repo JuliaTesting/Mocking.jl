@@ -26,6 +26,23 @@ function activate()
 end
 
 """
+    Mocking.activate(func)
+
+Execute `func` with `@mock` call sites enabled.
+"""
+function activate(f)
+    old = activated()
+    try
+        activate()
+        Base.invokelatest(f)
+    finally
+        if (Base.invokelatest(activated) != old)
+            @eval activated() = $old
+        end
+    end
+end
+
+"""
     Mocking.deactivate()
 
 Disable `@mock` call sites to only call the original function.
