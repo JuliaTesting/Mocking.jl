@@ -31,7 +31,7 @@
     end
 end
 
-# https://github.com/invenia/Mocking.jl/issues/59
+# https://github.com/JuliaTesting/Mocking.jl/issues/59
 @testset "patch calls patch" begin
     f(args...) = 0
 

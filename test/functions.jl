@@ -10,7 +10,7 @@
     end
 end
 
-# https://github.com/invenia/Mocking.jl/issues/56
+# https://github.com/JuliaTesting/Mocking.jl/issues/56
 @testset "kwarg default uses arg" begin
     function f end
 
@@ -24,7 +24,7 @@ end
     end
 end
 
-# https://github.com/invenia/Mocking.jl/issues/57
+# https://github.com/JuliaTesting/Mocking.jl/issues/57
 @testset "kwarg default uses symbol" begin
     function f end
 
