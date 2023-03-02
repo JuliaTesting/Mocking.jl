@@ -15,7 +15,7 @@ include("deprecated.jl")
 activated() = false
 
 """
-    Mocking.activate()
+    Mocking.activate([func])
 
 Enable `@mock` call sites to allow for calling patches instead of the original function.
 """
@@ -25,11 +25,6 @@ function activate()
     return nothing
 end
 
-"""
-    Mocking.activate(func)
-
-Execute `func` with `@mock` call sites enabled.
-"""
 function activate(f)
     old = activated()
     try
