@@ -15,7 +15,7 @@ include("deprecated.jl")
 activated() = false
 
 """
-    Mocking.activate()
+    Mocking.activate([func])
 
 Enable `@mock` call sites to allow for calling patches instead of the original function.
 """
@@ -23,6 +23,18 @@ function activate()
     # Avoid redefining `activated` when it's already set appropriately
     !activated() && @eval activated() = true
     return nothing
+end
+
+function activate(f)
+    old = activated()
+    try
+        activate()
+        Base.invokelatest(f)
+    finally
+        if (Base.invokelatest(activated) != old)
+            @eval activated() = $old
+        end
+    end
 end
 
 """
