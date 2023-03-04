@@ -1,4 +1,4 @@
-# https://github.com/invenia/Mocking.jl/issues/14
+# https://github.com/JuliaTesting/Mocking.jl/issues/14
 @testset "patch generation" begin
     statuscode(url::AbstractString) = 500
 

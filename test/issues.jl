@@ -1,4 +1,4 @@
-# https://github.com/invenia/Mocking.jl/issues/92
+# https://github.com/JuliaTesting/Mocking.jl/issues/92
 @testset "ContextVariableX logging incompatibility" begin
     generate_report() = "original"
     report_patch = @patch generate_report() = "mocked"
