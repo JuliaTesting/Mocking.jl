@@ -21,7 +21,7 @@ macro mock(expr)
             local $args_var = tuple($(args...))
             local $alternate_var = Mocking.get_alternate($target, $args_var...)
             if $alternate_var !== nothing
-                $alternate_var($args_var...; $(kwargs...))
+                Base.invokelatest($alternate_var, $args_var...; $(kwargs...))
             else
                 $target($args_var...; $(kwargs...))
             end
