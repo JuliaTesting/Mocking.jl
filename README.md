@@ -8,7 +8,7 @@ Mocking
 [![ColPrac: Contributor Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet)](https://github.com/SciML/ColPrac)
 
 
-Allows Julia function calls to be temporarily overloaded for purpose of testing.
+aLlOwS JuLiA FuNcTiOn cAlLs tO Be tEmPoRaRiLy oVeRlOaDeD FoR PuRpOsE Of tEsTiNg.
 
 Contents
 --------
