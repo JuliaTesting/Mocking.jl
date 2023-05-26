@@ -31,4 +31,5 @@ using Mocking: anon_morespecific, anonymous_signature, dispatch, type_morespecif
     include("async.jl")
     include("issues.jl")
     include("activate.jl")
+    include("async-world-ages.jl")
 end
