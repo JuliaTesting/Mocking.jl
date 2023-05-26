@@ -13,7 +13,9 @@ using Mocking
     @test bar(2) == 2
 
     # NOTE: Every top-level statement in a testset is run in a new world age.
-    intial_world_age = Base.get_world_counter()
+    if VERSION >= v"1.5"
+        intial_world_age = Base.get_world_counter()
+    end
 
     # Start a background, async task which blocks until bar() is patched, so that we
     # can test that patches to functions defined in later world ages can be called
@@ -28,7 +30,9 @@ using Mocking
     end
 
     # Make sure we're actually testing what we think we are.
-    @assert Base.get_world_counter() > intial_world_age
+    if VERSION >= v"1.5"
+        @assert Base.get_world_counter() > intial_world_age
+    end
 
     p = @patch bar(x) = 10 * x
 
