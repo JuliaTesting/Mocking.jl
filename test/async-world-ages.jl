@@ -3,7 +3,6 @@ using Mocking
 
 # Issue #108
 @testset "patching an async task from an earlier world age" begin
-
     function foo(x)
         @mock bar(x)
     end
@@ -31,7 +30,7 @@ using Mocking
     # Make sure we're actually testing what we think we are.
     @assert Base.get_world_counter() > intial_world_age
 
-    p = @patch bar(x) = 10*x
+    p = @patch bar(x) = 10 * x
 
     apply(p) do
         # Release the background task
@@ -39,6 +38,4 @@ using Mocking
         # Fetch the task's result
         @test take!(ch) == 20
     end
-
 end
-
