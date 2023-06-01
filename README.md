@@ -88,6 +88,40 @@ end
 # Outside of the scope of the patched environment `@mock` is essentially a no-op
 @test randdev(n) != convert(Array{UInt8}, n:-1:1)
 ```
+**Simpler Example**
+
+The fuction to be tested and mocked can be in a julia file as shown below:
+
+```
+function sub(x,y)
+    return x*y
+end
+
+function addo(x,y)
+    z = @mock sub(x,y)
+return x+y+z
+end
+```
+
+The test file is put in separate julia file as shown below:
+```
+using Test
+using Mocking
+
+include("../src/ToLoadData.jl")
+Mocking.activate()
+
+
+patch = @patch sub(x::Int64, y::Int64) = 0
+apply(patch) do
+    @test addo(1,1) == 2
+end
+```
+
+Mocking creates an easier path for testing the function under test while having some expecttion and return value of other sub-functions
+
+
+
 
 Gotchas
 -------
