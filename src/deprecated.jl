@@ -12,3 +12,5 @@ function enable(; force=false)
     depwarn("`$m.enable(; force=$force)` is deprecated, use `$m.activate()` instead.", :enable)
     activate()
 end
+
+@deprecate set_active_env(f, pe) with_active_env(f, pe) false

@@ -126,14 +126,26 @@ end
 ```
 """
 function apply(body::Function, pe::PatchEnv)
-    merged_pe = merge(patch_env[], pe)
-    return with_context(body, patch_env => merged_pe)
+    merged_pe = merge(PATCH_ENV[], pe)
+    return with_active_env(body, merged_pe)
 end
 
 function apply(body::Function, patches; debug::Bool=false)
     return apply(body, PatchEnv(patches, debug))
 end
 
-@contextvar patch_env = PatchEnv()
-set_active_env(body::Function, pe::PatchEnv) = with_context(body, patch_env => pe)
-get_active_env() = patch_env[]
+if VERSION > v"1.11-"
+    const PATCH_ENV = ScopedValue(PatchEnv())
+    with_active_env(body::Function, pe::PatchEnv) = with(body, PATCH_ENV => pe)
+else
+    function with_active_env(body::Function, pe::PatchEnv)
+        old_pe = get_active_env
+        try
+            PATCH_ENV[] = pe
+            body()
+        finally
+            PATCH_ENV[] = old_pe
+        end
+    end
+end
+get_active_env() = PATCH_ENV[]

@@ -21,7 +21,7 @@
         Mocking.apply!(pe, p)
     end
 
-    Mocking.set_active_env(pe) do
+    Mocking.with_active_env(pe) do
         @test (@mock multiply(2)) == 8        # calls mocked `multiply(::Int)`
         @test (@mock multiply(0x2)) == 0x6    # calls mocked `multiply(::Integer)`
         @test (@mock multiply(2//1)) == 4//1  # calls original `multiply(::Number)`
