@@ -21,7 +21,7 @@
         Mocking.apply!(pe, p)
     end
 
-    Mocking.with_active_env(pe) do
+    Mocking.apply(pe) do
         @test (@mock multiply(2)) == 8        # calls mocked `multiply(::Int)`
         @test (@mock multiply(0x2)) == 0x6    # calls mocked `multiply(::Integer)`
         @test (@mock multiply(2//1)) == 4//1  # calls original `multiply(::Number)`
@@ -31,8 +31,8 @@
         @test (@mock multiply(2//1)) == multiply(2//1)
     end
 
-    # Clean env
-    @test Mocking.get_active_env() == Mocking.PatchEnv()
+    # Patch environment has been reset back to original clean state
+    @test Mocking.PATCH_ENV[] == Mocking.PatchEnv()
 
     # Ensure that original behaviour is restored
     @test (@mock multiply(2)) == 3

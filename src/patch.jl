@@ -134,12 +134,12 @@ function apply(body::Function, patches; debug::Bool=false)
     return apply(body, PatchEnv(patches, debug))
 end
 
-if VERSION > v"1.11-"
+if isdefined(Base, :ScopedValue) # added in v"1.11"
     const PATCH_ENV = ScopedValue(PatchEnv())
     with_active_env(body::Function, pe::PatchEnv) = with(body, PATCH_ENV => pe)
 else
     function with_active_env(body::Function, pe::PatchEnv)
-        old_pe = get_active_env
+        old_pe = PATCH_ENV[]
         try
             PATCH_ENV[] = pe
             body()
@@ -148,4 +148,3 @@ else
         end
     end
 end
-get_active_env() = PATCH_ENV[]
