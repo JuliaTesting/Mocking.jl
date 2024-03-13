@@ -134,9 +134,10 @@ function apply(body::Function, patches; debug::Bool=false)
     return apply(body, PatchEnv(patches, debug))
 end
 
-if isdefined(Base, :ScopedValue) # added in v"1.11"
-    const PATCH_ENV = ScopedValue(PatchEnv())
-    with_active_env(body::Function, pe::PatchEnv) = with(body, PATCH_ENV => pe)
+# https://github.com/JuliaLang/julia/pull/50958
+if isdefined(Base, :ScopedValue)
+    const PATCH_ENV = Base.ScopedValue(PatchEnv())
+    with_active_env(body::Function, pe::PatchEnv) = Base.with(body, PATCH_ENV => pe)
 else
     function with_active_env(body::Function, pe::PatchEnv)
         old_pe = PATCH_ENV[]
