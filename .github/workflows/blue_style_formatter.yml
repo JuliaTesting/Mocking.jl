@@ -7,13 +7,21 @@ jobs:
   format:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: julia-actions/setup-julia@latest
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
         with:
-          version: 1
-      - run: |
-          julia  -e 'using Pkg; Pkg.add("JuliaFormatter")'
-          julia  -e 'using JuliaFormatter; format(".", BlueStyle(); verbose=true)'
+          version: "1"
+      - uses: julia-actions/cache@v2
+      - name: Install JuliaFormatter
+        shell: julia --color=yes {0}
+        run: |
+          using Pkg
+          Pkg.add(PackageSpec(name="JuliaFormatter", version="1"))
+      - name: Check Formatting
+        shell: julia --color=yes {0}
+        run: |
+          using JuliaFormatter
+          format(".", BlueStyle(); verbose=true)
       - uses: reviewdog/action-suggester@v1
         with:
           tool_name: JuliaFormatter
