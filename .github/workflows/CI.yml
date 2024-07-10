@@ -1,12 +1,15 @@
 name: CI
 # Run on master, tags, or any pull request
 on:
-  schedule:
-    - cron: '0 2 * * *'  # Daily at 2 AM UTC (8 PM CST)
   push:
-    branches: [master]
-    tags: ["*"]
+    branches: "master"
+    tags: "*"
   pull_request:
+    paths:
+      - "src/**/*.jl"
+      - "test/**/*.jl"
+      - "Project.toml"
+      - ".github/workflows/CI.yml"
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
@@ -15,62 +18,23 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - "1.0"  # LTS
+          - "1.0"  # Oldest supported version
+          - "1.6"  # LTS
           - "1"    # Latest Release
         os:
           - ubuntu-latest
-          - macOS-latest
-          - windows-latest
         arch:
           - x64
-          - x86
-        exclude:
-          # Test 32-bit only on Linux
-          - os: macOS-latest
-            arch: x86
-          - os: windows-latest
-            arch: x86
-        include:
-          # Add a 1.5 job because that's what Invenia actually uses
-          - os: ubuntu-latest
-            version: 1.5
-            arch: x64
     steps:
-      - uses: actions/checkout@v2
-      - uses: julia-actions/setup-julia@v1
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - uses: actions/cache@v2
-        env:
-          cache-name: cache-artifacts
-        with:
-          path: ~/.julia/artifacts
-          key: ${{ runner.os }}-${{ matrix.arch }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.arch }}-test-${{ env.cache-name }}-
-            ${{ runner.os }}-${{ matrix.arch }}-test-
-            ${{ runner.os }}-${{ matrix.arch }}-
-            ${{ runner.os }}-
-      - uses: julia-actions/julia-buildpkg@latest
-      - uses: julia-actions/julia-runtest@latest
+      - uses: julia-actions/cache@v2
+      - uses: julia-actions/julia-buildpkg@v1
+      - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
-      - uses: codecov/codecov-action@v1
+      - uses: codecov/codecov-action@v4
         with:
-          file: lcov.info
-
-  slack:
-    name: Notify Slack Failure
-    needs: test
-    runs-on: ubuntu-latest
-    if: always() && github.event_name == 'schedule'
-    steps:
-      - uses: technote-space/workflow-conclusion-action@v2
-      - uses: voxmedia/github-action-slack-notify-build@v1
-        if: env.WORKFLOW_CONCLUSION == 'failure'
-        with:
-          channel: nightly-dev
-          status: FAILED
-          color: danger
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.DEV_SLACK_BOT_TOKEN }}
+          files: lcov.info
