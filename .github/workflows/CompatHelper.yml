@@ -1,5 +1,8 @@
 name: CompatHelper
 on:
+  pull_request:
+    paths:
+      - ".github/workflows/CompatHelper.yml"
   schedule:
     - cron: "0 0 * * *"  # Everyday at midnight
   workflow_dispatch:

@@ -1,6 +1,9 @@
 name: JuliaNightly
 # Nightly Scheduled Julia Nightly Run
 on:
+  pull_request:
+    paths:
+      - ".github/workflows/JuliaNightly.yml"
   schedule:
     - cron: "0 2 * * *"  # Daily at 2 AM UTC (8 PM CST)
 jobs:

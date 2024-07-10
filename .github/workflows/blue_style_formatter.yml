@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "**.jl"
+      - ".github/workflows/blue_style_formatter.yml"
 
 jobs:
   format:
