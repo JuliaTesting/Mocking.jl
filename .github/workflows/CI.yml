@@ -2,8 +2,8 @@ name: CI
 # Run on master, tags, or any pull request
 on:
   push:
-    branches: [master]
-    tags: ["*"]
+    branches: "master"
+    tags: "*"
   pull_request:
 jobs:
   test:
