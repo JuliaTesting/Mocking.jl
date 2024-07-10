@@ -5,6 +5,10 @@ on:
     branches: "master"
     tags: "*"
   pull_request:
+    paths:
+      - "src/**/*.jl"
+      - "test/**/*.jl"
+      - "Project.toml"
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
