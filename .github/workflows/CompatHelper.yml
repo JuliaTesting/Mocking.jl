@@ -1,3 +1,4 @@
+# Based upon: https://github.com/JuliaRegistries/CompatHelper.jl/blob/70ddefcdea232a7cde9d6976794ece7d0cca7048/.github/workflows/CompatHelper.yml
 name: CompatHelper
 on:
   pull_request:
@@ -5,7 +6,10 @@ on:
       - ".github/workflows/CompatHelper.yml"
   schedule:
     - cron: "0 0 * * *"  # Everyday at midnight
-  workflow_dispatch:
+  workflow_dispatch: {}
+permissions:
+  contents: write
+  pull-requests: write
 jobs:
   CompatHelper:
     runs-on: ubuntu-latest
