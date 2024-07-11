@@ -77,7 +77,7 @@ result = randdev(n)
 # Produces a string with sequential UInt8 values from 1:n
 data = unsafe_string(pointer(convert(Array{UInt8}, 1:n)))
 
-# Generate a alternative method of `open` which call we wish to mock
+# Generate an alternative method of `open` which call we wish to mock
 patch = @patch open(fn::Function, f::AbstractString) = fn(IOBuffer(data))
 
 # Apply the patch which will modify the behaviour for our test
