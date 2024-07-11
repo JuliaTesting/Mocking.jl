@@ -29,7 +29,7 @@ macro patch(expr::Expr)
 
     # We need to evaluate the alternate function in the context of the `@patch` macro in
     # order to support closures.
-    return esc(:(Mocking.Patch($target, $alternate)))
+    return esc(:($Patch($target, $alternate)))
 end
 
 struct PatchEnv

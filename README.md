@@ -2,7 +2,7 @@ Mocking
 =======
 
 [![CI](https://github.com/JuliaTesting/Mocking.jl/workflows/CI/badge.svg)](https://github.com/JuliaTesting/Mocking.jl/actions?query=workflow%3ACI)
-[![codecov.io](http://codecov.io/github/invenia/Mocking.jl/coverage.svg?branch=master)](http://codecov.io/github/invenia/Mocking.jl?branch=master)
+[![codecov.io](http://codecov.io/github/JuliaTesting/Mocking.jl/coverage.svg?branch=master)](http://codecov.io/github/JuliaTesting/Mocking.jl?branch=master)
 
 [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle) 
 [![ColPrac: Contributor Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet)](https://github.com/SciML/ColPrac)
@@ -77,7 +77,7 @@ result = randdev(n)
 # Produces a string with sequential UInt8 values from 1:n
 data = unsafe_string(pointer(convert(Array{UInt8}, 1:n)))
 
-# Generate a alternative method of `open` which call we wish to mock
+# Generate an alternative method of `open` which call we wish to mock
 patch = @patch open(fn::Function, f::AbstractString) = fn(IOBuffer(data))
 
 # Apply the patch which will modify the behaviour for our test

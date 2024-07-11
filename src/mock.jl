@@ -6,24 +6,21 @@ macro mock(expr)
     expr.head == :call || error("expression is not a function call")
 
     target = expr.args[1]
-    args = filter(!Mocking.iskwarg, expr.args[2:end])
+    args = filter(!iskwarg, expr.args[2:end])
     kwargs = extract_kwargs(expr)
-
-    args_var = gensym("args")
-    alternate_var = gensym("alt")
 
     # Due to how world-age works (see Julia issue #265 and PR #17057) when
     # `Mocking.activated` is overwritten then all dependent functions will be recompiled.
     # When `Mocking.activated() == false` then Julia will optimize the
     # code below to have zero-overhead by only executing the original expression.
     result = quote
-        if Mocking.activated()
-            local $args_var = tuple($(args...))
-            local $alternate_var = Mocking.get_alternate($target, $args_var...)
-            if $alternate_var !== nothing
-                Base.invokelatest($alternate_var, $args_var...; $(kwargs...))
+        if $activated()
+            args_var = tuple($(args...))
+            alternate_var = $get_alternate($target, args_var...)
+            if alternate_var !== nothing
+                Base.invokelatest(alternate_var, args_var...; $(kwargs...))
             else
-                $target($args_var...; $(kwargs...))
+                $target(args_var...; $(kwargs...))
             end
         else
             $target($(args...); $(kwargs...))
