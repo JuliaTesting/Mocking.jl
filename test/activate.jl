@@ -5,7 +5,7 @@
     # Starting with Mocking enabled.
     Mocking.activate()
     @test Mocking.activated()
-    Mocking.activate() do
+    @test_deprecated Mocking.activate() do
         apply(patch) do
             @test (@mock add1(2)) == 44
         end
@@ -15,9 +15,9 @@
     # Starting with Mocking disabled.
     # Make sure to leave it enabled for the rest of the tests.
     try
-        Mocking.deactivate()
+        @test_deprecated Mocking.deactivate()
         @test !Mocking.activated()
-        Mocking.activate() do
+        @test_deprecated Mocking.activate() do
             apply(patch) do
                 @test (@mock add1(2)) == 44
             end

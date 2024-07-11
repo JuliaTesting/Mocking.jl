@@ -1,4 +1,4 @@
-using Base: @deprecate, depwarn
+using Base: depwarn
 
 function ismocked(pe::PatchEnv, func_name::Symbol, args::Tuple)
     m = @__MODULE__
@@ -6,9 +6,32 @@ function ismocked(pe::PatchEnv, func_name::Symbol, args::Tuple)
     return false
 end
 
-# Note: Very similar to using `@deprecate` but displays fully qualified function names
+# Note: The `depwarn` call here is similar to using `@deprecate` but instead shows a fully
+# qualified function name.
 function enable(; force=false)
     m = @__MODULE__
     depwarn("`$m.enable(; force=$force)` is deprecated, use `$m.activate()` instead.", :enable)
     activate()
+end
+
+function activate(f)
+    m = @__MODULE__
+    depwarn("`$m.activate(f)` is deprecated and will be removed in the future.", :activate)
+
+    started_deactivated = !activated()
+    try
+        activate()
+        Base.invokelatest(f)
+    finally
+        started_deactivated && deactivate()
+    end
+end
+
+function deactivate()
+    m = @__MODULE__
+    depwarn("`$m.deactivate()` is deprecated and will be removed in the future.", :deactivate)
+
+    # Avoid redefining `_activated` when it's already set appropriately
+    Base.invokelatest(activated) && @eval _activated(::Int) = false
+    return nothing
 end
