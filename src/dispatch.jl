@@ -54,16 +54,19 @@ tuple of the selected method and the generic function of the method.
 When the function to dispatch to is ambiguous last ambiguous function in the vector is used.
 """
 function dispatch(funcs::AbstractVector, args...)
-    # Since arguments are values all of the `arg_types` will be concrete types.
     arg_types = map(Core.Typeof, args)
 
     best_method = nothing
     best_function = nothing
     for f in reverse(funcs)
-        m = which(f, arg_types)
-        if best_method === nothing || anon_morespecific(m, best_method)
-            best_method = m
-            best_function = f
+        # Since arguments will be using concrete types `methods` should only return up to
+        # one method. Avoiding use `which` here as we do not want to raise an exception if
+        # there is no method match.
+        for m in methods(f, arg_types)
+            if best_method === nothing || anon_morespecific(m, best_method)
+                best_method = m
+                best_function = f
+            end
         end
     end
 
