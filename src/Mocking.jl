@@ -21,19 +21,17 @@ Enable `@mock` call sites to allow for calling patches instead of the original f
 """
 function activate()
     # Avoid redefining `activated` when it's already set appropriately
-    !activated() && @eval activated() = true
+    !Base.invokelatest(activated) && @eval activated() = true
     return nothing
 end
 
 function activate(f)
-    old = activated()
+    started_deactivated = !activated()
     try
         activate()
         Base.invokelatest(f)
     finally
-        if (Base.invokelatest(activated) != old)
-            @eval activated() = $old
-        end
+        started_deactivated && deactivate()
     end
 end
 
@@ -44,7 +42,7 @@ Disable `@mock` call sites to only call the original function.
 """
 function deactivate()
     # Avoid redefining `activated` when it's already set appropriately
-    activated() && @eval activated() = false
+    Base.invokelatest(activated) && @eval activated() = false
     return nothing
 end
 

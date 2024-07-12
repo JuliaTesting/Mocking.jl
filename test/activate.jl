@@ -4,7 +4,7 @@
 
     # Starting with Mocking enabled.
     Mocking.activate()
-    @assert Mocking.activated()
+    @test Mocking.activated()
     Mocking.activate() do
         apply(patch) do
             @test (@mock add1(2)) == 44
@@ -16,7 +16,7 @@
     # Make sure to leave it enabled for the rest of the tests.
     try
         Mocking.deactivate()
-        @assert !Mocking.activated()
+        @test !Mocking.activated()
         Mocking.activate() do
             apply(patch) do
                 @test (@mock add1(2)) == 44
