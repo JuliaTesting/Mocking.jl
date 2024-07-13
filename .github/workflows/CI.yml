@@ -39,7 +39,7 @@ jobs:
         with:
           files: lcov.info
 
- doc-tests:
+  doc-tests:
     name: Doctests
     runs-on: ubuntu-latest
 
