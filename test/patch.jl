@@ -1,14 +1,17 @@
 @testset "patch" begin
     @testset "unnamed function" begin
-        @test_throws LoadError macroexpand(@__MODULE__, :(@patch () -> nothing))
+        exception = VERSION >= v"1.7" ? ArgumentError : LoadError
+        @test_throws exception macroexpand(@__MODULE__, :(@patch () -> nothing))
     end
 
     @testset "non-function definition" begin
-        @test_throws LoadError macroexpand(@__MODULE__, :(@patch f()))
+        exception = VERSION >= v"1.7" ? ArgumentError : LoadError
+        @test_throws exception macroexpand(@__MODULE__, :(@patch f()))
     end
 
     @testset "empty-function definition" begin
-        @test_throws LoadError macroexpand(@__MODULE__, :(@patch function f end))
+        exception = VERSION >= v"1.7" ? ArgumentError : LoadError
+        @test_throws exception macroexpand(@__MODULE__, :(@patch function f end))
     end
 
     @testset "non-function definition" begin
