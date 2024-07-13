@@ -24,39 +24,39 @@
     end
 
     @testset "union all" begin
-        @test type_morespecific(Tuple{Int}, Tuple{T} where T <: Integer)
+        @test type_morespecific(Tuple{Int}, Tuple{T} where {T<:Integer})
 
-        @test !type_morespecific(Tuple{Integer}, Tuple{T} where T <: Integer)
-        @test !type_morespecific(Tuple{T} where T <: Integer, Tuple{Integer})
+        @test !type_morespecific(Tuple{Integer}, Tuple{T} where {T<:Integer})
+        @test !type_morespecific(Tuple{T} where {T<:Integer}, Tuple{Integer})
 
-        @test type_morespecific(Tuple{Type{Integer}}, Tuple{Type{T}} where T <: Integer)
-        @test !type_morespecific(Tuple{Type{T}} where T <: Integer, Tuple{Type{Integer}})
+        @test type_morespecific(Tuple{Type{Integer}}, Tuple{Type{T}} where {T<:Integer})
+        @test !type_morespecific(Tuple{Type{T}} where {T<:Integer}, Tuple{Type{Integer}})
     end
 end
 
 @testset "anonymous_signature" begin
     @testset "diagonal dispatch" begin
-        diag(::T, ::T) where T <: Integer = nothing
+        diag(::T, ::T) where {T<:Integer} = nothing
 
         diag_method = first(methods(diag, (Int, Int)))
-        diag_sig = Tuple{typeof(diag),T,T} where T <: Integer
+        diag_sig = Tuple{typeof(diag),T,T} where {T<:Integer}
         @test diag_method.sig == diag_sig
 
         @test anonymous_signature(Tuple{typeof(diag),Int,Int}) == Tuple{Int,Int}
-        @test anonymous_signature(diag_sig) == Tuple{T,T} where T <: Integer
-        @test anonymous_signature(diag_method) == Tuple{T,T} where T <:Integer
+        @test anonymous_signature(diag_sig) == Tuple{T,T} where {T<:Integer}
+        @test anonymous_signature(diag_method) == Tuple{T,T} where {T<:Integer}
     end
 
     @testset "triangular dispatch" begin
-        tri(::Vector{T}, ::S) where {T, S<:T} = nothing
+        tri(::Vector{T}, ::S) where {T,S<:T} = nothing
 
         tri_method = first(methods(tri, (Vector, Int)))
-        tri_sig = Tuple{typeof(tri),Vector{T},S} where {T, S<:T}
+        tri_sig = Tuple{typeof(tri),Vector{T},S} where {T,S<:T}
         @test tri_method.sig == tri_sig
 
         @test anonymous_signature(Tuple{typeof(tri),Vector,Int}) == Tuple{Vector,Int}
-        @test anonymous_signature(tri_sig) == Tuple{Vector{T},S} where {T, S<:T}
-        @test anonymous_signature(tri_method) == Tuple{Vector{T},S} where {T, S<:T}
+        @test anonymous_signature(tri_sig) == Tuple{Vector{T},S} where {T,S<:T}
+        @test anonymous_signature(tri_method) == Tuple{Vector{T},S} where {T,S<:T}
     end
 end
 
@@ -82,9 +82,12 @@ end
     end
 
     @testset "no arguments" begin
+        #! format: off
         funcs = [
             () -> 1
         ]
+        #! format: on
+
         m, f = dispatch(funcs)
         @test f == funcs[1]
         @test m.sig == Tuple{typeof(funcs[1])}
@@ -98,12 +101,11 @@ end
 
         m, f = dispatch(funcs, zero(Int))
         @test f == funcs[1]
-        @test m.sig == Tuple{typeof(funcs[1]), Int}
-
+        @test m.sig == Tuple{typeof(funcs[1]),Int}
 
         m, f = dispatch(funcs, zero(UInt))
         @test f == funcs[2]
-        @test m.sig == Tuple{typeof(funcs[2]), Integer}
+        @test m.sig == Tuple{typeof(funcs[2]),Integer}
     end
 
     @testset "more specific method" begin
@@ -115,11 +117,11 @@ end
 
         m, f = dispatch(funcs, zero(Int))
         @test f == funcs[1]
-        @test m.sig == Tuple{typeof(funcs[1]), Int}
+        @test m.sig == Tuple{typeof(funcs[1]),Int}
 
         m, f = dispatch(funcs, zero(UInt))
         @test f == funcs[2]
-        @test m.sig == Tuple{typeof(funcs[2]), Integer}
+        @test m.sig == Tuple{typeof(funcs[2]),Integer}
     end
 
     @testset "ambiguous" begin
@@ -131,11 +133,11 @@ end
         # In ambiguous cases the last function is preferred
         m, f = dispatch(funcs, 0)
         @test f == funcs[2]
-        @test m.sig == Tuple{typeof(funcs[2]), Integer}
+        @test m.sig == Tuple{typeof(funcs[2]),Integer}
 
         m, f = dispatch(reverse(funcs), 0)
         @test f == funcs[1]
-        @test m.sig == Tuple{typeof(funcs[1]), Integer}
+        @test m.sig == Tuple{typeof(funcs[1]),Integer}
     end
 
     @testset "optional" begin
@@ -146,15 +148,15 @@ end
 
         m, f = dispatch(funcs, 0)
         @test f == funcs[2]
-        @test m.sig == Tuple{typeof(funcs[2]), Any}
+        @test m.sig == Tuple{typeof(funcs[2]),Any}
 
         m, f = dispatch(funcs, 0, 0)
         @test f == funcs[1]
-        @test m.sig == Tuple{typeof(funcs[1]), Any, Any}
+        @test m.sig == Tuple{typeof(funcs[1]),Any,Any}
 
         m, f = dispatch(reverse(funcs), 0)
         @test f == funcs[1]
-        @test m.sig == Tuple{typeof(funcs[1]), Any}
+        @test m.sig == Tuple{typeof(funcs[1]),Any}
     end
 
     @testset "Type{T}" begin
@@ -169,7 +171,7 @@ end
 
         m, f = dispatch(funcs, Integer)
         @test f == funcs[1]
-        @test m.sig == Tuple{typeof(funcs[1]), Type{Integer}}
+        @test m.sig == Tuple{typeof(funcs[1]),Type{Integer}}
 
         m, f = dispatch(reverse(funcs), Type{Integer})
         @test f === nothing
@@ -184,10 +186,10 @@ end
 
         m, f = dispatch(funcs, Int)
         @test f == funcs[1]
-        @test m.sig == Tuple{typeof(funcs[1]), Type{Int}}
+        @test m.sig == Tuple{typeof(funcs[1]),Type{Int}}
 
         m, f = dispatch(reverse(funcs), Integer)
         @test f == funcs[2]
-        @test m.sig == Tuple{typeof(funcs[2]), Type{<:Integer}}
+        @test m.sig == Tuple{typeof(funcs[2]),Type{<:Integer}}
     end
 end

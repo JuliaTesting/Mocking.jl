@@ -2,7 +2,7 @@
 function rewrite_do(expr::Expr)
     expr.head == :do || error("expression is not a do-block")
     call, body = expr.args
-    Expr(:call, call.args[1], body, call.args[2:end]...)
+    return Expr(:call, call.args[1], body, call.args[2:end]...)
 end
 
 iskwarg(x::Any) = isa(x, Expr) && (x.head === :parameters || x.head === :kw)

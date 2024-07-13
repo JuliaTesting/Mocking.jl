@@ -8,9 +8,11 @@
     foo(x::Float64) = floor(x)
 
     # Patching only the function that takes a scalar
+    #! format: off
     patches = Patch[
         @patch foo(x::Float64) = ceil(x)
     ]
+    #! format: on
 
     @test (@mock foo(1.6)) == 1.0
 
@@ -36,8 +38,8 @@ end
     f(args...) = 0
 
     patches = [
-       @patch f(a::Function, b) = b
-       @patch f(b) = @mock f(() -> nothing, b)
+        @patch f(a::Function, b) = b
+        @patch f(b) = @mock f(() -> nothing, b)
     ]
 
     apply(patches) do

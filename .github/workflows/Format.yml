@@ -1,13 +1,19 @@
-name: Format suggestions
-
+name: Format
 on:
   pull_request:
     paths:
       - "**.jl"
-      - ".github/workflows/blue_style_formatter.yml"
-
+      - ".github/workflows/Format.yml"
 jobs:
   format:
+    # These permissions are needed to:
+    # - Checkout the repo
+    # - Delete old caches: https://github.com/julia-actions/cache#usage
+    # - Post formatting suggestions: https://github.com/reviewdog/action-suggester#required-permissions
+    permissions:
+      actions: write
+      contents: read
+      pull-requests: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,7 +30,7 @@ jobs:
         shell: julia --color=yes {0}
         run: |
           using JuliaFormatter
-          format(".", BlueStyle(); verbose=true)
+          format("."; verbose=true)
       - uses: reviewdog/action-suggester@v1
         with:
           tool_name: JuliaFormatter

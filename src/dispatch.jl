@@ -5,7 +5,6 @@
 # https://github.com/JuliaLang/julia/blob/master/doc/src/devdocs/types.md#subtyping-and-method-sorting
 type_morespecific(a, b) = ccall(:jl_type_morespecific, Bool, (Any, Any), a, b)
 
-
 """
     anonymous_signature(m::Method) -> Type{<:Tuple}
 
@@ -26,7 +25,6 @@ anonymous_signature(m::Method) = anonymous_signature(m.sig)
 anonymous_signature(sig::DataType) = Tuple{sig.parameters[2:end]...}
 anonymous_signature(sig::UnionAll) = UnionAll(sig.var, anonymous_signature(sig.body))
 
-
 """
     anon_morespecific(a::Method, b::Method) -> Bool
 
@@ -41,7 +39,6 @@ function anon_morespecific(a::Method, b::Method)
 
     return type_morespecific(a_sig, b_sig)
 end
-
 
 """
     dispatch(funcs::AbstractVector, args...) -> Tuple{Method, Any}
