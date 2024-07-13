@@ -139,6 +139,8 @@ if isdefined(Base, :ScopedValue)
     const PATCH_ENV = Base.ScopedValue(PatchEnv())
     with_active_env(body::Function, pe::PatchEnv) = Base.with(body, PATCH_ENV => pe)
 else
+    const PATCH_ENV = Ref{PatchEnv}(PatchEnv())
+
     function with_active_env(body::Function, pe::PatchEnv)
         old_pe = PATCH_ENV[]
         try
