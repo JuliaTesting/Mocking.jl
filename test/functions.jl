@@ -15,7 +15,7 @@ end
     function f end
 
     p = @patch function f(x; y=x)
-        (x, x, y, y)
+        return (x, x, y, y)
     end
 
     apply(p) do
@@ -29,7 +29,7 @@ end
     function f end
 
     p = @patch function f(x; y=:foo)
-        (x, x, y, y)
+        return (x, x, y, y)
     end
 
     apply(p) do

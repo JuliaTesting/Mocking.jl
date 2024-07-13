@@ -1,5 +1,7 @@
 @testset "nested mock call" begin
-    readfile(filename) = (@mock isfile(filename)) ? read((@mock open(filename)), String) : ""
+    function readfile(filename)
+        return (@mock isfile(filename)) ? read((@mock open(filename)), String) : ""
+    end
 
     # Testing with both generic and anonymous functions
     patches = Patch[

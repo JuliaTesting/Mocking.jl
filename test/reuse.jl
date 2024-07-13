@@ -26,7 +26,7 @@
     end
 
     @testset "optional arguments" begin
-        f(args::T...) where T = zero(T)
+        f(args::T...) where {T} = zero(T)
 
         # Create a patch function that contains two methods: `f(x)` and `f(x, y)`
         p1 = @patch f(x, y=0) = x + y

@@ -64,11 +64,11 @@ end
 @testset "constructor function" begin
     @test Vector() == []
 
-    p = @patch Vector() = [1,2,3]
+    p = @patch Vector() = [1, 2, 3]
     apply(p) do
         # Call alternative
-        @test (@mock Vector()) == [1,2,3]
-        @test (@mock Base.Vector()) == [1,2,3]
+        @test (@mock Vector()) == [1, 2, 3]
+        @test (@mock Base.Vector()) == [1, 2, 3]
 
         # Call original function
         @test (@mock Base.Vector{Any}()) == Any[]
