@@ -1,13 +1,19 @@
 using Mocking
-Mocking.activate()
-
-using Dates: Dates, Hour
 using Test
 
+using Aqua: Aqua
+using Dates: Dates, Hour
 using Mocking: apply
 using Mocking: anon_morespecific, anonymous_signature, dispatch, type_morespecific
 
+Mocking.activate()
+
 @testset "Mocking" begin
+    @testset "Code quality (Aqua.jl)" begin
+        # Unable to add compat entries for stdlibs while we support Julia 1.0
+        Aqua.test_all(Mocking; deps_compat=(; check_extras=(; ignore=[:Dates, :Test])))
+    end
+
     include("dispatch.jl")
     include("mock.jl")
     include("patch.jl")
