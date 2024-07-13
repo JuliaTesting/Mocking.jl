@@ -56,7 +56,7 @@ jobs:
         with:
           version: "1"
       - uses: julia-actions/cache@v2
-       - name: Configure docs environment
+      - name: Configure docs environment
         shell: julia --project=docs --color=yes {0}
         run: |
           using Pkg
