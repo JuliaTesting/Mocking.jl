@@ -11,14 +11,24 @@ type_morespecific(a, b) = ccall(:jl_type_morespecific, Bool, (Any, Any), a, b)
 Construct a Tuple of the methods signature with the function type removed
 
 # Example
+```@meta
+DocTestSetup = quote
+    using Mocking: anonymous_signature
+end
+```
+
 ```jldoctest
 julia> m = first(methods(first, (String,)));
 
 julia> m.sig
-Tuple{typeof(first),Any}
+Tuple{typeof(first), Any}
 
 julia> anonymous_signature(m)
 Tuple{Any}
+```
+
+```@meta
+DocTestSetup = nothing
 ```
 """
 anonymous_signature(m::Method) = anonymous_signature(m.sig)
