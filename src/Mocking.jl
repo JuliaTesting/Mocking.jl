@@ -3,6 +3,13 @@ module Mocking
 using Compat: mergewith
 using ExprTools: splitdef, combinedef
 
+# Available in Julia 1.11+: https://github.com/JuliaLang/julia/pull/50958
+# We cannot use ScopedValues.jl for backwards compatability as that implementation breaks
+# `@test_logs`.
+if VERSION >= v"1.11.0-DEV.482"
+    using Base: ScopedValue, with
+end
+
 export @patch, @mock, Patch, apply
 
 include("expr.jl")

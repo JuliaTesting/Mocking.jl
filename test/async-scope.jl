@@ -1,4 +1,5 @@
-@testset "tasks" begin
+# Async tasks should consistently use the patch environment (if any) they started with
+@testset "async scope" begin
     c = Condition()
     ch = Channel{String}(1)
     f() = "original"
@@ -20,7 +21,12 @@
             @test (@mock f()) == "mocked"
 
             notify(c)
-            @test_broken take!(ch) == "original"
+            # https://github.com/JuliaLang/julia/pull/50958
+            if VERSION >= v"1.11.0-DEV.482"
+                @test take!(ch) == "original"
+            else
+                @test_broken take!(ch) == "original"
+            end
 
             # Task started inside patched context should call patched functions.
             @async background()
@@ -35,6 +41,11 @@
         end
 
         notify(c)
-        @test_broken take!(ch) == "mocked"
+        # https://github.com/JuliaLang/julia/pull/50958
+        if VERSION >= v"1.11.0-DEV.482"
+            @test take!(ch) == "mocked"
+        else
+            @test_broken take!(ch) == "mocked"
+        end
     end
 end
