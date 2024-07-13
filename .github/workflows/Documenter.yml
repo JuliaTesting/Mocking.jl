@@ -17,8 +17,7 @@ on:
       - ".github/workflows/Documenter.yml"
 
 jobs:
-  docs:
-    name: Documentation
+  deploy:
     runs-on: ubuntu-latest
 
     # These permissions are needed to:
