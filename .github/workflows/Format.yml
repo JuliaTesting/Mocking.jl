@@ -6,6 +6,14 @@ on:
       - ".github/workflows/Format.yml"
 jobs:
   format:
+    # These permissions are needed to:
+    # - Checkout the repo
+    # - Delete old caches: https://github.com/julia-actions/cache#usage
+    # - Post formatting suggestions: https://github.com/reviewdog/action-suggester#required-permissions
+    permissions:
+      actions: write
+      contents: read
+      pull-requests: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
