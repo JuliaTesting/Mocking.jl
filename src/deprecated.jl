@@ -13,8 +13,9 @@ function enable(; force=false)
     depwarn(
         "`$m.enable(; force=$force)` is deprecated, use `$m.activate()` instead.",
         :enable,
+        # format trick: using this comment to force use of multiple lines
     )
-    activate()
+    return activate()
 end
 
 function activate(f)
@@ -35,6 +36,7 @@ function deactivate()
     depwarn(
         "`$m.deactivate()` is deprecated and will be removed in the future.",
         :deactivate,
+        # format trick: using this comment to force use of multiple lines
     )
 
     # Avoid redefining `_activated` when it's already set appropriately
