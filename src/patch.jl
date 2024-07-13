@@ -134,7 +134,8 @@ function apply(body::Function, patches; debug::Bool=false)
     return apply(body, PatchEnv(patches, debug))
 end
 
-if isdefined(@__MODULE__, :ScopedValue)
+# https://github.com/JuliaLang/julia/pull/50958
+if VERSION >= v"1.11.0-DEV.482"
     const PATCH_ENV = ScopedValue(PatchEnv())
     with_active_env(body::Function, pe::PatchEnv) = with(body, PATCH_ENV => pe)
 else
