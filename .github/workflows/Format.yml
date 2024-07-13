@@ -1,11 +1,9 @@
-name: Format suggestions
-
+name: Format
 on:
   pull_request:
     paths:
       - "**.jl"
-      - ".github/workflows/blue_style_formatter.yml"
-
+      - ".github/workflows/Format.yml"
 jobs:
   format:
     runs-on: ubuntu-latest
