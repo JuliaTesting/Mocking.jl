@@ -10,7 +10,10 @@ end
 # qualified function name.
 function enable(; force=false)
     m = @__MODULE__
-    depwarn("`$m.enable(; force=$force)` is deprecated, use `$m.activate()` instead.", :enable)
+    depwarn(
+        "`$m.enable(; force=$force)` is deprecated, use `$m.activate()` instead.",
+        :enable,
+    )
     activate()
 end
 
@@ -29,7 +32,10 @@ end
 
 function deactivate()
     m = @__MODULE__
-    depwarn("`$m.deactivate()` is deprecated and will be removed in the future.", :deactivate)
+    depwarn(
+        "`$m.deactivate()` is deprecated and will be removed in the future.",
+        :deactivate,
+    )
 
     # Avoid redefining `_activated` when it's already set appropriately
     Base.invokelatest(activated) && @eval _activated(::Int) = false
