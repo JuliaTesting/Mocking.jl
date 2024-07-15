@@ -19,7 +19,7 @@ makedocs(;
         prettyurls=get(ENV, "CI", nothing) == "true",  # Fix links in local builds
     ),
     pages=[
-        # "Home" => "index.md",
+        "Home" => "index.md",
         "FAQ" => "faq.md",
         "API" => "api.md",
     ],
