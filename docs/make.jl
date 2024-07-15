@@ -1,12 +1,12 @@
 using Documenter
 using Mocking: Mocking
 
-doc_test_setup = quote
+setup = quote
     using Mocking: @mock, @patch, activate, apply
     activate()
 end
 
-DocMeta.setdocmeta!(Mocking, :DocTestSetup, doc_test_setup; recursive=true)
+DocMeta.setdocmeta!(Mocking, :DocTestSetup, setup; recursive=true)
 
 makedocs(;
     modules=[Mocking],

@@ -67,5 +67,11 @@ jobs:
         run: |
           using Documenter: DocMeta, doctest
           using Mocking: Mocking
-          DocMeta.setdocmeta!(Mocking, :DocTestSetup, :(using Mocking); recursive=true)
-          doctest(Mocking)
+
+          setup = quote
+              using Mocking: @mock, @patch, activate, apply
+              activate()
+          end
+
+          DocMeta.setdocmeta!(Mocking, :DocTestSetup, setup; recursive=true)
+          doctest(Mocking; manual=false)
