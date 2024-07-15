@@ -38,6 +38,7 @@ jobs:
       - uses: codecov/codecov-action@v4
         with:
           files: lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   doc-tests:
     name: Doctests
