@@ -3,6 +3,7 @@ using Mocking: Mocking
 
 doc_test_setup = quote
     using Mocking: @mock, @patch, activate, apply
+    activate()
 end
 
 DocMeta.setdocmeta!(Mocking, :DocTestSetup, doc_test_setup; recursive=true)
@@ -17,11 +18,11 @@ makedocs(;
         assets=String[],
         prettyurls=get(ENV, "CI", nothing) == "true",  # Fix links in local builds
     ),
-    # pages=[
-    #     # "Home" => "index.md",
-    #     "FAQ" => "faq.md",
-    #     "API" => "api.md",
-    # ],
+    pages=[
+        # "Home" => "index.md",
+        "FAQ" => "faq.md",
+        "API" => "api.md",
+    ],
     warnonly=[:missing_docs]
 )
 
