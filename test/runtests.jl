@@ -1,11 +1,10 @@
 using Mocking
-Mocking.activate()
-
-using Dates: Dates, Hour
 using Test
 
-using Mocking: apply
-using Mocking: anon_morespecific, anonymous_signature, dispatch, type_morespecific
+using Dates: Dates, Hour
+using Mocking: dispatch, anon_morespecific, anonymous_signature, apply, type_morespecific
+
+Mocking.activate()
 
 @testset "Mocking" begin
     include("dispatch.jl")
