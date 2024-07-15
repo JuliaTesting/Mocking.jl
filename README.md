@@ -1,9 +1,9 @@
 Mocking
 =======
 
-[![CI](https://github.com/JuliaTesting/Mocking.jl/workflows/CI/badge.svg)](https://github.com/JuliaTesting/Mocking.jl/actions?query=workflow%3ACI)
+[![CI](https://github.com/JuliaTesting/Mocking.jl/workflows/CI/badge.svg)](https://github.com/JuliaTesting/Mocking.jl/actions?query=workflow%3ACI+branch%3Amain)
 [![codecov](https://codecov.io/gh/JuliaTesting/Mocking.jl/graph/badge.svg?token=BkilUame8F)](https://codecov.io/gh/JuliaTesting/Mocking.jl)
-[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle) 
+[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 [![ColPrac: Contributor Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet)](https://github.com/SciML/ColPrac)
 
 
