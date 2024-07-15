@@ -1,9 +1,9 @@
 name: CI
-# Run on master, tags, or any pull request
+# Run on main, tags, or any pull request
 on:
   push:
-    branches: "master"
-    tags: "*"
+    branches: ["main"]
+    tags: ["*"]
   pull_request:
     paths:
       - "src/**/*.jl"
