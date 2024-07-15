@@ -151,7 +151,7 @@ julia> f(::Int) = "original";
 julia> p = @patch f(::Char) = "patched";
 
 julia> apply(p) do
-           @mock f(1)
+           @mock f()
        end
 "original"
 ```
