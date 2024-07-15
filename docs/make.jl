@@ -23,7 +23,7 @@ makedocs(;
         "FAQ" => "faq.md",
         "API" => "api.md",
     ],
-    warnonly=[:missing_docs]
+    warnonly=[:missing_docs],
 )
 
 deploydocs(; repo="github.com/JuliaTesting/Mocking.jl", devbranch="main")
