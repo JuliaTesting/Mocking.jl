@@ -38,3 +38,40 @@ jobs:
       - uses: codecov/codecov-action@v4
         with:
           files: lcov.info
+
+  doc-tests:
+    name: Doctests
+    runs-on: ubuntu-latest
+
+    # These permissions are needed to:
+    # - Checkout the repo
+    # - Delete old caches: https://github.com/julia-actions/cache#usage
+    # - Deploy the docs to the `gh-pages` branch: https://documenter.juliadocs.org/stable/man/hosting/#Permissions
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: "1"
+      - uses: julia-actions/cache@v2
+      - name: Configure docs environment
+        shell: julia --project=docs --color=yes {0}
+        run: |
+          using Pkg
+          Pkg.develop(PackageSpec(path=pwd()))
+          Pkg.instantiate()
+      - name: Run Doctests
+        shell: julia --project=docs --color=yes {0}
+        run: |
+          using Documenter: DocMeta, doctest
+          using Mocking: Mocking
+
+          setup = quote
+              using Mocking: @mock, @patch, activate, apply
+              activate()
+          end
+
+          DocMeta.setdocmeta!(Mocking, :DocTestSetup, setup; recursive=true)
+          doctest(Mocking; manual=false)

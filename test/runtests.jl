@@ -3,8 +3,7 @@ using Test
 
 using Aqua: Aqua
 using Dates: Dates, Hour
-using Mocking: apply
-using Mocking: anon_morespecific, anonymous_signature, dispatch, type_morespecific
+using Mocking: anon_morespecific, anonymous_signature, apply, dispatch, type_morespecific
 
 Mocking.activate()
 
@@ -26,7 +25,7 @@ Mocking.activate()
     include("real-isfile.jl")
     include("real-nested.jl")
     include("mock-in-patch.jl")
-    include("readme.jl")
+    include("randdev.jl")
     include("optional.jl")
     include("patch-gen.jl")
     include("anonymous-param.jl")

@@ -4,6 +4,14 @@ struct Patch{T}
     alternate::Function
 end
 
+"""
+    @patch expr
+
+Creates a patch from a function definition. A patch can be used with [`apply`](@ref) to
+temporarily include the patch when performing multiple dispatch on `@mock`ed call sites.
+
+See also: [`@mock`](@ref), [`apply`](@ref).
+"""
 macro patch(expr::Expr)
     def = splitdef(expr)
 
@@ -77,6 +85,7 @@ end
 
 function apply!(pe::PatchEnv, p::Patch)
     alternate_funcs = get!(Vector{Function}, pe.mapping, p.target)
+    # isempty(alternate_funcs) && push!(alternate_funcs, p.target)
     push!(alternate_funcs, p.alternate)
     return pe
 end
@@ -89,42 +98,104 @@ function apply!(pe::PatchEnv, patches)
 end
 
 """
-    apply(body::Function, patches; debug::Bool=false)
-    apply(body::Function, pe::PatchEnv)
+    apply(body::Function, patches; debug::Bool=false) -> Any
 
-Convenience function to run `body` in the context of the given `patches`.
+Applies one or more `patches` during execution of `body`. Specifically ,any [`@mock`](@ref)
+call sites encountered while running `body` will include the provided `patches` when
+performing dispatch.
 
-This is intended to be used with do-block notation, e.g.:
+Multiple-dispatch is used to determine which method to call when utilizing multiple patches.
+However, patch defined methods always take precedence over the original function methods.
 
+!!! note
+    Ensure you have called [`activate`](@ref) prior to calling `apply` as otherwise the
+    provided patches will be ignored.
+
+See also: [`@mock`](@ref), [`@patch`](@ref).
+
+## Examples
+
+Applying a patch allows the alternative patch function to be called:
+
+```jldoctest
+julia> f() = "original";
+
+julia> p = @patch f() = "patched";
+
+julia> apply(p) do
+            @mock f()
+       end
+"patched"
 ```
-patch = @patch ...
-apply(patch) do
-    ...
-end
+
+Patches take precedence over the original function even when the original method is more
+specific:
+
+```jldoctest
+julia> f(::Int) = "original";
+
+julia> p = @patch f(::Any) = "patched";
+
+julia> apply(p) do
+            @mock f(1)
+       end
+"patched"
 ```
 
-## Nesting
+However, when the patches do not provide a valid method to call then the original function
+will be used as a fallback:
 
-Note that calls to apply will nest the patches that are applied. If multiple patches
-are made to the same method, the innermost patch takes precedence.
+```jldoctest
+julia> f(::Int) = "original";
 
-The following two examples are equivalent:
+julia> p = @patch f(::Char) = "patched";
 
+julia> apply(p) do
+           @mock f(1)
+       end
+"original"
 ```
-patch_2 = @patch ...
-apply([patch, patch_2]) do
-    ...
-end
+
+### Nesting
+
+Nesting multiple [`apply`](@ref) calls is allowed. When multiple patches are provided for
+the same method then the innermost patch takes precedence:
+
+```jldoctest
+julia> f() = "original";
+
+julia> p1 = @patch f() = "p1";
+
+julia> p2 = @patch f() = "p2";
+
+julia> apply(p1) do
+           apply(p2) do
+               @mock f()
+           end
+       end
+"p2"
 ```
 
-```
-apply(patch) do
-    apply(patch_2) do
-        ...
-    end
-end
+When multiple patches are provided for different methods then multiple-dispatch is used to
+select the most specific patch:
+
+```jldoctest
+julia> f(::Int) = "original";
+
+julia> p1 = @patch f(::Integer) = "p1";
+
+julia> p2 = @patch f(::Number) = "p2";
+
+julia> apply(p1) do
+           apply(p2) do
+               @mock f(1)
+           end
+       end
+"p1"
 ```
 """
+function apply end
+
 function apply(body::Function, pe::PatchEnv)
     merged_pe = merge(PATCH_ENV[], pe)
     return with_active_env(body, merged_pe)
