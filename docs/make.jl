@@ -22,6 +22,7 @@ makedocs(;
         "Home" => "index.md",
         "FAQ" => "faq.md",
         "API" => "api.md",
+        # format trick: using this comment to force use of multiple lines
     ],
     warnonly=[:missing_docs],
 )
