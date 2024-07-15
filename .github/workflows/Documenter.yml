@@ -1,9 +1,8 @@
 name: Documenter
 on:
   push:
+    branches: ["main"]
     tags: ["*"]
-    branches:
-      - main
     paths:
       - "docs/**"
       - "src/**"
