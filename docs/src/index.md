@@ -2,7 +2,7 @@
 
 Allows Julia function calls to be temporarily overloaded for the purpose of testing.
 
-## Usage
+## `randdev` Example
 
 Suppose you wrote the function `randdev` (UNIX only). How would you go about writing tests
 for it?

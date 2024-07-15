@@ -20,7 +20,7 @@ using Mocking: anon_morespecific, anonymous_signature, dispatch, type_morespecif
     include("real-isfile.jl")
     include("real-nested.jl")
     include("mock-in-patch.jl")
-    include("readme.jl")
+    include("randdev.jl")
     include("optional.jl")
     include("patch-gen.jl")
     include("anonymous-param.jl")

@@ -1,5 +1,5 @@
-# Testcase from example given in Mocking.jl's README
-@testset "readme" begin
+# Testcase from example given in Mocking.jl's documentation
+@testset "randdev" begin
     # Note: Function only works in UNIX environments.
     function randdev(n::Integer)
         @mock open("/dev/urandom") do fp
