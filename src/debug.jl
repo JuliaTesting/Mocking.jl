@@ -26,6 +26,8 @@ if VERSION >= v"1.9"
         # filename, separator, line
         file = contractuser(file)
         print(io, " ", file, ":", line)
+
+        return nothing
     end
 else
     function _print_module_path_file(io::IO, modul, file::AbstractString, line::Integer)
@@ -36,6 +38,8 @@ else
 
         # filename, separator, line
         print(io, " ", file, ":", line)
+
+        return nothing
     end
 end
 
