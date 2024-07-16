@@ -17,12 +17,4 @@
 
         @test pe == merge(pe1, pe2)
     end
-
-    @testset "debug flag" begin
-        pe1 = Mocking.PatchEnv(patches[1], true)
-        pe2 = Mocking.PatchEnv(patches[2:3])
-        pe = Mocking.PatchEnv(patches, true)
-
-        @test pe == merge(pe1, pe2)
-    end
 end

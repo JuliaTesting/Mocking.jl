@@ -42,19 +42,19 @@ end
 
 struct PatchEnv
     mapping::Dict{Any,Vector{Function}}
-    debug::Bool
+    PatchEnv(mapping::AbstractDict) = new(mapping)
 end
 
-function PatchEnv(patches, debug::Bool=false)
-    pe = PatchEnv(debug)
+function PatchEnv(patches)
+    pe = PatchEnv()
     apply!(pe, patches)
     return pe
 end
 
-PatchEnv(debug::Bool=false) = PatchEnv(Dict{Any,Vector{Function}}(), debug)
+PatchEnv() = PatchEnv(Dict{Any,Vector{Function}}())
 
 function Base.:(==)(pe1::PatchEnv, pe2::PatchEnv)
-    return pe1.mapping == pe2.mapping && pe1.debug == pe2.debug
+    return pe1.mapping == pe2.mapping
 end
 
 """
@@ -75,12 +75,10 @@ pe = PatchEnv(patches)
 
 @assert pe == merge(pe1, pe2)
 ```
-
-The `debug` flag will be set to true if either `pe1` or `pe2` have it set to true.
 """
 function Base.merge(pe1::PatchEnv, pe2::PatchEnv)
     mapping = mergewith(vcat, pe1.mapping, pe2.mapping)
-    return PatchEnv(mapping, pe1.debug || pe2.debug)
+    return PatchEnv(mapping)
 end
 
 function apply!(pe::PatchEnv, p::Patch)
@@ -98,7 +96,7 @@ function apply!(pe::PatchEnv, patches)
 end
 
 """
-    apply(body::Function, patches; debug::Bool=false) -> Any
+    apply(body::Function, patches) -> Any
 
 Applies one or more `patches` during execution of `body`. Specifically ,any [`@mock`](@ref)
 call sites encountered while running `body` will include the provided `patches` when
@@ -206,8 +204,8 @@ function apply(body::Function, pe::PatchEnv)
     end
 end
 
-function apply(body::Function, patches; debug::Bool=false)
-    return apply(body, PatchEnv(patches, debug))
+function apply(body::Function, patches)
+    return apply(body, PatchEnv(patches))
 end
 
 const PATCH_ENV = Ref{PatchEnv}(PatchEnv())
