@@ -10,7 +10,8 @@ Mocking.activate()
 @testset "Mocking" begin
     @testset "Code quality (Aqua.jl)" begin
         # Unable to add compat entries for stdlibs while we support Julia 1.0
-        Aqua.test_all(Mocking; deps_compat=(; check_extras=(; ignore=[:Dates, :Test])))
+        stdlibs = [:Dates, :Test]
+        Aqua.test_all(Mocking; deps_compat=(; check_extras=(; ignore=stdlibs)))
     end
 
     include("dispatch.jl")
