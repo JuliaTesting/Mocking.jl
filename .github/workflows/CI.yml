@@ -21,7 +21,7 @@ jobs:
           - "1.0"  # Oldest supported version
           - "1.6"  # LTS
           - "1"    # Latest Release
-          - "1.11" # ScopedValues support
+          - "pre"  # ScopedValue support introduced in Julia 1.11
         os:
           - ubuntu-latest
         arch:
