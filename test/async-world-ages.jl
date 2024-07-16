@@ -21,11 +21,11 @@ using Mocking
     # can test that patches to functions defined in later world ages can be called
     # from mocks in a Task running in an earlier world age.
     ch = Channel() do ch
-        # Block until we've started the patch
+        # Wait until there is data in the channel
         v1 = take!(ch)
-        # Call the (patched) foo
+        # Call the (patched) `foo`
         v2 = foo(v1)
-        # return the value
+        # Return the value into the channel
         put!(ch, v2)
     end
 
