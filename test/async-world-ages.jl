@@ -2,6 +2,8 @@ using Test
 using Mocking
 
 # Issue #108
+# TODO: Test is mostly redundant with "async-scope.jl". We may want to update those tests to
+# also validate we can run in a later world age.
 @testset "patching an async task from an earlier world age" begin
     function foo(x)
         @mock bar(x)
@@ -17,9 +19,10 @@ using Mocking
         intial_world_age = Base.get_world_counter()
     end
 
-    # Start a background, async task which blocks until bar() is patched, so that we
-    # can test that patches to functions defined in later world ages can be called
-    # from mocks in a Task running in an earlier world age.
+    # Start a background async task. For Julia 1.11+ this task will consistently use the
+    # patch environment which it was started in. In earlier versions of Julia we can patch
+    # this task while it's running can call functions defined in a later world age than the
+    # world age of this task.
     ch = Channel() do ch
         # Block until we've started the patch
         v1 = take!(ch)
@@ -40,6 +43,12 @@ using Mocking
         # Release the background task
         put!(ch, 2)
         # Fetch the task's result
-        @test take!(ch) == 20
+
+        # https://github.com/JuliaLang/julia/pull/50958
+        if VERSION >= v"1.11.0-DEV.482"
+            @test take!(ch) == 2
+        else
+            @test_broken take!(ch) == 2
+        end
     end
 end

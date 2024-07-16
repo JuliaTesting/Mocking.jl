@@ -1,4 +1,4 @@
-# Async tasks should consistently use the patch environment (if any) they started with
+# Async tasks should consistently use the patch environment (if any) they started with.
 @testset "async scope" begin
     c = Condition()
     ch = Channel{String}(1)
