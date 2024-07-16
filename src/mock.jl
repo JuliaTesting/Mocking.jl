@@ -33,9 +33,7 @@ macro mock(expr)
     args = filter(!iskwarg, expr.args[2:end])
     kwargs = extract_kwargs(expr)
 
-    call_loc = sprint(
-        Base.print_module_path_file, __module__, string(__source__.file), __source__.line
-    )
+    call_loc = sprint(_print_module_path_file, __module__, __source__)
 
     # Due to how world-age works (see Julia issue #265 and PR #17057) when
     # `Mocking.activated` is overwritten then all dependent functions will be recompiled.
@@ -102,4 +100,33 @@ end
 function _call_site(target, args, location)
     call = "$target($(join(map(arg -> "::$(Core.Typeof(arg))", args), ", ")))"
     return "$call $location"
+end
+
+# Mirroring the print format used when showing a method. Based upon the function
+# `Base.print_module_path_file` which was introduced in Julia 1.10.
+if VERSION >= v"1.9"
+    function _print_module_path_file(io::IO, modul, file::AbstractString, line::Integer)
+        print(io, "@")
+
+        # module
+        modul !== nothing && print(io, " ", modul)
+
+        # filename, separator, line
+        file = contractuser(file)
+        print(io, " ", file, ":", line)
+    end
+else
+    function _print_module_path_file(io::IO, modul, file::AbstractString, line::Integer)
+        print(io, "in")
+
+        # module
+        modul !== nothing && print(io, " ", modul, " at")
+
+        # filename, separator, line
+        print(io, " ", file, ":", line)
+    end
+end
+
+function _print_module_path_file(io::IO, modul, source::LineNumberNode)
+    return _print_module_path_file(io, modul, string(source.file), source.line)
 end

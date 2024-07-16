@@ -16,6 +16,7 @@ Mocking.activate()
     include("dispatch.jl")
     include("mock.jl")
     include("patch.jl")
+    include("debug.jl")
 
     include("concept.jl")
     include("targets.jl")
