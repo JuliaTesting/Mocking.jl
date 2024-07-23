@@ -8,7 +8,7 @@ on:
     - cron: "0 2 * * *"  # Daily at 2 AM UTC (8 PM CST)
 jobs:
   test:
-    name: Julia Nightly - Ubuntu - x64
+    name: Julia nightly - ubuntu-latest - x64
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

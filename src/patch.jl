@@ -195,19 +195,28 @@ julia> apply(p1) do
 function apply end
 
 function apply(body::Function, pe::PatchEnv)
-    prev_pe = get_active_env()
-    set_active_env(merge(prev_pe, pe))
-    try
-        return body()
-    finally
-        set_active_env(prev_pe)
-    end
+    merged_pe = merge(PATCH_ENV[], pe)
+    return with_active_env(body, merged_pe)
 end
 
 function apply(body::Function, patches)
     return apply(body, PatchEnv(patches))
 end
 
-const PATCH_ENV = Ref{PatchEnv}(PatchEnv())
-set_active_env(pe::PatchEnv) = (PATCH_ENV[] = pe)
-get_active_env() = PATCH_ENV[]
+# https://github.com/JuliaLang/julia/pull/50958
+if VERSION >= v"1.11.0-DEV.482"
+    const PATCH_ENV = ScopedValue(PatchEnv())
+    with_active_env(body::Function, pe::PatchEnv) = with(body, PATCH_ENV => pe)
+else
+    const PATCH_ENV = Ref{PatchEnv}(PatchEnv())
+
+    function with_active_env(body::Function, pe::PatchEnv)
+        old_pe = PATCH_ENV[]
+        try
+            PATCH_ENV[] = pe
+            body()
+        finally
+            PATCH_ENV[] = old_pe
+        end
+    end
+end

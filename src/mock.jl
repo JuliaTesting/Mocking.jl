@@ -83,5 +83,5 @@ function get_alternate(pe::PatchEnv, target, args...; call_loc)
 end
 
 function get_alternate(target, args...; kwargs...)
-    return get_alternate(get_active_env(), target, args...; kwargs...)
+    return get_alternate(PATCH_ENV[], target, args...; kwargs...)
 end
