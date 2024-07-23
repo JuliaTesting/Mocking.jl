@@ -100,3 +100,27 @@ end
     @test !isdefined(@__MODULE__, :f)
     @test_throws UndefVarError (@patch f() = 1)
 end
+
+@testset "debugging" begin
+    f(::Number) = "original"
+
+    patch = @patch f(::Int) = "patched"
+    apply(patch) do
+        # Call patched function
+        @test_logs min_level = Debug (:debug, r"Patch called") begin
+            @test (@mock f(1)) == "patched"
+        end
+
+        # Call original function
+        @test_logs min_level = Debug (:debug, r"No patch handles provided arguments") begin
+            @test (@mock f(1.0)) == "original"
+        end
+    end
+
+    # Call unpatched function
+    apply([]) do
+        @test_logs min_level = Debug (:debug, r"No patch defined for target function") begin
+            @test (@mock f(1)) == "original"
+        end
+    end
+end

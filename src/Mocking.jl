@@ -14,6 +14,7 @@ export @patch, @mock, Patch, apply
 
 include("expr.jl")
 include("dispatch.jl")
+include("debug.jl")
 include("patch.jl")
 include("mock.jl")
 include("deprecated.jl")

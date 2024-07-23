@@ -33,6 +33,8 @@ macro mock(expr)
     args = filter(!iskwarg, expr.args[2:end])
     kwargs = extract_kwargs(expr)
 
+    call_loc = sprint(_print_module_path_file, __module__, __source__)
+
     # Due to how world-age works (see Julia issue #265 and PR #17057) when
     # `Mocking.activated` is overwritten then all dependent functions will be recompiled.
     # When `Mocking.activated() == false` then Julia will optimize the
@@ -40,7 +42,7 @@ macro mock(expr)
     result = quote
         if $activated()
             args_var = tuple($(args...))
-            alternate_var = $get_alternate($target, args_var...)
+            alternate_var = $get_alternate($target, args_var...; call_loc=$call_loc)
             if alternate_var !== nothing
                 Base.invokelatest(alternate_var, args_var...; $(kwargs...))
             else
@@ -54,32 +56,32 @@ macro mock(expr)
     return esc(result)
 end
 
-function get_alternate(pe::PatchEnv, target, args...)
+function get_alternate(pe::PatchEnv, target, args...; call_loc)
     if haskey(pe.mapping, target)
         m, f = dispatch(pe.mapping[target], args...)
 
-        if pe.debug
+        @debug begin
+            call_site = _call_site(target, args, call_loc)
             if m !== nothing
-                @info _debug_msg(m, target, args)
+                _intercepted_msg(call_site, m, "Patch called")
             else
                 target_m, _ = dispatch([target], args...)
-                @info _debug_msg(target_m, target, args)
+                _intercepted_msg(call_site, target_m, "No patch handles provided arguments")
             end
-        end
+        end _file = nothing _line = nothing
 
         return f
     else
+        @debug begin
+            call_site = _call_site(target, args, call_loc)
+            target_m, _ = dispatch([target], args...)
+            _intercepted_msg(call_site, target_m, "No patch defined for target function")
+        end _file = nothing _line = nothing
+
         return nothing
     end
 end
 
-get_alternate(target, args...) = get_alternate(PATCH_ENV[], target, args...)
-
-function _debug_msg(method::Union{Method,Nothing}, target, args)
-    call = "$target($(join(map(arg -> "::$(Core.Typeof(arg))", args), ", ")))"
-    return """
-        Mocking intercepted:
-        call:       $call
-        dispatched: $(method === nothing ? "(no matching method)" : method)
-        """
+function get_alternate(target, args...; kwargs...)
+    return get_alternate(PATCH_ENV[], target, args...; kwargs...)
 end

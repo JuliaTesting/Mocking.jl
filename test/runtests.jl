@@ -3,6 +3,7 @@ using Test
 
 using Aqua: Aqua
 using Dates: Dates, Hour
+using Logging: Debug
 using Mocking: anon_morespecific, anonymous_signature, apply, dispatch, type_morespecific
 
 Mocking.activate()
@@ -10,13 +11,14 @@ Mocking.activate()
 @testset "Mocking" begin
     @testset "Code quality (Aqua.jl)" begin
         # Unable to add compat entries for stdlibs while we support Julia 1.0
-        stdlibs = [:Dates, :Test]
+        stdlibs = [:Dates, :Logging, :Test]
         Aqua.test_all(Mocking; deps_compat=(; check_extras=(; ignore=stdlibs)))
     end
 
     include("dispatch.jl")
     include("mock.jl")
     include("patch.jl")
+    include("debug.jl")
 
     include("concept.jl")
     include("targets.jl")

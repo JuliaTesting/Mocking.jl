@@ -23,6 +23,10 @@ When your patch isn't being applied you should remember to check for the followi
 - Call sites you want to patch are using [`@mock`](@ref).
 - The patch's argument types are supertypes the values passed in at the call site.
 
+You can also start Julia with `JULIA_DEBUG=Mocking` to show details about what methods are
+being dispatched to from `@mock`ed call sites. These interception messages are only
+displayed if `Mocking.activate` has been called.
+
 ## Where should I add `Mocking.activate()`?
 
 We recommend putting the call to [`Mocking.activate`](@ref activate) in your package's
