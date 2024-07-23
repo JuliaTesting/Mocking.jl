@@ -17,7 +17,6 @@ include("dispatch.jl")
 include("debug.jl")
 include("patch.jl")
 include("mock.jl")
-include("deprecated.jl")
 
 # Create the initial definition of `activated` which defaults having Mocking be deactivated.
 # We utilize method invalidation as a feature here to allow functions using `@mock` to be

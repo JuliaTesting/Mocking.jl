@@ -38,6 +38,5 @@ Mocking.activate()
     include("nested_apply.jl")
     include("async-scope.jl")
     include("issues.jl")
-    include("activate.jl")
     include("async-world-ages.jl")
 end
