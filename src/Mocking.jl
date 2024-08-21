@@ -7,7 +7,7 @@ using ExprTools: splitdef, combinedef
 # We cannot use ScopedValues.jl for backwards compatability as that implementation breaks
 # `@test_logs`.
 if VERSION >= v"1.11.0-DEV.482"
-    using Base: ScopedValue, with
+    using Base.ScopedValues: ScopedValue, with
 end
 
 export @patch, @mock, Patch, apply
