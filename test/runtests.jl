@@ -39,4 +39,5 @@ Mocking.activate()
     include("async-scope.jl")
     include("issues.jl")
     include("async-world-ages.jl")
+    include("activate.jl")
 end
