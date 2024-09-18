@@ -32,3 +32,29 @@ displayed if `Mocking.activate` has been called.
 We recommend putting the call to [`Mocking.activate`](@ref activate) in your package's
 `test/runtests.jl` file after all of your import statements. The only true requirement is
 that you call  `Mocking.activate()` before the first [`apply`](@ref) call.
+
+## What if I want to call the un-patched function inside a patch?
+
+Simply call the patched function without `@mock`:
+
+```julia
+julia> f(x) = x + 1
+f (generic function with 1 method)
+
+julia> g(x) = @mock(f(x)) * 2
+g (generic function with 1 method)
+
+julia> fp = @patch f(x) = f(-x)
+Patch{typeof(f)}(f, var"##f_patch#240")
+
+julia> g(3)
+8 # = (3 + 1) * 2
+
+julia> apply(fp) do 
+           g(3)
+       end
+-4 # = (-3 + 1) * 2
+```
+
+Note that you can also use `@mock` _inside_ a patch, which can be useful when using
+multiple dispatch with patches.
