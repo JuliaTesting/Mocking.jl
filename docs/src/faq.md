@@ -35,25 +35,31 @@ that you call  `Mocking.activate()` before the first [`apply`](@ref) call.
 
 ## What if I want to call the un-patched function inside a patch?
 
-Simply call the patched function without `@mock`:
+Simply call the function without using `@mock` within the patch. For example we can count the number of calls a recursive function does like this:
 
 ```julia
-julia> f(x) = x + 1
-f (generic function with 1 method)
+function fibonacci(n)
+    if n <= 1
+        return n
+    else
+        return @mock(fibonacci(n - 1)) + @mock(fibonacci(n - 2))
+    end
+end
 
-julia> g(x) = @mock(f(x)) * 2
-g (generic function with 1 method)
+calls = Ref(0)
+p = @patch function fibonacci(n)
+    calls[] += 1
+    return fibonacci(n)  # Calls original function
+end
 
-julia> fp = @patch f(x) = f(-x)
-Patch{typeof(f)}(f, var"##f_patch#240")
+apply(p) do
+    @test @mock(fibonacci(1)) == 1
+    @test calls[] == 1
 
-julia> g(3)
-8 # = (3 + 1) * 2
-
-julia> apply(fp) do 
-           g(3)
-       end
--4 # = (-3 + 1) * 2
+    calls[] = 0
+    @test @mock(fibonacci(4)) == 3
+    @test calls[] == 9
+end
 ```
 
 Note that you can also use `@mock` _inside_ a patch, which can be useful when using
