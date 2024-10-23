@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - "1.0"  # Oldest supported version
+          - "min"  # Oldest supported version
           - "1.10" # LTS
           - "1"    # Latest Release
         os:
