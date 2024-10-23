@@ -32,3 +32,35 @@ displayed if `Mocking.activate` has been called.
 We recommend putting the call to [`Mocking.activate`](@ref activate) in your package's
 `test/runtests.jl` file after all of your import statements. The only true requirement is
 that you call  `Mocking.activate()` before the first [`apply`](@ref) call.
+
+## What if I want to call the un-patched function inside a patch?
+
+Simply call the function without using `@mock` within the patch. For example we can count the number of calls a recursive function does like this:
+
+```julia
+function fibonacci(n)
+    if n <= 1
+        return n
+    else
+        return @mock(fibonacci(n - 1)) + @mock(fibonacci(n - 2))
+    end
+end
+
+calls = Ref(0)
+p = @patch function fibonacci(n)
+    calls[] += 1
+    return fibonacci(n)  # Calls original function
+end
+
+apply(p) do
+    @test @mock(fibonacci(1)) == 1
+    @test calls[] == 1
+
+    calls[] = 0
+    @test @mock(fibonacci(4)) == 3
+    @test calls[] == 9
+end
+```
+
+Note that you can also use `@mock` _inside_ a patch, which can be useful when using
+multiple dispatch with patches.
