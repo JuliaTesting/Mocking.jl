@@ -21,10 +21,10 @@ end
 julia> m = first(methods(first, (String,)));
 
 julia> m.sig
-Tuple{typeof(first), Any}
+Tuple{typeof(first), AbstractString}
 
 julia> anonymous_signature(m)
-Tuple{Any}
+Tuple{AbstractString}
 ```
 
 ```@meta
