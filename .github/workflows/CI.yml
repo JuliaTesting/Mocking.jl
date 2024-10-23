@@ -19,7 +19,7 @@ jobs:
       matrix:
         version:
           - "min"  # Oldest supported version
-          - "1.10" # LTS
+          - "lts"  # LTS
           - "1"    # Latest Release
         os:
           - ubuntu-latest
