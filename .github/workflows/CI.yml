@@ -18,10 +18,9 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - "1.0"  # Oldest supported version
-          - "1.6"  # LTS
+          - "min"  # Oldest supported version
+          - "lts"  # LTS
           - "1"    # Latest Release
-          - "pre"  # ScopedValue support introduced in Julia 1.11
         os:
           - ubuntu-latest
         arch:
