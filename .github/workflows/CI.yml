@@ -41,7 +41,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ${{ fromJSON(needs.resolve-version.outputs.json) }}
+        version: ${{ fromJSON(needs.resolve-version.outputs.json).version }}
         os:
           - ubuntu-latest
         arch:
