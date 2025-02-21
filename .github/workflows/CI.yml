@@ -24,6 +24,7 @@ jobs:
     outputs:
       json: ${{ steps.matrix-output.outputs.json }}
     steps:
+      - uses: actions/checkout@v4  # Needed for Project.toml
       - uses: julia-actions/julia-version@cv/implementation
         with:
           version: ${{ matrix.version }}
