@@ -41,9 +41,6 @@ jobs:
       fail-fast: false
       matrix:
         version: ${{ fromJSON(needs.resolve-version.outputs.json) }}
-          - "min"  # Oldest supported version
-          - "lts"  # LTS
-          - "1"    # Latest Release
         os:
           - ubuntu-latest
         arch:
