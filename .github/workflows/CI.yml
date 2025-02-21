@@ -33,7 +33,7 @@ jobs:
         id: matrix-output
         with:
           yaml: |
-            version: "${{ steps.julia-version.outputs.version }}"
+            "${{ steps.julia-version.outputs.version }}"
 
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
@@ -42,7 +42,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ${{ fromJSON(needs.resolve-version.outputs.json).version }}
+        version: ${{ fromJSON(needs.resolve-version.outputs.json) }}
         os:
           - ubuntu-latest
         arch:
