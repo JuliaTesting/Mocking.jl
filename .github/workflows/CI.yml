@@ -11,38 +11,29 @@ on:
       - "Project.toml"
       - ".github/workflows/CI.yml"
 jobs:
-  resolve-version:
-    name: Resolve Julia Version ${{ matrix.version }}
+  version:
+    name: Resolve Julia Versions
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        version:
-          - "min"  # Oldest supported version
-          - "lts"  # LTS
-          - "1"    # Latest Release
     outputs:
-      json: ${{ steps.matrix-output.outputs.json }}
+      json: ${{ steps.matrix-output.outputs.resolved }}
     steps:
       - uses: actions/checkout@v4  # Needed for Project.toml
       - uses: julia-actions/julia-version@cv/implementation
         id: julia-version
         with:
-          version: ${{ matrix.version }}
-      - uses: beacon-biosignals/matrix-output@v1
-        id: matrix-output
-        with:
-          yaml: |
-            "${{ steps.julia-version.outputs.version }}"
+          versions: |
+            - min  # Project's oldest supported version
+            - lts  # Long-Term Stable
+            - 1    # Latest release
 
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
-    needs: resolve-version
+    needs: version
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        version: ${{ fromJSON(needs.resolve-version.outputs.json) }}
+        version: ${{ fromJSON(needs.version.outputs.json) }}
         os:
           - ubuntu-latest
         arch:
