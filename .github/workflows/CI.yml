@@ -15,7 +15,7 @@ jobs:
     name: Resolve Julia Versions
     runs-on: ubuntu-latest
     outputs:
-      json: ${{ steps.matrix-output.outputs.resolved }}
+      json: ${{ steps.julia-version.outputs.resolved }}
     steps:
       - uses: actions/checkout@v4  # Needed for Project.toml
       - uses: julia-actions/julia-version@cv/implementation
