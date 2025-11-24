@@ -12,6 +12,7 @@ end
 
 export @patch, @mock, Patch, apply
 
+include("compat.jl")
 include("expr.jl")
 include("dispatch.jl")
 include("debug.jl")
