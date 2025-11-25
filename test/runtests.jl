@@ -15,6 +15,7 @@ Mocking.activate()
         Aqua.test_all(Mocking; deps_compat=(; check_extras=(; ignore=stdlibs)))
     end
 
+    include("compat.jl")
     include("dispatch.jl")
     include("mock.jl")
     include("patch.jl")

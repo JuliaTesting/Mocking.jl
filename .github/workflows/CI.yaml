@@ -31,6 +31,9 @@ jobs:
             - min  # Project's oldest supported version
             - lts  # Long-Term Stable
             - 1    # Latest release
+            # Versions to validate backwards compatibility logic
+            - 1.11
+            - 1.12
 
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
