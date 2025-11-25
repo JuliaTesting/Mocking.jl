@@ -26,10 +26,10 @@ show_methodtable(x) = show_methodtable(stdout, x)
 @testset "delete_method" begin
     @testset "delete and restore" begin
         foo(::Int) = :original
-        original_world_age = Mocking.get_world_counter()
+        original_world_age = Base.get_world_counter()
 
         foo(::Int) = :replaced
-        replaced_world_age = Mocking.get_world_counter()
+        replaced_world_age = Base.get_world_counter()
 
         @test foo(1) === :replaced
         @test length(methods(foo)) == 1
@@ -37,7 +37,7 @@ show_methodtable(x) = show_methodtable(stdout, x)
 
         m = first(methods(foo, Tuple{Int}))
         @test Mocking.delete_method(m) === nothing
-        deleted_world_age = Mocking.get_world_counter()
+        deleted_world_age = Base.get_world_counter()
 
         @test foo(1) === :original
         @test length(methods(foo)) == 1
@@ -68,7 +68,7 @@ show_methodtable(x) = show_methodtable(stdout, x)
                 def = def.next
             end
 
-            ml = Base.MethodList(mt)
+            ml = collect(Base.MethodList(mt))
             @test ml[1].primary_world == deleted_world_age
             @test ml[1].deleted_world == typemax(UInt64)
             @test ml[2].primary_world == replaced_world_age
@@ -80,14 +80,14 @@ show_methodtable(x) = show_methodtable(stdout, x)
 
     @testset "delete only" begin
         foo(::Int) = :original
-        original_world_age = Mocking.get_world_counter()
+        original_world_age = Base.get_world_counter()
 
         @test foo(1) === :original
         @test length(methods(foo)) == 1
 
         m = first(methods(foo, Tuple{Int}))
         @test Mocking.delete_method(m) === nothing
-        deleted_world_age = Mocking.get_world_counter()
+        deleted_world_age = Base.get_world_counter()
 
         @test_throws MethodError foo(1)
         @test length(methods(foo)) == 0
@@ -111,7 +111,7 @@ show_methodtable(x) = show_methodtable(stdout, x)
                 def = def.next
             end
 
-            ml = Base.MethodList(mt)
+            ml = collect(Base.MethodList(mt))
             @test ml[1].primary_world == original_world_age
             @test ml[1].deleted_world == original_world_age
         end

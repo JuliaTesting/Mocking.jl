@@ -1,11 +1,5 @@
 const MAX_WORLD_AGE = typemax(UInt)
 
-if VERSION >= v"1.2.0-DEV.573"
-    get_world_counter() = Base.get_world_counter()
-else
-    get_world_counter() = ccall(:jl_get_world_counter, UInt, ())
-end
-
 function delete_method(m::Method)
     @static if VERSION >= v"1.12.0"
         # On Julia 1.12 deleting a method re-activates the previous version of method
@@ -14,7 +8,7 @@ function delete_method(m::Method)
         # The method table associated with the generic function
         mt = Base.get_methodtable(m)
 
-        world_age = get_world_counter()
+        world_age = Base.get_world_counter()
         current_method = nothing
         old_method = nothing
 
