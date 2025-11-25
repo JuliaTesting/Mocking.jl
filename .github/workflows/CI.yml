@@ -9,6 +9,7 @@ on:
       - "src/**/*.jl"
       - "test/**/*.jl"
       - "Project.toml"
+      - ".codecov.yaml"
       - ".github/workflows/CI.yml"
 jobs:
   test:
