@@ -22,7 +22,7 @@ jobs:
       json: ${{ steps.julia-version.outputs.resolved-json }}
     steps:
       - uses: actions/checkout@v6 # Needed for "min" to access the Project.toml
-      - uses: julia-actions/julia-version@v0.1
+      - uses: julia-actions/julia-version@v0.1.0
         id: julia-version
         with:
           versions: |
