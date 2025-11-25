@@ -20,6 +20,8 @@ jobs:
         version:
           - "min"  # Oldest supported version
           - "lts"  # LTS
+          - "1.11"
+          - "1.12"
           - "1"    # Latest Release
         os:
           - ubuntu-latest

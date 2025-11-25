@@ -1,7 +1,7 @@
 const MAX_WORLD_AGE = typemax(UInt)
 
 if VERSION >= v"1.2.0-DEV.573"
-    get_world_counter() = Base.get_world_counter
+    get_world_counter() = Base.get_world_counter()
 else
     get_world_counter() = ccall(:jl_get_world_counter, UInt, ())
 end
@@ -21,7 +21,7 @@ function delete_method(m::Method)
         # The `Core.MethodTable` stores each method as a linked list with the newest method
         # definitions occurring first.
         def = mt.defs
-        while !isnothing(def)
+        while def !== nothing
             if def.sig == m.sig
                 if def.max_world == MAX_WORLD_AGE
                     current_method = def.func
@@ -36,11 +36,17 @@ function delete_method(m::Method)
         # When the method table contains 2+ methods for the signature we'll restore the previous
         # method definition. Otherwise, we'll just limit the world age for the only existing
         # method.
-        if !isnothing(old_method)
+        if old_method !== nothing
             # Using `primary_world == 1` causes Julia to increase the world counter
             replacement_method = deepcopy(old_method)
-            replacement_method.primary_world = 1
-            replacement_method.deleted_world = MAX_WORLD_AGE
+
+            @static if VERSION >= v"1.11"
+                @atomic replacement_method.primary_world = 1
+                @atomic replacement_method.deleted_world = MAX_WORLD_AGE
+            else
+                replacement_method.primary_world = 1
+                replacement_method.deleted_world = MAX_WORLD_AGE
+            end
 
             ccall(
                 :jl_method_table_insert,
