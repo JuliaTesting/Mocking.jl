@@ -1,3 +1,4 @@
+---
 name: CI
 # Run on main, tags, or any pull request
 on:
@@ -9,7 +10,8 @@ on:
       - "src/**/*.jl"
       - "test/**/*.jl"
       - "Project.toml"
-      - ".github/workflows/CI.yml"
+      - ".codecov.yaml"
+      - ".github/workflows/CI.yaml"
 jobs:
   version:
     name: Resolve Julia Versions
@@ -46,7 +48,7 @@ jobs:
         arch:
           - x64
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
@@ -55,7 +57,7 @@ jobs:
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
         with:
           files: lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -72,7 +74,7 @@ jobs:
       actions: write
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: julia-actions/setup-julia@v2
         with:
           version: "1"
