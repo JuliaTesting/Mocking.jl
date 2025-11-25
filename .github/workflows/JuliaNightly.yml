@@ -1,5 +1,6 @@
-name: JuliaNightly
 # Nightly Scheduled Julia Nightly Run
+---
+name: JuliaNightly
 on:
   pull_request:
     paths:

@@ -1,3 +1,4 @@
+---
 name: CI
 # Run on main, tags, or any pull request
 on:
