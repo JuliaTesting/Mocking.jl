@@ -27,9 +27,9 @@ function delete_method(m::Method)
             def = def.next
         end
 
-        # When the method table contains 2+ methods for the signature we'll restore the previous
-        # method definition. Otherwise, we'll just limit the world age for the only existing
-        # method.
+        # When the method table contains 2+ methods for the signature we'll restore the
+        # previous method definition. Otherwise, we'll just limit the world age for the only
+        # existing method.
         if old_method !== nothing
             # Using `primary_world == 1` causes Julia to increase the world counter
             replacement_method = deepcopy(old_method)
@@ -51,7 +51,8 @@ function delete_method(m::Method)
                 replacement_method.sig,
             )
         else
-            # On Julia versions below 1.12 just limits the world age specified method.
+            # On Julia versions below 1.12 this just limits the world age for the specified
+            # method.
             Base.delete_method(m)
         end
     end

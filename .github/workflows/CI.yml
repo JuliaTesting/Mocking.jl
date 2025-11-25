@@ -29,11 +29,7 @@ jobs:
             - min  # Oldest supported version
             - lts  # Long-Term Stable
             - 1    # Latest release
-            - 1.6
-            - 1.7
-            - 1.8
-            - 1.9
-            - 1.10
+            # Versions to validate backwards compatibility logic
             - 1.11
             - 1.12
 
