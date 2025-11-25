@@ -67,8 +67,10 @@ show_methodtable(x) = show_methodtable(stdout, x)
 
                 def = def.next
             end
+            @test count == 3
 
             ml = collect(Base.MethodList(mt))
+            @test length(ml) == 3
             @test ml[1].primary_world == deleted_world_age
             @test ml[1].deleted_world == typemax(UInt64)
             @test ml[2].primary_world == replaced_world_age
@@ -110,10 +112,68 @@ show_methodtable(x) = show_methodtable(stdout, x)
 
                 def = def.next
             end
+            @test count == 1
 
             ml = collect(Base.MethodList(mt))
+            @test length(ml) == 1
             @test ml[1].primary_world == original_world_age
             @test ml[1].deleted_world == original_world_age
+        end
+    end
+
+    @testset "delete non-latest" begin
+        foo(::Int) = :original
+        original_world_age = Base.get_world_counter()
+        original_method = first(methods(foo, Tuple{Int}))
+
+        foo(::Int) = :replaced
+        replaced_world_age = Base.get_world_counter()
+        replaced_method = first(methods(foo, Tuple{Int}))
+
+        @test original_method != replaced_method
+
+        @test foo(1) === :replaced
+        @test length(methods(foo)) == 1
+        @test original_world_age < replaced_world_age
+
+        @test Mocking.delete_method(original_method) === nothing
+        deleted_world_age = Base.get_world_counter()
+
+        @test foo(1) === :replaced
+        @test length(methods(foo)) == 1
+        @test replaced_world_age < deleted_world_age
+
+        @test Base.invoke_in_world(original_world_age, foo, 1) === :original
+        @test Base.invoke_in_world(replaced_world_age, foo, 1) === :replaced
+        @test Base.invoke_in_world(deleted_world_age, foo, 1) === :replaced
+
+        @static if VERSION < v"1.12"
+            @show original_world_age replaced_world_age deleted_world_age
+            show_methodtable(foo)
+            mt = get_methodtable(original_method)
+            def = mt.defs
+            count = 0
+            while def !== nothing
+                count += 1
+
+                if count == 1
+                    @test def.min_world == replaced_world_age
+                    @test def.max_world == Mocking.MAX_WORLD_AGE
+                elseif count == 2
+                    @test def.min_world == original_world_age
+                    @test def.max_world == replaced_world_age
+                end
+
+                def = def.next
+            end
+            @test count == 2
+
+            ml = collect(Base.MethodList(mt))
+            @test length(ml) == 2
+            @test ml[1].primary_world == replaced_world_age
+            @test ml[1].deleted_world == Mocking.MAX_WORLD_AGE
+            @test ml[2].primary_world == original_world_age
+            @test ml[2].deleted_world == replaced_world_age
         end
     end
 end

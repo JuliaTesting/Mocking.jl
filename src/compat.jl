@@ -5,7 +5,7 @@ function delete_method(m::Method)
         # On Julia 1.12 deleting a method re-activates the previous version of method
         Base.delete_method(m)
     else
-        # The method table associated with the generic function
+        # The method table associated with the generic function.
         mt = Base.get_methodtable(m)
 
         world_age = Base.get_world_counter()
@@ -17,9 +17,9 @@ function delete_method(m::Method)
         def = mt.defs
         while def !== nothing
             if def.sig == m.sig
-                if def.max_world == MAX_WORLD_AGE
+                if def.min_world == m.primary_world
                     current_method = def.func
-                else
+                elseif current_method !== nothing
                     old_method = def.func
                     break
                 end
@@ -42,6 +42,8 @@ function delete_method(m::Method)
                 replacement_method.deleted_world = MAX_WORLD_AGE
             end
 
+            # Adding a new method into the function's method table will increase world age
+            # (requires `primary_world == 1`) and invalidate backedges.
             ccall(
                 :jl_method_table_insert,
                 Cvoid,
@@ -51,8 +53,8 @@ function delete_method(m::Method)
                 replacement_method.sig,
             )
         else
-            # On Julia versions below 1.12 this just limits the world age for the specified
-            # method.
+            # On Julia versions below 1.12 this simply limits the world age for the
+            # specified method.
             Base.delete_method(m)
         end
     end
