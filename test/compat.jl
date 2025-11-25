@@ -18,10 +18,10 @@ show_methodtable(x) = show_methodtable(stdout, x)
 @testset "delete_method" begin
     @testset "delete and restore" begin
         foo(::Int) = :original
-        original_world_age = Base.get_world_counter()
+        original_world_age = Mocking.get_world_counter()
 
         foo(::Int) = :replaced
-        replaced_world_age = Base.get_world_counter()
+        replaced_world_age = Mocking.get_world_counter()
 
         @test length(methods(foo)) == 1
         @test length(get_methodtable(foo)) == 2
@@ -29,7 +29,7 @@ show_methodtable(x) = show_methodtable(stdout, x)
 
         m = first(methods(foo, Tuple{Int}))
         @test Mocking.delete_method(m) === nothing
-        deleted_world_age = Base.get_world_counter()
+        deleted_world_age = Mocking.get_world_counter()
 
         mt = get_methodtable(foo)
         @test length(methods(foo)) == 1
@@ -70,14 +70,14 @@ show_methodtable(x) = show_methodtable(stdout, x)
 
     @testset "delete only" begin
         foo(::Int) = :original
-        original_world_age = Base.get_world_counter()
+        original_world_age = Mocking.get_world_counter()
 
         @test length(methods(foo)) == 1
         @test length(get_methodtable(foo)) == 1
 
         m = first(methods(foo, Tuple{Int}))
         @test Mocking.delete_method(m) === nothing
-        deleted_world_age = Base.get_world_counter()
+        deleted_world_age = Mocking.get_world_counter()
 
         mt = get_methodtable(m)
         @test length(methods(foo)) == 0
