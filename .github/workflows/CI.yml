@@ -11,18 +11,35 @@ on:
       - "Project.toml"
       - ".github/workflows/CI.yml"
 jobs:
+  version:
+    name: Resolve Julia Versions
+    # These permissions are needed to:
+    # - Checkout the Git repository (`contents: read`)
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    outputs:
+      json: ${{ steps.julia-version.outputs.resolved-json }}
+    steps:
+      - uses: actions/checkout@v6 # Needed for "min" to access the Project.toml
+      - uses: julia-actions/julia-version@v1
+        id: julia-version
+        with:
+          versions: |
+            - min  # Oldest supported version
+            - lts  # Long-Term Stable
+            - 1.11
+            - 1.12
+            - 1    # Latest release
+
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
+    needs: version
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        version:
-          - "min"  # Oldest supported version
-          - "lts"  # LTS
-          - "1.11"
-          - "1.12"
-          - "1"    # Latest Release
+        version: ${{ fromJSON(needs.version.outputs.json) }}
         os:
           - ubuntu-latest
         arch:
