@@ -36,7 +36,14 @@ function delete_method(m::Method)
             replacement_method.primary_world = 1
             replacement_method.deleted_world = MAX_WORLD_AGE
 
-            ccall(:jl_method_table_insert, Cvoid, (Any, Any, Any), mt, replacement_method, replacement_method.sig)
+            ccall(
+                :jl_method_table_insert,
+                Cvoid,
+                (Any, Any, Any),
+                mt,
+                replacement_method,
+                replacement_method.sig,
+            )
         else
             # On Julia versions below 1.12 just limits the world age specified method.
             Base.delete_method(m)

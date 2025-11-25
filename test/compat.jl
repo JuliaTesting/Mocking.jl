@@ -1,18 +1,19 @@
 get_methodtable(m::Method) = Base.get_methodtable(m)
 get_methodtable(f::Function) = get_methodtable(first(methods(f)))
 
-function show_mt(mt)
+function show_methodtable(io::IO, mt)
     def = mt.defs
     println("---")
     while !isnothing(def)
-        Base.show_method(stdout, def.func)
-        println(stdout, "\n    World Age: ", sprint(show, def.min_world), " - ", sprint(show, def.max_world))
+        Base.show_method(io, def.func)
+        println(io, "\n    World Age: ", repr(def.min_world), " - ", repr(def.max_world))
         def = def.next
     end
 end
 
-show_mt(m::Method) = show_mt(Base.get_methodtable(m))
-show_mt(f::Function) = show_mt(first(methods(f)))
+show_methodtable(io::IO, m::Method) = show_methodtable(io, Base.get_methodtable(m))
+show_methodtable(io::IO, f::Function) = show_methodtable(io, first(methods(f)))
+show_methodtable(x) = show_methodtable(stdout, x)
 
 @testset "delete_method" begin
     @testset "delete and restore" begin
@@ -104,4 +105,3 @@ show_mt(f::Function) = show_mt(first(methods(f)))
         @test ml[1].deleted_world == original_world_age
     end
 end
-
