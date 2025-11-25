@@ -325,29 +325,29 @@ show_methodtableentry(x) = show_methodtableentry(stdout, x)
 
             if VERSION >= v"1.12"
                 if count == 1
-                    @test def.sig == Tuple{typeof(foo), Int}
+                    @test def.sig == Tuple{typeof(foo),Int}
                     @test def.min_world == replaced_world_age
                     @test def.max_world == replaced_world_age
                 elseif count == 2
-                    @test def.sig == Tuple{typeof(foo), Float64}
+                    @test def.sig == Tuple{typeof(foo),Float64}
                     @test def.min_world == float_world_age
                     @test def.max_world == typemax(UInt)
                 elseif count == 3
-                    @test def.sig == Tuple{typeof(foo), Int}
+                    @test def.sig == Tuple{typeof(foo),Int}
                     @test def.min_world == original_world_age
                     @test def.max_world == typemax(UInt)
                 end
             else
                 if count == 1
-                    @test def.sig == Tuple{typeof(foo), Int}
+                    @test def.sig == Tuple{typeof(foo),Int}
                     @test def.min_world == deleted_world_age
                     @test def.max_world == typemax(UInt)
                 elseif count == 2
-                    @test def.sig == Tuple{typeof(foo), Int}
+                    @test def.sig == Tuple{typeof(foo),Int}
                     @test def.min_world == replaced_world_age
                     @test def.max_world == replaced_world_age
                 elseif count == 3
-                    @test def.sig == Tuple{typeof(foo), Float64}
+                    @test def.sig == Tuple{typeof(foo),Float64}
                     @test def.min_world == float_world_age
                     @test def.max_world == typemax(UInt)
                 elseif count == 4
@@ -364,28 +364,28 @@ show_methodtableentry(x) = show_methodtableentry(stdout, x)
         ml = get_methodlist(original_method)
         @test length(ml) == (VERSION >= v"1.12" ? 3 : 4)
         if VERSION >= v"1.12"
-            @test ml[1].sig == Tuple{typeof(foo), Int}
+            @test ml[1].sig == Tuple{typeof(foo),Int}
             @test ml[1].primary_world == replaced_world_age
 
-            @test ml[2].sig == Tuple{typeof(foo), Float64}
+            @test ml[2].sig == Tuple{typeof(foo),Float64}
             @test ml[2].primary_world == float_world_age
 
-            @test ml[3].sig == Tuple{typeof(foo), Int}
+            @test ml[3].sig == Tuple{typeof(foo),Int}
             @test ml[3].primary_world == original_world_age
         else
-            @test ml[1].sig == Tuple{typeof(foo), Int}
+            @test ml[1].sig == Tuple{typeof(foo),Int}
             @test ml[1].primary_world == deleted_world_age
             @test ml[1].deleted_world == typemax(UInt)
 
-            @test ml[2].sig == Tuple{typeof(foo), Int}
+            @test ml[2].sig == Tuple{typeof(foo),Int}
             @test ml[2].primary_world == replaced_world_age
             @test ml[2].deleted_world == replaced_world_age
 
-            @test ml[3].sig == Tuple{typeof(foo), Float64}
+            @test ml[3].sig == Tuple{typeof(foo),Float64}
             @test ml[3].primary_world == float_world_age
             @test ml[3].deleted_world == typemax(UInt)
 
-            @test ml[4].sig == Tuple{typeof(foo), Int}
+            @test ml[4].sig == Tuple{typeof(foo),Int}
             @test_broken ml[4].primary_world == original_world_age
             @test_broken ml[4].deleted_world == float_world_age
         end
