@@ -28,7 +28,7 @@ jobs:
         id: julia-version
         with:
           versions: |
-            - min  # Oldest supported version
+            - min  # Project's oldest supported version
             - lts  # Long-Term Stable
             - 1    # Latest release
             # Versions to validate backwards compatibility logic

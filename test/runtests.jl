@@ -16,6 +16,11 @@ Mocking.activate()
     end
 
     include("compat.jl")
+    include("dispatch.jl")
+    include("mock.jl")
+    include("patch.jl")
+    include("debug.jl")
+
     include("concept.jl")
     include("targets.jl")
     include("functions.jl")
