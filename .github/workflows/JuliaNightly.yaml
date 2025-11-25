@@ -4,7 +4,7 @@ name: JuliaNightly
 on:
   pull_request:
     paths:
-      - ".github/workflows/JuliaNightly.yml"
+      - ".github/workflows/JuliaNightly.yaml"
   schedule:
     - cron: "0 2 * * *"  # Daily at 2 AM UTC (8 PM CST)
 jobs:

@@ -11,7 +11,7 @@ on:
       - "test/**/*.jl"
       - "Project.toml"
       - ".codecov.yaml"
-      - ".github/workflows/CI.yml"
+      - ".github/workflows/CI.yaml"
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
